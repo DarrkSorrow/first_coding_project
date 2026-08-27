@@ -545,7 +545,7 @@ class Minion7(Enemy):#v1
         return text, key
 
 
-class Elite1(Enemy):
+class Elite1(Enemy):#v1
 
     def __init__(self):
         super().__init__("JUNGER HÖHLENTROLL", 100, 100, 32, 38,
@@ -553,51 +553,52 @@ class Elite1(Enemy):
                         reduction=10)
         self.nerfed = False
         
-    def war_cry(self, hero, combat_log):#ENEMY-MOVE
+    def _war_cry(self, hero, combat_log):#ENEMY-MOVE
         text = f"{self.name} brüllt dich zornig an!"
         combat_log.add(text, True)
         abilities.EnemyDebuff1(7, 3).buff(hero)
 
-    def enemy_ai(self, hero, step, combat_log):
+    def enemy_ai(self, hero, key, combat_log):
         if self.life < self.max_life * 0.35 and not self.nerfed:
-            self.damage -= 12
+            self.damage -= 10
             self.nerfed = True
             text = f"{self.name} ist schächer geworden."
             combat_log.add(text, True)
-        if step == 0:
-            text = f"{self.name} schlägt mit Brutalität zu!"
-            combat_log.add(text, True)
-            self.damage += 14
-            self.basic_attack(hero, combat_log)
-            self.damage -= 14
-        if step == 1:
-            self.war_cry(hero, combat_log)
-        if step >= 2:
-            magic_number = random.randint(0, 100)
-            if magic_number <= 65:
+        match key:
+            case 1:
+                text = f"{self.name} schlägt mit Brutalität zu!"
+                combat_log.add(text, True)
+                self.damage += 14
                 self.basic_attack(hero, combat_log)
-            else:
-                self.war_cry(hero, combat_log)
+                self.damage -= 14
+            case 2:
+                self._war_cry(hero, combat_log)
+            case 3:
+                magic_number = random.randint(0, 100)
+                if magic_number <= 65:
+                    self.basic_attack(hero, combat_log)
+                else:
+                    self._war_cry(hero, combat_log)
 
     def enemy_intend(self, step, hero):
         if step == 0:
-            intend = "Atk+"
+            intend, key = "Atk+", 1
         elif step == 1:
-            intend = "Debuff"
+            intend, key = "Debuff", 2
         else:
-            intend = "Atk / Debuff"
+            intend, key = "Atk / Debuff", 3
         text = self.font.render(intend, True, (0, 0, 0))
-        return text
+        return text, key
 
 
-class Elite2(Enemy):
+class Elite2(Enemy):#v1
 
     def __init__(self):
         super().__init__("PANZER-SCHILDKRÖTE", 200, 200, 23, 10,
                         elite_2,
                         reduction=10)
         
-    def harden_or_burst(self, hero, combat_log):
+    def _harden_or_burst(self, hero, combat_log):
         if self.life <= self.max_life * 0.25:
             text = f"{self.name} zerberstet in einem lauten Knall!"
             combat_log.add(text, True)
@@ -610,41 +611,45 @@ class Elite2(Enemy):
             combat_log.add(text, True)
             abilities.EnemyBuff1(30, 3).buff(self)
 
-    def enemy_ai(self, hero, step, combat_log):
-        if step == 0:
-            self.basic_attack(hero, combat_log)
-        elif self.life >= self.max_life * 0.9:
-            self.harden_or_burst(hero, combat_log)
-        elif self.life >= self.max_life * 0.7:
-            self.basic_attack(hero, combat_log)
-        elif self.life >= self.max_life * 0.6:
-            self.block(15, combat_log)
-        else:
-            magic_number = random.choice((1, 2, 3))
-            match magic_number:
-                case 1:
-                    self.basic_attack(hero, combat_log)
-                case 2:
-                    self.harden_or_burst(hero, combat_log)
-                case 3:
-                    self.block(20, combat_log)
+    def _random(self, hero, combat_log):
+        magic_number = random.choice((1, 2, 3))
+        match magic_number:
+            case 1:
+                self.basic_attack(hero, combat_log)
+            case 2:
+                self._harden_or_burst(hero, combat_log)
+            case 3:
+                self.block(20, combat_log)
+
+    def enemy_ai(self, hero, key, combat_log):
+        match key:
+            case 1:
+                self.basic_attack(hero, combat_log)
+            case 2:
+                self.harden_or_burst(hero, combat_log)
+            case 3:
+                self.basic_attack(hero, combat_log)
+            case 4:
+                self.block(15, combat_log)
+            case 5:
+                self._random(hero, combat_log)
 
     def enemy_intend(self, step, hero):
         if step == 0:
-            intend = "Atk"
+            intend, key = "Atk", 1
         elif self.life >= self.max_life * 0.9:
-            intend = "Buff"
+            intend, key = "Buff", 2
         elif self.life >= self.max_life * 0.7:
-            intend = "Atk"
+            intend, key = "Atk", 3
         elif self.life >= self.max_life * 0.6:
-            intend = "Block"
+            intend, key = "Block", 4
         else:
-            intend = "?"
+            intend, key = "?", 5
         text = self.font.render(intend, True, (0, 0, 0))
-        return text
+        return text, key
     
 
-class Elite3(Enemy):
+class Elite3(Enemy):#v1
 
     def __init__(self):
         super().__init__('SCHWARZER SCHWERTKÄMPFER', 160, 160, 20, 70,
@@ -662,40 +667,41 @@ class Elite3(Enemy):
         combat_log.add(text, True)
         abilities.EnemyDebuff2(10, 2).buff(hero)
 
-    def enemy_ai(self, hero, step, combat_log):
+    def enemy_ai(self, hero, key, combat_log):
         magic_number = random.choice((1, 2))
-        if step == 0:
-            self.block(20, combat_log)
-        elif step % 3 == 2:
-            if magic_number == 1:
-                self.basic_attack(hero, combat_log)
-            else:
-                self.ability_1(combat_log)
-        elif step % 3 == 1:
-            if magic_number == 1:
-                self.basic_attack(hero, combat_log)
-            else:
-                self.ability_2(hero, combat_log)
-        elif step % 3 == 0:
-            if magic_number == 1:
-                self.basic_attack(hero, combat_log)
-            else:
+        match key:
+            case 1:
                 self.block(20, combat_log)
+            case 2:
+                if magic_number == 1:
+                    self.basic_attack(hero, combat_log)
+                else:
+                    self.ability_1(combat_log)
+            case 3:
+                if magic_number == 1:
+                    self.basic_attack(hero, combat_log)
+                else:
+                    self.ability_2(hero, combat_log)
+            case 4:
+                if magic_number == 1:
+                    self.basic_attack(hero, combat_log)
+                else:
+                    self.block(20, combat_log)
 
     def enemy_intend(self, step, hero):
         if step == 0:
-            intend = "Block"
+            intend, key = "Block", 1
         elif step % 3 == 2:
-            intend = "Atk / Buff"
+            intend, key = "Atk / Buff", 2
         elif step % 3 == 1:
-            intend = "Atk / Debuff"
+            intend, key = "Atk / Debuff", 3
         elif step % 3 == 0:
-            intend = "Atk / Block"
+            intend, key = "Atk / Block", 4
         text = self.font.render(intend, True, (0, 0, 0))
-        return text
+        return text, key
                 
 
-class Boss1(Enemy):
+class Boss1(Enemy):#v1
 
     def __init__(self):
         super().__init__("INFERNO-DÄMON", 330, 330, 12, 50,
@@ -703,40 +709,41 @@ class Boss1(Enemy):
                         reduction=10, dodge=10, mental_reduction=10,
                         magic_power=6)
         
-    def enemy_ai(self, hero, step, combat_log):
-        if step == 0:
-            text = f"{self.name} erwacht!"
-            combat_log.add(text, True)
-        elif step % 4 == 1:
-            text = f"Die Kreatur beschwört ein Feuersiegel auf {hero.name}'s Haut."
-            combat_log.add(text, True)
-            abilities.EnemyDebuff3(6, 4).buff(hero)
-        elif step % 4 == 2:
-            text = f"{self.name} holt zum Schlag aus!"
-            combat_log.add(text, True)
-            self.basic_attack(hero, combat_log)
-        elif step % 4 == 3:
-            text = f"{self.name} schleudert einen Feuerpfeil!"
-            combat_log.add(text, True)
-            self.basic_magic(hero, combat_log)
-        elif step % 4 == 0:
-            text = f"Die Macht von {self.name} erhöht sich."
-            combat_log.add(text, True)
-            self.damage += 6
+    def enemy_ai(self, hero, key, combat_log):
+        match key:
+            case 1:
+                text = f"{self.name} erwacht!"
+                combat_log.add(text, True)
+            case 2:
+                text = f"Die Kreatur beschwört ein Feuersiegel auf {hero.name}'s Haut."
+                combat_log.add(text, True)
+                abilities.EnemyDebuff3(6, 4).buff(hero)
+            case 3:
+                text = f"{self.name} holt zum Schlag aus!"
+                combat_log.add(text, True)
+                self.basic_attack(hero, combat_log)
+            case 4:
+                text = f"{self.name} schleudert einen Feuerpfeil!"
+                combat_log.add(text, True)
+                self.basic_magic(hero, combat_log)
+            case 5:
+                text = f"Die Macht von {self.name} erhöht sich."
+                combat_log.add(text, True)
+                self.damage += 6
 
     def enemy_intend(self, step, hero):
         if step == 0:
-            intend = "zz.."
+            intend, key = "zz..", 1
         elif step % 4 == 1:
-            intend = "DEBUFF+"
+            intend, key = "DEBUFF+", 2
         elif step % 4 == 2:
-            intend = "Atk"
+            intend, key = "Atk", 3
         elif step % 4 == 3:
-            intend = "Mag"
+            intend, key = "Mag", 4
         elif step % 4 == 0:
-            intend = "Pwr++"
+            intend, key = "Pwr++", 5
         text = self.font.render(intend, True, (0, 0, 0))
-        return text
+        return text, key
 
 
 #IMAGES LOADED, EVERY ENEMY INSTANCE POITNS TO THESE
