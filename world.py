@@ -68,33 +68,65 @@ def bond_fire(hero, stage, screen):
             hero.mana = hero.max_mana
         
         case "3":
-            hero.xp += round(hero.xp * 0.7)
+            hero.xp += round(hero.xp / 2)
 
     screen.fill((20, 255, 20))
-    pygame.display.flip(), sleep(3)
+    pygame.display.flip(), sleep(2)
 
 
 def reward(hero, enemy, stage, screen):
     
     screen.fill((50, 50, 50)), pygame.display.flip()
 
-    if stage == 0:
-        points = 35
-        points += random.randint(0, 35)
-        reward_system(hero, points, screen)
+    match stage:
+        
+        #Akt 0 *** Akt 0 *** Akt 0
+        case 0:
+            points = 35
+            points += random.randint(0, 35)
+            reward_system(hero, points, screen)
 
-    elif enemy == 1:
-        points = 100
-        points += random.randint(0, 50)
-        reward_system(hero, points, screen)
+        #Akt 1 *** Akt 1 *** Akt 1
+        case 1 | 2 | 3:
+            match enemy:
+                case 1:
+                    points = 100
+                    points += random.randint(0, 50)
+                    reward_system(hero, points, screen)
+                case 2:
+                    points = 150
+                    points += random.randint(0, 100)
+                    reward_system(hero, points, screen)    
+                case 3:
+                    boss_reward(hero, screen)
 
-    elif enemy == 2:
-        points = 150
-        points += random.randint(0, 100)
-        reward_system(hero, points, screen)    
+        #Akt 2 *** Akt 2 *** Akt 2
+        case 4 | 5 | 6:
+            match enemy:
+                case 1:
+                    points = 300
+                    points += random.randint(0, 150)
+                    reward_system(hero, points, screen)
+                case 2:
+                    points = 450
+                    points += random.randint(0, 300)
+                    reward_system(hero, points, screen)
+                case 3:
+                    boss_reward(hero, screen)
 
-    elif enemy == 3:
-        boss_reward(hero,screen)
+        #Akt 3 *** Akt 3 *** Akt 3
+        case 7 | 8 | 9:
+            match enemy:
+                case 1:
+                    points = 900
+                    points += random.randint(0, 450)
+                    reward_system(hero, points, screen)
+                case 2:
+                    points = 1350
+                    points += random.randint(0, 900)
+                    reward_system(hero, points, screen)
+                case 3:
+                    boss_reward(hero, screen)
         
 
 def boss_reward(hero, screen):
@@ -118,10 +150,8 @@ def boss_reward(hero, screen):
             hero.mental_reduction += 10
         case '3':
             hero.max_inventory += 1
-            #some item has to be given
         case '4':
             hero.max_abilities += 1
-            hero.xp += 150 # sollte dynamisch sein 
             
     hero.life += round(hero.max_life / 2)
     if hero.life >= hero.max_life:
@@ -151,7 +181,7 @@ def reward_system(hero, points, screen):
         hero.xp += points
         text = f"+{points}XP"
         y = buttons_clog.display_text(text, y, screen, font)
-        sleep(1.5)
+        sleep(1)
 
 
 def get_item(hero, item, screen, font, y):
@@ -205,8 +235,8 @@ def release_item(hero, item, screen, font, y):
     choice = buttons_clog.display_answers_clicked(buttons)
     choice = int(choice)
     item = hero.inventory[choice]
-    hero.xp += round(item.xp * 0.3)
-    text = f'+{round(item.xp * 0.3)}XP'
+    hero.xp += round(item.xp * 0.25)
+    text = f'+{round(item.xp * 0.25)}XP'
     y = buttons_clog.display_text(text, y, screen, font)
 
     text = f'{item.name} aus dem Inventar entfernt.'
