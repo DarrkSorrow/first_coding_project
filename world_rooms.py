@@ -122,63 +122,106 @@ def procedual_dungeon(stage):
 
     rnd_room = choices(
         population=[o, e, r],
-        weights=[35, 45, 20],
-        k=21) #Sets number of tuples
+        weights=[30, 45, 25],
+        k=35) #Sets number of tuples
 
-    template = [[o, o, x, e, r],
-                [o, o, x, x, e],
-                [x, x, n, x, x],
-                [e, x, x, ü, e],
-                [r, e, x, e, w]]
-    
-    template = set_no_rooms(template, l=2)
+    match stage:
+        case 1:
+            template = [[o, o, x, x, o],
+                        [o, o, x, x, x],
+                        [x, x, x, x, x],
+                        [x, x, x, ü, e],
+                        [o, x, x, e, w]]
+            l = 3 #NoRoom
+
+        case 4:
+            template = [[o, o, x, x, x, o],
+                        [o, x, x, x, x, e],
+                        [e, x, x, x, x, o],
+                        [o, x, x, x, x, e],
+                        [e, x, x, x, ü, o],
+                        [o, x, x, x, e, w]]
+            l = 5 #NoRoom
+
+        case 7:
+            template = [[o, o, o, e, o, e, o],
+                        [o, x, x, x, x, x, x],
+                        [x, x, x, x, x, x, x],
+                        [x, x, x, x, x, x, x],
+                        [x, x, x, x, x, x, x],
+                        [x, x, x, x, x, ü, e],
+                        [o, e, o, e, o, e, w]]
+            l = 6 #NoRoom
+
+    template = set_no_rooms(template, l)
     template = set_rooms(template, rnd_room)
     return template 
 
 
 def procedual_dungeon_elite(stage):
     
-    rnd_room = choices(
+    rnd_rooms = choices(
         population=[o, e, r],
-        weights=[37, 50, 13],
-        k=30) #Sets number of tuples
+        weights=[30, 50, 20],
+        k=35) #Sets number of tuples
 
-    template = [[o, o, x, e, r],
-                [o, o, x, x, e],
-                [x, x, n, x, x],
-                [e, x, x, ü, b],
-                [r, e, x, b, w]]
+    match stage:
+        case 2:
+            template = [[o, o, x, x, o],
+                        [o, o, x, x, x],
+                        [x, x, x, x, x],
+                        [x, x, e, ü, n],
+                        [o, x, x, b, w]]
+            l = 3 #NoRoom
 
-    template = set_no_rooms(template, l=2)
-    template = set_rooms(template, rnd_room)
+        case 5:
+            template = [[o, o, x, x, x, o],
+                        [o, x, x, x, x, o],
+                        [e, x, x, x, x, e],
+                        [o, x, x, x, x, o],
+                        [e, x, x, x, ü, b],
+                        [o, x, x, x, n, w]]
+            l = 5 #NoRoom
+
+        case 8:
+            template = [[o, o, o, e, o, e, o],
+                        [o, x, x, x, x, x, x],
+                        [x, x, x, x, x, x, x],
+                        [x, x, x, x, x, x, x],
+                        [x, x, x, x, x, x, x],
+                        [x, x, x, x, x, ü, n],
+                        [o, e, o, e, o, b, w]]
+            l = 6 #NoRoom
+
+    template = set_no_rooms(template, l)
+    template = set_rooms(template, rnd_rooms)
     return template
 
 
-def set_rooms(template, rnd_room):
+def set_rooms(template, rnd_rooms):
 
     i = 0
     for row in range(len(template)):
         for column in range(len(template[row])):
             if template[row][column] == x:
-                template[row][column] = rnd_room[i]
+                template[row][column] = rnd_rooms[i]
                 i += 1
     return template
 
 
 def set_no_rooms(template, l):
     """Function to limit NoRoom generation"""
-    rnd_room = choices(
+    rnd_rooms = choices(
         population=[x, n],
-        weights=[70, 30],
+        weights=[80, 20],
         k=30)
     
-    a = 0
-    k = 0
+    a, k = 0, 0
 
     for i, y in enumerate(template):
         for j, z in enumerate(y):
-            if template[i][j] == x:
-                template[i][j] = rnd_room[a]
+            if z == x:
+                template[i][j] = rnd_rooms[a]
                 a += 1
                 if template[i][j] == n:
                     k += 1
