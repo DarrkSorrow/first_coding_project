@@ -1,8 +1,22 @@
 import pygame
 from time import sleep
 import random
-import world, items, abilities, buttons_clog
+import world, buttons_clog, combat
 from combat import hero_combat_stats
+
+
+events = []
+
+def register(act=0):
+
+    def decorate(event):
+        if act == 0:
+            pass
+        elif act == 1:
+            events.append(event)
+        return event
+    
+    return decorate
 
 
 def start_event(hero, stage, screen):
@@ -21,8 +35,6 @@ def start_event(hero, stage, screen):
         if magic_number >= 10:
             return True
         else:
-            events = (event_1, event_2, event_3, event_4, event_5,
-                      event_6, event_7, event_8)
             event = random.choice(events)
             #no b2b same events
             while event in hero.game_state.last_events:
@@ -33,6 +45,7 @@ def start_event(hero, stage, screen):
             hero.game_state.events_in_row += 1
             hero.game_state.enemy_counter = 0 # reset
             event(hero, screen)
+            return False
 
 
 def event_get_item(hero, item, screen):
@@ -64,6 +77,18 @@ def construct_intro(hero, intro, screen):
         sleep(1.7)
 
 
+def standard_event_constructor(hero, intro, answers, screen):
+    
+    font = pygame.font.SysFont(None, 28)
+    construct_intro(hero, intro, screen)
+    buttons = buttons_clog.display_answers(answers, screen)
+    pygame.display.flip()
+    screen.fill((255, 255, 0))
+    y = 100
+
+    return font, buttons, y
+
+
 def display_outro(hero, raw_text, y, screen, font):
 
     world.hero_health_bar(hero, screen)
@@ -76,6 +101,11 @@ def display_outro(hero, raw_text, y, screen, font):
     return y
 
 
+#*** --- *** --- *** --- *** --- ***
+
+#*** --- *** --- *** --- *** --- ***
+
+
 def event_0(hero, screen):
     
     start = "Du kannst einen Gegenstand an dich nehmen."
@@ -83,13 +113,14 @@ def event_0(hero, screen):
 
     intro = [start, a]
 
-    item_1 = items.random_gear()
-    item_2 = items.random_gear()
+    item_1 = world.random_gear()
+    item_2 = world.random_gear()
     while item_1.name == item_2.name:
-        item_2 = items.random_gear()
+        item_2 = world.random_gear()
 
     choice_1 = (f"{item_1.name}")
     choice_2 = (f"{item_2.name}")
+
     answers = [choice_1, choice_2]
 
     font = pygame.font.SysFont(None, 28)
@@ -110,8 +141,8 @@ def event_0(hero, screen):
     return None
 
 
-#Akt1 
-def event_1(hero, screen):
+@register(act=1)
+def event_1_act_1(hero, screen):
 
     start = f"{hero.name} marschiert schnellen Fußes durch fremde Landschaften. "
     a = "Er stößt auf ein verlassenes Grubenhaus etwas abseits der Wege "
@@ -124,15 +155,11 @@ def event_1(hero, screen):
 
     choice_1 = ("1: Eine leere Phiole von den Regalen nehmen und"
         " sie mit dem Aufguss befüllen.")
-    choice_2 = ("2: Sich entkleiden und in die Wanne steigen.") 
+    choice_2 = ("2: Sich entkleiden und in die Wanne steigen.")
+
     answers = [choice_1, choice_2]
     
-    font = pygame.font.SysFont(None, 28)
-    construct_intro(hero, intro, screen)
-    buttons = buttons_clog.display_answers(answers, screen)
-    pygame.display.flip()
-    screen.fill((255, 255, 0))
-    y = 100
+    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
 
     choice = buttons_clog.display_answers_clicked(buttons)
 
@@ -140,7 +167,7 @@ def event_1(hero, screen):
         case "1":
             raw_text = "Du machst die Phiole voll und gehst weiter.."
             y = display_outro(hero, raw_text, y, screen, font)
-            item = items.Item1()
+            item = world.Item1()
             event_get_item(hero, item, screen)
 
         case "2":
@@ -162,7 +189,8 @@ def event_1(hero, screen):
     return None
 
 
-def event_2(hero, screen):
+@register(act=1)
+def event_2_act_1(hero, screen):
 
     start = f"In der entfernung zeichnen sich Umrisse eines Mannes, im Dunst, ab. "
     a = f"{hero.name} und der Fremde näheren sich immer mehr an, " 
@@ -173,14 +201,10 @@ def event_2(hero, screen):
 
     choice_1 = "1: Macht (+ KLEINE BRANDBOMBE)"
     choice_2 = "2: Wissen (+ XP)"
+
     answers = [choice_1, choice_2]
 
-    font = pygame.font.SysFont(None, 28)
-    construct_intro(hero, intro, screen)
-    buttons = buttons_clog.display_answers(answers, screen)
-    pygame.display.flip()
-    screen.fill((255, 255, 0))
-    y = 100
+    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
 
     choice = buttons_clog.display_answers_clicked(buttons)
 
@@ -188,7 +212,7 @@ def event_2(hero, screen):
         case "1":
             raw_text = f"Der Fremde zwinkert und drückt {hero.name} etwas in die Hand."
             y = display_outro(hero, raw_text, y, screen, font) 
-            item = items.Item3()
+            item = world.Item3()
             raw_text = 'Der Fremde geht weiter...'
             display_outro(hero, raw_text, y, screen, font)
             event_get_item(hero, item, screen)
@@ -204,7 +228,8 @@ def event_2(hero, screen):
     return None
 
 
-def event_3(hero, screen):
+@register(act=1)
+def event_3_act_1(hero, screen):
 
     start = f"{hero.name} geht, in einer kleinen Siedlung, eine kleine Treppe "
     a = "hinunter was so aussieht wie eine Schenke. Es wirkt schummrig "
@@ -217,14 +242,10 @@ def event_3(hero, screen):
 
     choice_1 = "1: Nicht wetten. Deines Weges gehen."
     choice_2 = "2: Einsatz abgeben (Wähle ein Item aus deinem Inventar)"
+
     answers = [choice_1, choice_2]
     
-    font = pygame.font.SysFont(None, 28)
-    construct_intro(hero, intro, screen)
-    buttons = buttons_clog.display_answers(answers, screen)
-    pygame.display.flip()
-    screen.fill((255, 255, 0))
-    y = 100
+    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
 
     choice = buttons_clog.display_answers_clicked(buttons)
 
@@ -261,7 +282,8 @@ def event_3(hero, screen):
         y = display_outro(hero, raw_text, y, screen, font)
         raw_text = "Der Buchmacher überreicht dir den Hauptpreis."
         y = display_outro(hero, raw_text, y, screen, font)
-        prize_pool = (items.SimpleWarmogs(), items.SimpleArmor(), items.LifeStone())
+        prize_pool = (world.SimpleWarmogs(),
+                    world.SimpleArmor(), world.LifeStone())
         item = random.choice(prize_pool)
         event_get_item(hero, item, screen)
     else:
@@ -272,7 +294,8 @@ def event_3(hero, screen):
     return None
 
 
-def event_4(hero, screen):
+@register(act=1)
+def event_4_act_1(hero, screen):
 
     start = f"{hero.name} erreicht eine kleine Lichtung tief im Wald. "
     a = "In ihrer Mitte erhebt sich ein uralter steinerner Altar, "
@@ -287,14 +310,10 @@ def event_4(hero, screen):
     choice_1 = "1: Aus der Schale trinken."
     choice_2 = "2: Die Goldmünzen an dich nehmen."
     choice_3 = "3: Den Altar respektvoll verlassen."
+
     answers = [choice_1, choice_2, choice_3]
 
-    font = pygame.font.SysFont(None, 28)
-    construct_intro(hero, intro, screen)
-    buttons = buttons_clog.display_answers(answers, screen)
-    pygame.display.flip()
-    screen.fill((255, 255, 0))
-    y = 100
+    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
 
     choice = buttons_clog.display_answers_clicked(buttons)
 
@@ -328,7 +347,7 @@ def event_4(hero, screen):
             if magic_number <= 4:
                 raw_text = "Zwischen den Münzen findest du einen wertvollen Gegenstand."
                 y = display_outro(hero, raw_text, y, screen, font)
-                item = items.random_item()
+                item = world.random_item()
                 event_get_item(hero, item, screen)
             elif magic_number <= 9:
                 raw_text = "Die Münzen zerfallen augenblicklich zu Staub."
@@ -356,7 +375,8 @@ def event_4(hero, screen):
     return None
 
 
-def event_5(hero, screen):
+@register(act=1)
+def event_5_act_1(hero, screen):
 
     start = f"{hero.name} erblickt einen steinernen Torbogen, "
     a = "der scheinbar mitten im Nichts errichtet wurde. "
@@ -369,14 +389,10 @@ def event_5(hero, screen):
 
     choice_1 = "1: Den Handel eingehen. (-6 MAX HP, lerne eine Fähigkeit)"
     choice_2 = "2: Das Angebot ablehnen und weiterziehen."
+
     answers = [choice_1, choice_2]
 
-    font = pygame.font.SysFont(None, 28)
-    construct_intro(hero, intro, screen)
-    buttons = buttons_clog.display_answers(answers, screen)
-    pygame.display.flip()
-    screen.fill((255, 255, 0))
-    y = 100
+    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
 
     choice = buttons_clog.display_answers_clicked(buttons)
 
@@ -398,7 +414,7 @@ def event_5(hero, screen):
 
             already_learned = False
             for ability in hero.abilities:
-                if isinstance(ability, abilities.Ability1):
+                if isinstance(ability, combat.Ability1):
                     already_learned = True
 
             if already_learned:
@@ -406,10 +422,10 @@ def event_5(hero, screen):
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = '"...Ich lehre dich die wahre Technik..."'
                 y = display_outro(hero, raw_text, y, screen, font)
-                ability = abilities.Ability5()
+                ability = combat.Ability5()
             else:
-                ability = abilities.Ability1()
-            abilities.abilities_from_events(hero, ability, screen)
+                ability = combat.Ability1()
+            combat.abilities_from_events(hero, ability, screen)
 
         case "2":
             raw_text = f"{hero.name} bedankt sich höflich und geht weiter."
@@ -421,7 +437,8 @@ def event_5(hero, screen):
     return None
 
 
-def event_6(hero, screen):
+@register(act=1)
+def event_6_act_1(hero, screen):
 
     start = f"{hero.name} erreicht einen verlassenen Wachposten. "
     a = "Am alten Wachposten stehen Händler nebeneinander aufgebaut. "
@@ -434,20 +451,16 @@ def event_6(hero, screen):
 
     choice_1 = "1: Du misstraust dem Angebot und lehnst dankend ab."
     choice_2 = '2: Einen "Tropfen" Blut eintauschen. (-16 HP und -4 MAX-HP)'
+
     answers = [choice_1, choice_2]
 
     for item in hero.inventory:
-        if isinstance(item, items.SimpleWarmogs):
+        if isinstance(item, world.SimpleWarmogs):
             choice_3 = ("3: Dem Händler den seltenen Gegenstand zeigen (Rüstung der Lebenskraft).")
             answers.append(choice_3)
             break
 
-    font = pygame.font.SysFont(None, 28)
-    construct_intro(hero, intro, screen)
-    buttons = buttons_clog.display_answers(answers, screen)
-    pygame.display.flip()
-    screen.fill((255, 255, 0))
-    y = 100
+    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
 
     choice = buttons_clog.display_answers_clicked(buttons)
 
@@ -467,7 +480,7 @@ def event_6(hero, screen):
             y = display_outro(hero, raw_text, y, screen, font)
             raw_text = '"Ein fairer Handel.", murmelt der Alte und durchsucht seinen Karren.'
             y = display_outro(hero, raw_text, y, screen, font)
-            item = items.RitualDagger()
+            item = world.RitualDagger()
             event_get_item(hero, item, screen)
 
         case "3":
@@ -476,19 +489,20 @@ def event_6(hero, screen):
                 raw_text = '"Ein Artefakt aus der Kluft der Beschwörer."'
                 y = display_outro(hero, raw_text, y, screen, font)
                 for item in hero.inventory: ##trade item
-                    if isinstance(item, items.SimpleWarmogs):
+                    if isinstance(item, world.SimpleWarmogs):
                         item.unequip(hero)
                         break #trade item
                 raw_text = ("Der Händler nimmt den Gegenstand entgegen ")
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = ("und reicht dir stattdessen einen sorgfältig eingewickelten Dolch.")
                 y = display_outro(hero, raw_text, y, screen, font)
-                item = items.RitualDagger()
+                item = world.RitualDagger()
                 event_get_item(hero, item, screen)
     return None
 
 
-def event_7(hero, screen):
+@register(act=1)
+def event_7_act_1(hero, screen):
 
     start = f"{hero.name} erkennt in den Büschen den Schein eines kleinen Feuers. "
     a = "Daneben sitzt ein erschöpfter Mann in einer zerschlissenen Robe. "
@@ -502,14 +516,10 @@ def event_7(hero, screen):
     choice_1 = "1: Den heilenden Trank trinken. (+65 Leben)"
     choice_2 = "2: Die Kräuter des Heilers einnehmen. (+4 Max. Leben)"
     choice_3 = "3: Die schnelle Heilung erlernen. (-40 Speed)"
+
     answers = [choice_1, choice_2, choice_3]
 
-    font = pygame.font.SysFont(None, 28)
-    construct_intro(hero, intro, screen)
-    buttons = buttons_clog.display_answers(answers, screen)
-    pygame.display.flip()
-    screen.fill((255, 255, 0))
-    y = 100
+    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
 
     choice = buttons_clog.display_answers_clicked(buttons)
 
@@ -546,12 +556,13 @@ def event_7(hero, screen):
             y = display_outro(hero, raw_text, y, screen, font)
             raw_text = "-40 Speed"
             y = display_outro(hero, raw_text, y, screen, font)
-            ability = abilities.Ability9()
-            abilities.abilities_from_events(hero, ability, screen)
+            ability = combat.Ability9()
+            combat.abilities_from_events(hero, ability, screen)
     return None
 
 
-def event_8(hero, screen):
+@register(act=1)
+def event_8_act_1(hero, screen):
 
     start = f"{hero.name} wandert auf einer gut befestigten Straße, "
     a = "auf dem ihm ein schwer beladener Händler entgegenkommt. "
@@ -562,19 +573,15 @@ def event_8(hero, screen):
 
     intro = [start, a, b, c, d, e]
 
-    his_jam = items.Item5 #Berserker Blut
+    his_jam = world.Item5 #Berserker Blut
     choice_1 = "1: Du interessierst dich doch nicht für das Artefakt."
     choice_2 = f'Dem Händler {his_jam.item_name} überlassen.'
     choice_3 = 'Den Händler mit Pyromagie beeindrucken.'
     choice_4 = "3: Das Item rauben.(min 65 Spd)"
+
     answers = [choice_1, choice_2, choice_3, choice_4]
 
-    font = pygame.font.SysFont(None, 28)
-    construct_intro(hero, intro, screen)
-    buttons = buttons_clog.display_answers(answers, screen)
-    pygame.display.flip()
-    screen.fill((255, 255, 0))
-    y = 100
+    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
 
     choice = buttons_clog.display_answers_clicked(buttons)
 
@@ -612,7 +619,7 @@ def event_8(hero, screen):
         case "3":
             trick_shown = False
             for spell in hero.abilities:
-                if isinstance(spell, abilities.Ability4):
+                if isinstance(spell, combat.Ability4):
                     hero.mana -= 5
                     if hero.mana < 0:
                         hero.mana = 0
@@ -648,7 +655,7 @@ def event_8(hero, screen):
                 y = display_outro(hero, raw_text, y, screen, font)
                 got_item = False
     if got_item:
-        item = items.KhansHat()
+        item = world.KhansHat()
         event_get_item(hero, item, screen)
     else:
         raw_text = 'Der Händler wippt nervös hin und her.'
@@ -660,8 +667,12 @@ def event_8(hero, screen):
     return None
 
 
-#Akt 2
-def event_9(hero, screen):
+#*** --- *** --- *** --- *** --- ***
+
+#*** --- *** --- *** --- *** --- ***
+
+
+def event_1_act_2(hero, screen):#enemies not included yet
 
     start = 'In den Gassen der Stadt trifft du auf zwielichtige Gestalten'
     a = 'Sie greifen dich nicht an mustern dich aber genau'
@@ -674,14 +685,10 @@ def event_9(hero, screen):
     choice_1 = 'Du lehnst ab und versuchst zügig dich wieder zu entfernen.'
     choice_2 = 'Du akzeptierst den Kampf und machst dich bereit!'
     choice_3 = 'Du forderst seinen größeren stärkeren Kollegen heraus.[Elite] '
+
     answers = [choice_1, choice_2, choice_3]
 
-    font = pygame.font.SysFont(None, 28)
-    construct_intro(hero, intro, screen)
-    buttons = buttons_clog.display_answers(answers, screen)
-    pygame.display.flip()
-    screen.fill((255, 255, 0))
-    y = 100
+    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
 
     choice = buttons_clog.display_answers_clicked(buttons)
     match choice:
@@ -706,6 +713,121 @@ def event_9(hero, screen):
         case "3":
             raw_text = 'Mein Name ist KARIM.'
             y = display_outro(hero, raw_text, y, screen, font)
-            raw_text = 'Mach dich auf Schmerzen gefasst.'
+            raw_text = 'Mach dich auf Schmerzen gefasst...'
             y = display_outro(hero, raw_text, y, screen, font)
             #Gegner wird geladen und der Kampf beginnt
+
+
+def event_2_act_2(hero, screen):
+
+    start = f'Beim Gehen entlang des Stadtrandes strahlt {hero.name}, '
+    a = 'die untergehende Sonne, vergnügt, aufs Gesicht.'
+    b = 'Du schlenderst weiter und stößt auf eine Brücke.'
+    c = 'Unter der Brücke findest du ein fremdes Lager,'
+    d = 'dass zur Zeit verlassen scheint.'
+
+    intro = [start, a, b, c, d]
+
+    font = pygame.font.SysFont(None, 28)
+    construct_intro(hero, intro, screen)
+
+    danger, enemy_arrived, hero_left = 1, False, False
+
+    while not enemy_arrived or not hero_left:
+
+        display_danger = 10
+        if danger == 5:
+            display_danger = 20
+        elif danger == 9:
+            display_danger = 50
+            
+
+        choice_1 = 'Das Lager verlassen, ohne etwas anzurühren.'
+        choice_2 = f'Das Lager nach Nützlichem durchsuchen.. ({display_danger}%: Gefahr)'
+
+        answers = [choice_1, choice_2]
+
+        screen.fill((255, 255, 0))
+        buttons = buttons_clog.display_answers(answers, screen)
+        pygame.display.flip()
+        y = 100
+
+        choice = buttons_clog.display_answers_clicked(buttons)
+        match choice:
+            case "1":
+                hero_left = True
+                raw_text = f'{hero.name} verlässt das Lager und geht weiter.'
+                y = display_outro(hero, raw_text, y, screen, font)
+            
+            case "2":
+                magic_number = random.randint(danger, 10)
+                if magic_number == 10:
+                    raw_text = 'Es sind deutliche SCHRITTE zu hören!'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = f'{hero.name} macht sich bereit,'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = 'JEMANDEN oder ETWAS zu bekämpfen.'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    enemy_arrived = True   #stage=5 
+                    combat.start_elite(hero, 5, screen) 
+
+                else:
+                    match danger:
+                        case 1:
+                            magic_number ==random.choice((1, 2))
+                            if magic_number == 1:
+                                xp_gain = 80
+                                hero.xp += xp_gain
+                                raw_text = f'{hero.name} findet in Säcken einige Erzbrocken'
+                                y = display_outro(hero, raw_text, y, screen, font)
+                                raw_text = f'+{xp_gain} Erz'
+                                hero_left = True
+                                raw_text = f'{hero.name} zieht weiter und hofft auf das Beste.'
+                                y = display_outro(hero, raw_text, y, screen, font)
+                            else:
+                                danger = 5
+                        
+                        case 5:
+                            magic_number ==random.choice((1, 2))
+                            if magic_number == 1:
+                                #get some consumable
+                                hero_left = True
+                                #some text/ hero leaves
+                            else:
+                                danger = 9
+
+                        case 9:
+                            #get a good item
+                            hero_left = True
+                            #some text/ hero leaves
+    return None
+
+
+def event_template(hero, screen):#template
+    
+    start = ''
+    a = ''
+    b = ''
+    c = ''
+
+    intro = [start, a, b, c]
+
+    choice_1 = ''
+    choice_2 = ''
+    choice_3 = ''
+
+    answers = [choice_1, choice_2, choice_3]
+
+    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
+
+    choice = buttons_clog.display_answers_clicked(buttons)
+    match choice:
+        case "1":
+            raw_text = 'TEMPLATE'
+            y = display_outro(hero, raw_text, y, screen, font)
+
+        case "2":
+            pass
+
+        case "3":
+            pass
