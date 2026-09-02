@@ -1,36 +1,36 @@
 import pygame
 from random import choice
 from buffs import *
+from abilities import overhp_before_hp
+
+
+consumable_pool, gear_pool = [], []
+
+def register(type='gear'):
+
+    def decorate(item):
+        if type == 'item':
+            consumable_pool.append(item)
+        elif type == 'gear':
+            gear_pool.append(item)
+        return item
+
+    return decorate
 
 
 def random_item():
-    items = (Item1, Item2, Item3, Item4, Item5,
-             Item6, Item7)
+    items = consumable_pool
     item = choice(items)
     return item()
 
 
 def random_gear():
-    items = (ShortSword, LongSword, ShatteredRunes,
-            SimpleArmor, Boots, SimpleWarmogs, ManaMantle,
-            LifeStone, KhansHat, ElvenBoots,
-            RitualDagger, SoulStealer)
+    items = gear_pool
     item = choice(items)
     return item()
 
 
-#IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
-simple_health_potion = 'images/items/simple_health_potion.png'
-simple_mana_potion = 'images/items/simple_mana_potion.png'
-simple_fire_bomb = 'images/items/simple_fire_bomb.png'
-moderate_health_potion = 'images/items/moderate_health_potion.png'
-berserk_blood = 'images/items/berserk_blood.png'
-moderate_fire_bomb = 'images/items/moderate_fire_bomb.png'
-good_mana_potion = 'images/items/good_mana_potion.png'
-#IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
-
-
-class Item:
+class Consumable:
     
     def __init__(self, name, power, charges, xp,
                   symbol, image):
@@ -40,6 +40,8 @@ class Item:
         self.xp = xp
         self.symbol = symbol
         self.image = image
+        
+        self.gear = False
         self.active = True
         self.dungeon = False
         self.passive_effekt = False
@@ -64,7 +66,50 @@ class Item:
         hero.inventory.remove(self)
 
 
-class Item1(Item):#HEILTRANK
+class Gear:
+
+    def __init__(self, name, power, xp, symbol, image):
+        self.name = name
+        self.power = power
+        self.xp = xp
+        self.symbol = symbol
+        self.image = image
+
+        self.gear = True
+        self.active = False
+        self.passive_effekt = False
+        self.after_combat_effekt = False
+        self.dungeon = False
+
+        self.execution_10 = False
+        self.execution_15 = False
+        self.execution_20 = False
+    
+        self.image = pygame.image.load(
+            image)
+        self.image =pygame.transform.scale(self.image, (50, 50))
+        self.rect = self.image.get_rect()
+
+    def __repr__(self):
+        return self.name
+    
+    def use_item(self, hero, enemy):
+        print("placeholder")
+
+
+#IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
+simple_health_potion = 'images/items/simple_health_potion.png'
+simple_mana_potion = 'images/items/simple_mana_potion.png'
+simple_fire_bomb = 'images/items/simple_fire_bomb.png'
+moderate_health_potion = 'images/items/moderate_health_potion.png'
+berserk_blood = 'images/items/berserk_blood.png'
+moderate_fire_bomb = 'images/items/moderate_fire_bomb.png'
+good_mana_potion = 'images/items/good_mana_potion.png'
+#IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
+
+
+@register(type='item')
+class Item1(Consumable):#HEILTRANK
 
     def __init__(self):
         super().__init__("EINFACHER HEILTRANK",
@@ -86,7 +131,8 @@ class Item1(Item):#HEILTRANK
             combat_log.add(text)
 
 
-class Item2(Item):#ODEM-ESSENZ
+@register(type='item')
+class Item2(Consumable):#ODEM-ESSENZ
 
     def __init__(self):
         super().__init__("EINFACHE ODEM-ESSENZ",
@@ -108,26 +154,31 @@ class Item2(Item):#ODEM-ESSENZ
             combat_log.add(text)
 
 
-class Item3(Item):#BRANDBOMBE
+@register(type='item')
+class Item3(Consumable):#BRANDBOMBE
 
     def __init__(self):
         super().__init__("KLEINE BRANDBOMBE",
-                          20, 1, 55, '', simple_fire_bomb)
+                          20, 1, 60, '', simple_fire_bomb)
         
     def use_item(self, hero, enemy, combat_log):
         block = (1 - enemy.reduction / 100)
+        if block > 1:
+            block = 1
         damage_taken1 = round(self.power*block)
         if damage_taken1 < 0:
             damage_taken1 = 0
-        enemy.life -= damage_taken1
         block = (1 - enemy.mental_reduction / 100)
+        if block > 1:
+            block = 1
         damage_taken2 = round(self.power*block)
         if damage_taken2 < 0:
             damage_taken2 = 0
-        enemy.life -= damage_taken2
         damage_taken = damage_taken1 + damage_taken2
+        damage_taken = overhp_before_hp(enemy, damage_taken)
+        enemy.life -= damage_taken
         if damage_taken >= 0:
-            ItemBuff2(3, 2).buff(enemy)
+            FireH2E(3, 2).buff(enemy)
         text = f"{enemy.name} erleidet {damage_taken} Schaden!"
         combat_log.add(text)
         self.charges -= 1
@@ -135,11 +186,12 @@ class Item3(Item):#BRANDBOMBE
             hero.inventory.remove(self)
 
 
-class Item4(Item):#prakt. HEILTRANK
+@register(type='item')
+class Item4(Consumable):#prakt. HEILTRANK
 
     def __init__(self):
         super().__init__("PRAKTISCHER HEILTRANK",
-                          50, 2, 85, "", moderate_health_potion)
+                          60, 2, 110, "", moderate_health_potion)
         self.dungeon = True
         self.update_symbol()
 
@@ -163,15 +215,16 @@ class Item4(Item):#prakt. HEILTRANK
             combat_log.add(text)
 
 
-class Item5(Item):#BERSERKER BLUT
+@register(type='item')
+class Item5(Consumable):#BERSERKER BLUT
     item_name = "BERSERKER-BLUT" #needed for an event
 
     def __init__(self):
         super().__init__("BERSERKER-BLUT",
-                        0, 1, 100, "", berserk_blood)
+                        0, 1, 70, "", berserk_blood)
         
     def use_item(self, hero, enemy, combat_log):
-        ItemBuff1(2, 10).buff(hero)
+        BerserkH2H(3, 10).buff(hero)
         text = f"Die Macht der Ahnen übermannt {hero.name}."
         combat_log.add(text)
         self.charges -= 1
@@ -179,11 +232,12 @@ class Item5(Item):#BERSERKER BLUT
             hero.inventory.remove(self)
 
 
-class Item6(Item):#verb. BRANDBOMBE
+@register(type='item')
+class Item6(Consumable):#verb. BRANDBOMBE
 
     def __init__(self):
         super().__init__("VERBESSERTE BRANDBOMBE",
-                          20, 2, 100, '', moderate_fire_bomb)
+                          21, 2, 100, '', moderate_fire_bomb)
         self.update_symbol()
 
     def update_symbol(self):
@@ -191,18 +245,22 @@ class Item6(Item):#verb. BRANDBOMBE
 
     def use_item(self, hero, enemy, combat_log):
         block = (1 - enemy.reduction / 100)
+        if block > 1:
+            block = 1
         damage_taken1 = round(self.power * block)
         if damage_taken1 < 0:
             damage_taken1 = 0
-        enemy.life -= damage_taken1
         block = (1 - enemy.mental_reduction / 100)
+        if block > 1:
+            block = 1
         damage_taken2 = round(self.power * block)
         if damage_taken2 < 0:
             damage_taken2 = 0
-        enemy.life -= damage_taken2
         damage_taken = damage_taken1 + damage_taken2
+        damage_taken = overhp_before_hp(enemy, damage_taken)
+        enemy.life -= damage_taken
         if damage_taken >= 0:
-            ItemBuff2(4, 3).buff(enemy)
+            FireH2E(4, 3).buff(enemy)
         text = f"{enemy.name} erleidet {damage_taken} Schaden!"
         combat_log.add(text)
         self.charges -= 1
@@ -211,7 +269,8 @@ class Item6(Item):#verb. BRANDBOMBE
             hero.inventory.remove(self)
 
 
-class Item7(Item):#GUTE ODEM-ESSENZ
+@register(type='item')
+class Item7(Consumable):#GUTE ODEM-ESSENZ
 
     def __init__(self):
         super().__init__("GUTE ODEM-ESSENZ",
@@ -230,11 +289,11 @@ class Item7(Item):#GUTE ODEM-ESSENZ
             combat_log.add(text)
             text = f"+{self.power} ODEM"
             combat_log.add(text)
-            ItemBuff3(16, 3).buff(hero)
+            ClarityH2H(16, 3).buff(hero)
         self.charges -= 1
         if self.charges == 0:
             hero.inventory.remove(self)
-    
+
 
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 short_sword = 'images/items/gear/short_sword.png'
@@ -255,36 +314,7 @@ moon_stone = 'images/items/gear/moon_stone.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 
 
-class Gear:
-
-    def __init__(self, name, power, xp, symbol, image):
-        self.name = name
-        self.power = power
-        self.xp = xp
-        self.symbol = symbol
-        self.image = image
-
-        self.active = False
-        self.passive_effekt = False
-        self.after_combat_effekt = False
-        self.dungeon = False
-
-        self.execution_10 = False
-        self.execution_15 = False
-        self.execution_20 = False
-    
-        self.image = pygame.image.load(
-            image)
-        self.image =pygame.transform.scale(self.image, (50, 50))
-        self.rect = self.image.get_rect()
-
-    def __repr__(self):
-        return self.name
-    
-    def use_item(self, hero, enemy):
-        print("placeholder")
-
-
+@register()
 class ShortSword(Gear):
 
     def __init__(self):
@@ -302,6 +332,7 @@ class ShortSword(Gear):
         hero.inventory.remove(self)
 
 
+@register()
 class LongSword(Gear):
 
     def __init__(self):
@@ -317,6 +348,7 @@ class LongSword(Gear):
         hero.inventory.remove(self)
 
 
+@register()
 class ShatteredRunes(Gear):
 
     def __init__(self):
@@ -336,6 +368,7 @@ class ShatteredRunes(Gear):
         hero.inventory.remove(self)
 
 
+@register()
 class SimpleArmor(Gear):
 
     def __init__(self):
@@ -351,8 +384,8 @@ class SimpleArmor(Gear):
         hero.inventory.remove(self)
 
 
+@register()
 class Boots(Gear):
-
     def __init__(self):
         super().__init__("WANDERSTIEFEL",
                         34, 138, '', boots)
@@ -366,6 +399,7 @@ class Boots(Gear):
         hero.inventory.remove(self)
 
 
+@register()
 class SimpleWarmogs(Gear):
 
     def __init__(self):
@@ -383,6 +417,7 @@ class SimpleWarmogs(Gear):
         hero.inventory.remove(self)
 
 
+@register()
 class ManaMantle(Gear):
 
     def __init__(self):
@@ -403,6 +438,7 @@ class ManaMantle(Gear):
 #^^^ UNDER 150 XP | obtainable from normal enemies ^^^
 
 
+@register()
 class LifeStone(Gear):
 
     def __init__(self):
@@ -422,6 +458,7 @@ class LifeStone(Gear):
             hero.life = hero.max_life
 
 
+@register()
 class KhansHat(Gear):
 
     def __init__(self):
@@ -439,6 +476,7 @@ class KhansHat(Gear):
         hero.inventory.remove(self)
 
 
+@register()
 class ElvenBoots(Gear):
 
     def __init__(self):
@@ -456,6 +494,7 @@ class ElvenBoots(Gear):
         hero.inventory.append(self)
 
 
+@register()
 class RitualDagger(Gear):
 
     def __init__(self):
@@ -472,6 +511,7 @@ class RitualDagger(Gear):
         hero.inventory.remove(self)
 
 
+@register()
 class SoulStealer(Gear):
 
     def __init__(self):
@@ -490,6 +530,7 @@ class SoulStealer(Gear):
             hero.mana = self.power
 
 
+@register()
 class OldPistole(Gear):
 
     def __init__(self):
@@ -507,6 +548,7 @@ class OldPistole(Gear):
         hero.inventory.remove(self)
 
 
+@register()
 class MoonStone(Gear):
 
     def __init__(self):
@@ -529,7 +571,9 @@ class MoonStone(Gear):
         self.active = False
         hero.mental_reduction -= self.power
         hero.mana += self.power * 3
-        text = 'Der Stein hat sein Schimmern temporär verloren.'
+        if hero.mana > hero.max_mana:
+            hero.mana = hero.max_mana
+        text = 'Der Stein hat seinen Schimmer temporär verloren.'
         combat_log.add(text)
 
     def after_combat(self, hero):
@@ -539,11 +583,75 @@ class MoonStone(Gear):
 
 
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
+healing_salve = 'images/items/healing_salve.png'
+#IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
+
+
+class HealingSalve(Consumable):
+
+    def __init__(self):
+        super().__init__("Heilsalbe",
+                        33, 2, 155,
+                        '', healing_salve)
+        self.update_symbol()
+
+    def update_symbol(self):
+        self.symbol = f"{self.charges}"
+
+    def use_item(self, hero, enemy, combat_log):
+        hero.life += self.power
+        if combat_log == None:
+            hero.life += self.power
+        if hero.life >= hero.max_life:
+            hero.life = hero.max_life
+        if combat_log != None:
+            RegenerationH2H(11, 10).buff(hero)
+            text = "Du Salbe legt sich über die Haut"
+            combat_log.add(text)
+            text = "wie Honig über einen Apfel."
+            combat_log.add(text)
+        self.charges -= 1
+        self.update_symbol()
+        if self.charges == 0:
+            hero.inventory.remove(self)
+
+
+class HandyManaPotion(Consumable):#reused and altered for act 2
+    
+    def __init__(self):
+        super().__init__("PRAKTISCHE ODEM-ESSENZ",
+                        45, 2, 160,
+                        '', good_mana_potion)#icon png from act 1
+        self.dungeon = True
+        self.update_symbol()
+
+    def update_symbol(self):
+        self.symbol = f"{self.charges}"
+
+    def use_item(self, hero, enemy, combat_log):
+        hero.mana += self.power
+        if combat_log == None:
+            hero.mana += self.power
+        if hero.mana > hero.max_mana:
+            hero.mana = hero.max_mana
+        if combat_log != None:
+            text = "Die gute ODEM-ESSENZ sorgt für Klarheit."
+            combat_log.add(text)
+            text = f"+{self.power} ODEM"
+            combat_log.add(text)
+            ClarityH2H(16, 3).buff(hero)
+        self.charges -= 1
+        self.update_symbol()
+        if self.charges == 0:
+            hero.inventory.remove(self)
+
+
+#IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 shuko_claws = 'images/items/gear/shuko_claws.png'            
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
             
 
-class ShukoClaws(Gear):#not in rotation
+class ShukoClaws(Gear):
     def __init__(self):
         super().__init__("Shuko-Krallen", 
                         0, 280, '', shuko_claws)
