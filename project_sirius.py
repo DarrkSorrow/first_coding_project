@@ -16,10 +16,10 @@ class GameState:
 
 
 class Hero:
-    
+
     def __init__(self, name):
 
-        self.game_state = GameState()#saves last enemy last event etc
+        self.game_state = GameState()
 
         self.name = name
         self.life, self.max_life = 100, 100
@@ -27,30 +27,60 @@ class Hero:
         self.mental_reduction = 0 #percent
         self.damage = 15
         self.speed = 50
-        self.critical = 0#not displayed stat
-        self.mana, self.max_mana = 15, 100
+        self.critical = 0
+        self.accuracy = 0
+        self.mana, self.max_mana = 0, 100
         self.xp = 0
 
         self.max_inventory, self.max_abilities = 4, 2
         self.inventory, self.abilities = [], []
-        self.over_hp = 0#temporary block for dmg value by value
+        self.pocket_size, self.pockets = 0, []
+        self.over_hp = 0
         self.buffs = []
     
+
     def defend(self, combat_log):
         self.dodge += 15
         self.reduction += 30
         self.mana += 15
+        if self.mana >= self.max_mana:
+            self.mana = self.max_mana
         self.over_hp += 10
         text = "ZERTUS geht in Verteidigungsstellung!"
         combat_log.add(text)
 
+
     def instant_defend(self):
         self.speed += 600
-    
+
+
     def undo_defend(self):
         self.speed -= 600
         self.reduction -= 30
         self.dodge -= 15
+
+
+    def instant_item(self, combat_log):
+        active_items = []
+        for item in self.inventory:
+            if item.active:
+                active_items.append(item)
+        if active_items == []:
+            text = ("Du hast doch garnichts.")
+            combat_log.add(text)
+            self.dodge += 15
+            self.speed += 300
+        else:
+            self.dodge += 15
+            self.speed += 300
+            text = (f"{self.name} versucht blitzschnell in seine Tasche zu greifen!")
+            combat_log.add(text)
+
+
+    def undo_instant_item(self):
+        self.dodge -= 15
+        self.speed -= 300
+
 
     def decay_over_hp(self):
         if self.over_hp == 1:
@@ -59,9 +89,17 @@ class Hero:
             self.over_hp = round(self.over_hp * 0.7)
 
 
+    def stunned_or_not(self):
+        magic_number = randint(0, 100)
+        for buff in self.buffs:
+            if buff.stun and buff.power >= magic_number:
+                return True
+
+
 class Adventurer(Hero):
     def __init__(self):
         super().__init__("ZERTUS")
+        self.mana = int(self.max_life / 2)
 
 
 def draw_map(position, dungeon, screen):
@@ -159,7 +197,8 @@ while hero.life > 0:
 
     #*** NORMAL FIGHT ***
     if dungeon[position[0]][position[1]].fight == True:
-
+# this random if is needed
+        
         #*** SURPRISE ELITE ***
         if hero.game_state.enemy_counter <= 1:
             pass
@@ -193,7 +232,7 @@ while hero.life > 0:
 
 
     #*** ELITE FIGHT ***
-    if dungeon[position[0]][position[1]].elite == True:
+    elif dungeon[position[0]][position[1]].elite == True:
         combat.start_elite(hero, stage, screen)
         if hero.life > 0:
             enemy = 2 # elite Gegner
@@ -214,5 +253,5 @@ while hero.life > 0:
     #*** BOSS FIGHT ***
 
 
-    clock.tick(10)
+    clock.tick(30)
     pygame.display.flip()
