@@ -4,28 +4,56 @@ from buffs import *
 from abilities import overhp_before_hp
 
 
-consumable_pool, gear_pool = [], []
+consumable_pool, consumable_pool_2, consumable_pool_3 = [], [], []
+gear_pool, gear_pool_2, gear_pool_3 = [], [], []
 
-def register(type='gear'):
+def register(type='gear', act=1):
 
     def decorate(item):
-        if type == 'item':
+
+        if type == 'item' and act == 1:
             consumable_pool.append(item)
-        elif type == 'gear':
+        elif type == 'item' and act == 2:
+            consumable_pool_2.append(item)
+        elif type == 'item' and act == 3:
+            consumable_pool_3.append(item)
+
+        elif type == 'gear' and act == 1:
             gear_pool.append(item)
+        elif type == 'gear' and act == 2:
+            gear_pool_2.append(item)
+        elif type == 'gear' and act == 3:
+            gear_pool_3.append(item)
+
+        print(f'consumable_act1: {consumable_pool}')
+        print(f'consumable_act2: {consumable_pool_2}')
+        print(f'gear_act1: {gear_pool}')
+        print(f'gear_act2: {gear_pool_2}')
         return item
 
     return decorate
 
 
-def random_item():
-    items = consumable_pool
+def random_item(stage):
+    match stage:
+        case 0 | 1 | 2:
+            items = consumable_pool
+        case 4 | 5:
+            items = consumable_pool_2
+        case 7 | 8:
+            items = consumable_pool_3
     item = choice(items)
     return item()
 
 
-def random_gear():
-    items = gear_pool
+def random_gear(stage):
+    match stage:
+        case 0 | 1 | 2:
+            items = gear_pool
+        case 4 | 5:
+            items = gear_pool_2
+        case 7 | 8:
+            items = gear_pool_3
     item = choice(items)
     return item()
 
@@ -59,11 +87,20 @@ class Consumable:
     def __repr__(self):
         return self.name
     
-    def equip(self, hero):
-        hero.inventory.append(self)
+    def __str__(self):
+        return self.name
+    
+    def _append(self, hero):
+        if len(hero.pockets) < hero.pocket_size:
+            hero.pockets.append(self)
+        else:
+            hero.inventory.append(self)
 
-    def unequip(self, hero):
-        hero.inventory.remove(self)
+    def _remove(self, hero):
+        try:
+            hero.pockets.remove(self)
+        except ValueError:
+            hero.inventory.remove(self)
 
 
 class Gear:
@@ -113,7 +150,7 @@ class Item1(Consumable):#HEILTRANK
 
     def __init__(self):
         super().__init__("EINFACHER HEILTRANK",
-                        60, 1, 50,
+                        60, 1, 55,
                         '', simple_health_potion)
         self.dungeon = True
 
@@ -123,7 +160,7 @@ class Item1(Consumable):#HEILTRANK
             hero.life = hero.max_life
         self.charges -= 1
         if self.charges == 0:
-            hero.inventory.remove(self)
+            self._remove(hero)
         if combat_log != None:#For usage in dungeon
             text = "Du nimmst einen kräftigen Schluck"
             combat_log.add(text)
@@ -146,7 +183,7 @@ class Item2(Consumable):#ODEM-ESSENZ
             hero.mana = hero.max_mana
         self.charges -= 1
         if self.charges == 0:
-            hero.inventory.remove(self)
+            self._remove(hero)
         if combat_log != None:#for usage in dungeon
             text = "Die ODEM-ESSENZ erhöht deine Macht."
             combat_log.add(text)
@@ -159,7 +196,7 @@ class Item3(Consumable):#BRANDBOMBE
 
     def __init__(self):
         super().__init__("KLEINE BRANDBOMBE",
-                          20, 1, 60, '', simple_fire_bomb)
+                          20, 1, 65, '', simple_fire_bomb)
         
     def use_item(self, hero, enemy, combat_log):
         block = (1 - enemy.reduction / 100)
@@ -183,9 +220,10 @@ class Item3(Consumable):#BRANDBOMBE
         combat_log.add(text)
         self.charges -= 1
         if self.charges == 0:
-            hero.inventory.remove(self)
+            self._remove(hero)
 
 
+@register(type='item', act=2)
 @register(type='item')
 class Item4(Consumable):#prakt. HEILTRANK
 
@@ -205,7 +243,7 @@ class Item4(Consumable):#prakt. HEILTRANK
         self.charges -= 1
         self.update_symbol()
         if self.charges == 0:
-            hero.inventory.remove(self)
+            self._remove(hero)
         if combat_log != None:#For usage in dungeon
             text = "Du nimmst einen kräftigen Schluck"
             combat_log.add(text)
@@ -229,15 +267,16 @@ class Item5(Consumable):#BERSERKER BLUT
         combat_log.add(text)
         self.charges -= 1
         if self.charges == 0:
-            hero.inventory.remove(self)
+            self._remove(hero)
 
 
+@register(type='item', act=2)
 @register(type='item')
 class Item6(Consumable):#verb. BRANDBOMBE
 
     def __init__(self):
         super().__init__("VERBESSERTE BRANDBOMBE",
-                          21, 2, 100, '', moderate_fire_bomb)
+                          21, 2, 110, '', moderate_fire_bomb)
         self.update_symbol()
 
     def update_symbol(self):
@@ -266,7 +305,7 @@ class Item6(Consumable):#verb. BRANDBOMBE
         self.charges -= 1
         self.update_symbol()
         if self.charges == 0:
-            hero.inventory.remove(self)
+            self._remove(hero)
 
 
 @register(type='item')
@@ -292,7 +331,7 @@ class Item7(Consumable):#GUTE ODEM-ESSENZ
             ClarityH2H(16, 3).buff(hero)
         self.charges -= 1
         if self.charges == 0:
-            hero.inventory.remove(self)
+            self._remove(hero)
 
 
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
@@ -499,7 +538,7 @@ class RitualDagger(Gear):
 
     def __init__(self):
         super().__init__("Ritual-Dolch",
-                         2, 188, '', ritual_dagger)
+                         3, 195, '', ritual_dagger)
         self.execution_10 = True
 
     def equip(self, hero):
@@ -535,7 +574,7 @@ class OldPistole(Gear):
 
     def __init__(self):
         super().__init__("Alte Pistole",
-                         15, 220, '', old_pistole)
+                         14, 210, '', old_pistole)
         
     def equip(self, hero):
         hero.inventory.append(self)
@@ -578,7 +617,7 @@ class MoonStone(Gear):
 
     def after_combat(self, hero):
         if not self.active:
-            hero.mental_redcution += self.power
+            hero.mental_reduction += self.power
             self.active = True
 
 
@@ -587,11 +626,12 @@ healing_salve = 'images/items/healing_salve.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 
 
+@register(type='item', act=2)
 class HealingSalve(Consumable):
 
     def __init__(self):
         super().__init__("Heilsalbe",
-                        33, 2, 155,
+                        33, 2, 160,
                         '', healing_salve)
         self.update_symbol()
 
@@ -613,14 +653,15 @@ class HealingSalve(Consumable):
         self.charges -= 1
         self.update_symbol()
         if self.charges == 0:
-            hero.inventory.remove(self)
+            self._remove(hero)
 
 
+@register(type='item', act=2)
 class HandyManaPotion(Consumable):#reused and altered for act 2
     
     def __init__(self):
         super().__init__("PRAKTISCHE ODEM-ESSENZ",
-                        45, 2, 160,
+                        45, 2, 165,
                         '', good_mana_potion)#icon png from act 1
         self.dungeon = True
         self.update_symbol()
@@ -643,22 +684,73 @@ class HandyManaPotion(Consumable):#reused and altered for act 2
         self.charges -= 1
         self.update_symbol()
         if self.charges == 0:
-            hero.inventory.remove(self)
+            self._remove(hero)
 
 
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
-shuko_claws = 'images/items/gear/shuko_claws.png'            
+shuko_claws = 'images/items/gear/shuko_claws.png'
+sobi_mask = 'images/items/gear/sobi_mask.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
-            
+back_pack = 'images/items/gear/back_pack.png'
+#IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 
+
+@register(act=2)
 class ShukoClaws(Gear):
+
     def __init__(self):
         super().__init__("Shuko-Krallen", 
-                        0, 280, '', shuko_claws)
+                        0, 400, '', shuko_claws)
+        
     def equip(self, hero):
         self.power = round(hero.speed / 9)#Set power for Item
         hero.inventory.append(self)#only once by equiping
         hero.damage += self.power
+
     def unequip(self, hero):
         hero.damage -= self.power
+        hero.inventory.remove(self)
+
+
+@register(act=2)
+class SobiMask(Gear):
+
+    def __init__(self):
+        super().__init__("Sobi-Maske",
+                        5, 350, '', sobi_mask)
+        
+    def equip(self, hero):
+        hero.inventory.append(self)
+        hero.mental_reduction += self.power
+        hero.dodge += self.power
+        hero.max_life += self.power
+
+    def unequip(self, hero):
+        hero.max_life -= self.power
+        if hero.life > hero.max_life:
+            hero.life = hero.max_life
+        hero.dodge -= self.power
+        hero.mental_reduction -= self.power
+        hero.inventory.remove(self)
+
+
+#^^^ UNDER 450 XP | obtainable from normal enemies ^^^
+        
+
+@register(act=2)
+class BackPack(Gear):
+
+    def __init__(self):
+        super().__init__('RUCKSACK',
+                        1, 615, '', back_pack)
+        
+    def equip(self, hero):
+        hero.inventory.append(self)
+        hero.pocket_size += 2
+
+    def unequip(self, hero):
+        hero.pocket_size -= 2
+        while not len(hero.pockets) <= hero.pocket_size:
+            hero.xp += round(hero.pockets[-1].xp * 0.15)
+            del hero.pockets[-1]
         hero.inventory.remove(self)
