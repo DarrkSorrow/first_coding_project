@@ -142,6 +142,7 @@ clock = pygame.time.Clock()
 stage = 0
 dungeon = world.generate_world(stage)
 hero = Adventurer()
+world.arm_hero(hero)
 combat.train_hero(hero)
 position = [0, 0]
 
