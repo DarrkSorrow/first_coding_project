@@ -5,15 +5,19 @@ import world, buttons_clog, combat
 from combat import hero_combat_stats
 
 
-events = []
+act_1_pool, act_2_pool, act_3_pool = [], [], []
 
 def register(act=0):
 
     def decorate(event):
-        if act == 0:
-            pass
-        elif act == 1:
-            events.append(event)
+
+        match act:
+            case 1:
+                act_1_pool.append(event)
+            case 2:
+                act_2_pool.append(event)
+            case 3:
+                act_3_pool.append(event)
         return event
     
     return decorate
@@ -21,31 +25,41 @@ def register(act=0):
 
 def start_event(hero, stage, screen):
 
-    if stage == 0: #START ITEM
-        event = event_0
-        #increases eventStreak
-        hero.game_state.events_in_row += 1
-        hero.game_state.enemy_counter = 0 # reset
-        event(hero, screen)
-    
-    elif stage > 0:
-        magic_number = random.randint(1, 10)
-        #b2b events, increases ambushChance
-        magic_number += hero.game_state.events_in_row * 2
-        if magic_number >= 10:
-            return True
-        else:
-            event = random.choice(events)
-            #no b2b same events
-            while event in hero.game_state.last_events:
-                event = random.choice(events)
-            #saves last 3 events to not be repeated
-            hero.game_state.last_events.append(event)
+    match stage:
+        case 0: #START ITEM
+            event = event_0
             #increases eventStreak
             hero.game_state.events_in_row += 1
             hero.game_state.enemy_counter = 0 # reset
-            event(hero, screen)
+            event(hero, stage, screen)
             return False
+        
+        case 1 | 2:
+            events = act_1_pool
+
+        case 4 | 5:
+            events = act_2_pool
+
+        case 7 | 8:
+            events = act_3_pool
+
+    magic_number = random.randint(1, 10)
+    #b2b events, increases ambushChance
+    magic_number += hero.game_state.events_in_row * 2
+    if magic_number >= 10:
+        return True
+    else:
+        event = random.choice(events)
+        #no b2b same events
+        while event in hero.game_state.last_events:
+            event = random.choice(events)
+        #saves last 3 events to not be repeated
+        hero.game_state.last_events.append(event)
+        #increases eventStreak
+        hero.game_state.events_in_row += 1
+        hero.game_state.enemy_counter = 0 # reset
+        event(hero, stage, screen)
+        return False
 
 
 def event_get_item(hero, item, screen):
@@ -106,17 +120,17 @@ def display_outro(hero, raw_text, y, screen, font):
 #*** --- *** --- *** --- *** --- ***
 
 
-def event_0(hero, screen):
+def event_0(hero, stage, screen):
     
     start = "Du kannst einen Gegenstand an dich nehmen."
     a = "Wähle mit Bedacht."
 
     intro = [start, a]
 
-    item_1 = world.random_gear()
-    item_2 = world.random_gear()
+    item_1 = world.random_gear(stage)
+    item_2 = world.random_gear(stage)
     while item_1.name == item_2.name:
-        item_2 = world.random_gear()
+        item_2 = world.random_gear(stage)
 
     choice_1 = (f"{item_1.name}")
     choice_2 = (f"{item_2.name}")
@@ -142,7 +156,7 @@ def event_0(hero, screen):
 
 
 @register(act=1)
-def event_1_act_1(hero, screen):
+def event_1_act_1(hero, stage, screen):
 
     start = f"{hero.name} marschiert schnellen Fußes durch fremde Landschaften. "
     a = "Er stößt auf ein verlassenes Grubenhaus etwas abseits der Wege "
@@ -190,7 +204,7 @@ def event_1_act_1(hero, screen):
 
 
 @register(act=1)
-def event_2_act_1(hero, screen):
+def event_2_act_1(hero, stage, screen):
 
     start = f"In der entfernung zeichnen sich Umrisse eines Mannes, im Dunst, ab. "
     a = f"{hero.name} und der Fremde näheren sich immer mehr an, " 
@@ -229,7 +243,7 @@ def event_2_act_1(hero, screen):
 
 
 @register(act=1)
-def event_3_act_1(hero, screen):
+def event_3_act_1(hero, stage, screen):
 
     start = f"{hero.name} geht, in einer kleinen Siedlung, eine kleine Treppe "
     a = "hinunter was so aussieht wie eine Schenke. Es wirkt schummrig "
@@ -295,7 +309,7 @@ def event_3_act_1(hero, screen):
 
 
 @register(act=1)
-def event_4_act_1(hero, screen):
+def event_4_act_1(hero, stage, screen):
 
     start = f"{hero.name} erreicht eine kleine Lichtung tief im Wald. "
     a = "In ihrer Mitte erhebt sich ein uralter steinerner Altar, "
@@ -347,7 +361,7 @@ def event_4_act_1(hero, screen):
             if magic_number <= 4:
                 raw_text = "Zwischen den Münzen findest du einen wertvollen Gegenstand."
                 y = display_outro(hero, raw_text, y, screen, font)
-                item = world.random_item()
+                item = world.random_item(stage)
                 event_get_item(hero, item, screen)
             elif magic_number <= 9:
                 raw_text = "Die Münzen zerfallen augenblicklich zu Staub."
@@ -376,7 +390,7 @@ def event_4_act_1(hero, screen):
 
 
 @register(act=1)
-def event_5_act_1(hero, screen):
+def event_5_act_1(hero, stage, screen):
 
     start = f"{hero.name} erblickt einen steinernen Torbogen, "
     a = "der scheinbar mitten im Nichts errichtet wurde. "
@@ -438,7 +452,7 @@ def event_5_act_1(hero, screen):
 
 
 @register(act=1)
-def event_6_act_1(hero, screen):
+def event_6_act_1(hero, stage, screen):
 
     start = f"{hero.name} erreicht einen verlassenen Wachposten. "
     a = "Am alten Wachposten stehen Händler nebeneinander aufgebaut. "
@@ -502,7 +516,7 @@ def event_6_act_1(hero, screen):
 
 
 @register(act=1)
-def event_7_act_1(hero, screen):
+def event_7_act_1(hero, stage, screen):
 
     start = f"{hero.name} erkennt in den Büschen den Schein eines kleinen Feuers. "
     a = "Daneben sitzt ein erschöpfter Mann in einer zerschlissenen Robe. "
@@ -562,7 +576,7 @@ def event_7_act_1(hero, screen):
 
 
 @register(act=1)
-def event_8_act_1(hero, screen):
+def event_8_act_1(hero, stage, screen):
 
     start = f"{hero.name} wandert auf einer gut befestigten Straße, "
     a = "auf dem ihm ein schwer beladener Händler entgegenkommt. "
@@ -591,14 +605,14 @@ def event_8_act_1(hero, screen):
             raw_text = f"{hero.name} hat es sich anders überlegt."
             y = display_outro(hero, raw_text, y, screen, font)
             raw_text = f"{hero.name} fragt den Händler noch nach dem Weg."
-            display_outro(hero, raw_text, y, screen, font)
+            y = display_outro(hero, raw_text, y, screen, font)
             got_item = False
 
         case "2":
             item_given = False
             for item in hero.inventory: #trade item
                 if isinstance(item, his_jam):
-                    item.unequip(hero)
+                    item._remove(hero)
                     raw_text = "Der Händler erwägt dein Angebot mit Interesse."
                     y = display_outro(hero, raw_text, y, screen, font)
                     raw_text = "Sag niemandem, dass ich sowas besitze."
@@ -672,7 +686,7 @@ def event_8_act_1(hero, screen):
 #*** --- *** --- *** --- *** --- ***
 
 
-def event_1_act_2(hero, screen):#enemies not included yet
+def event_1_act_2(hero, stage, screen):
 
     start = 'In den Gassen der Stadt trifft du auf zwielichtige Gestalten'
     a = 'Sie greifen dich nicht an mustern dich aber genau'
@@ -708,17 +722,28 @@ def event_1_act_2(hero, screen):#enemies not included yet
         case "2":
             raw_text = 'Dein Herausforderer macht sich bereit.'
             y = display_outro(hero, raw_text, y, screen, font)
-            #Gegner wird geladen und der Kampf beginnt
+            enemy = combat.EventMinionKirgo()
+            combat.main_fight(hero, enemy, screen)
+            if hero.life > 0:
+                reward_list = ()#fill pool with gear
+                reward = random.choice(reward_list)
+                event_get_item(hero, reward, screen)
 
         case "3":
             raw_text = 'Mein Name ist KARIM.'
             y = display_outro(hero, raw_text, y, screen, font)
             raw_text = 'Mach dich auf Schmerzen gefasst...'
             y = display_outro(hero, raw_text, y, screen, font)
-            #Gegner wird geladen und der Kampf beginnt
+            enemy = combat.EventEliteKarim()
+            combat.main_fight(hero, enemy, screen)
+            if hero.life > 0:
+                reward_list = ()#fill pool with gear
+                reward = random.choice(reward_list)
+                event_get_item(hero, reward, screen)
+    return None
 
 
-def event_2_act_2(hero, screen):
+def event_2_act_2(hero, stage, screen):
 
     start = f'Beim Gehen entlang des Stadtrandes strahlt {hero.name}, '
     a = 'die untergehende Sonne, vergnügt, aufs Gesicht.'
@@ -742,7 +767,7 @@ def event_2_act_2(hero, screen):
             display_danger = 50
             
 
-        choice_1 = 'Das Lager verlassen, ohne etwas anzurühren.'
+        choice_1 = 'Das Lager verlassen, ohne weiter zu suchen.'
         choice_2 = f'Das Lager nach Nützlichem durchsuchen.. ({display_danger}%: Gefahr)'
 
         answers = [choice_1, choice_2]
@@ -756,7 +781,7 @@ def event_2_act_2(hero, screen):
         match choice:
             case "1":
                 hero_left = True
-                raw_text = f'{hero.name} verlässt das Lager und geht weiter.'
+                raw_text = f'{hero.name} verlässt das Lager und geht weiter'
                 y = display_outro(hero, raw_text, y, screen, font)
             
             case "2":
@@ -776,34 +801,138 @@ def event_2_act_2(hero, screen):
                         case 1:
                             magic_number ==random.choice((1, 2))
                             if magic_number == 1:
-                                xp_gain = 80
+                                xp_gain = random.randint(60, 90)
                                 hero.xp += xp_gain
                                 raw_text = f'{hero.name} findet in Säcken einige Erzbrocken'
                                 y = display_outro(hero, raw_text, y, screen, font)
                                 raw_text = f'+{xp_gain} Erz'
-                                hero_left = True
-                                raw_text = f'{hero.name} zieht weiter und hofft auf das Beste.'
+                                raw_text = f'{hero.name} zieht weiter und hofft auf das Beste'
                                 y = display_outro(hero, raw_text, y, screen, font)
+                                hero_left = True
                             else:
+                                raw_text = f'Auf den ersten Blick kann {hero.name} nichts entdecken'
+                                y = display_outro(hero, raw_text, y, screen, font)
                                 danger = 5
                         
                         case 5:
                             magic_number ==random.choice((1, 2))
                             if magic_number == 1:
-                                #get some consumable
+                                raw_text = 'Ein netter Gegenstand, für den es sich gelohnt hat'
+                                y = display_outro(hero, raw_text, y, screen, font)
+                                raw_text = f'zu suchen .{hero.name} zieht jetzt lieber weiter.'
+                                y = display_outro(hero, raw_text, y, screen, font)
+                                item = world.random_item(stage)
+                                event_get_item(hero, item, screen)
                                 hero_left = True
-                                #some text/ hero leaves
                             else:
+                                raw_text = 'Auch nach einer kurzen effektiven Suche'
+                                y = display_outro(hero, raw_text, y, screen, font)
+                                raw_text = f'konnte {hero.name} nichts von wert finden.'
+                                y = display_outro(hero, raw_text, y, screen, font)
+                                raw_text = 'Nervosität macht sich breit..'
+                                y = display_outro(hero, raw_text, y, screen, font)
                                 danger = 9
 
                         case 9:
-                            #get a good item
+                            raw_text = 'Es scheint sich niemand sonst für das Lager zu interessieren..'
+                            y = display_outro(hero, raw_text, y, screen, font)
+                            raw_text = 'Nach einigen Minuten der Suche'
+                            y = display_outro(hero, raw_text, y, screen, font)
+                            raw_text = f'findet {hero.name} ein scheinbar kostbaren Gegenstand!'
+                            y = display_outro(hero, raw_text, y, screen, font)
+                            raw_text = f'{hero.name} versucht eine ruihge Ecke zu finden'
+                            y = display_outro(hero, raw_text, y, screen, font)
+                            raw_text = 'um die Beute sorgfältig zu untersuchen.'
+                            y = display_outro(hero, raw_text, y, screen, font)
+                            item = world.random_gear(stage)
+                            event_get_item(hero, item, screen)
                             hero_left = True
-                            #some text/ hero leaves
     return None
 
 
-def event_template(hero, screen):#template
+def event_3_act_2(hero, stage, screen):
+    
+    start = f'Für die Nacht sucht {hero.name} einen Übernachtungsplatz'
+    a = 'in einem verlassenen Keller. Bei genauerer Untersuchung '
+    b = 'entdeckt er ein Altar, der alten Göttern gewitmet scheint.'
+    c = f'{hero.name}s Instinkt rät ihm die Götzen nicht zu berühren.'
+
+    intro = [start, a, b, c]
+
+    choice_1 = 'Schlafen gehen.[Volle Heilung]'
+    choice_2 = 'Den Altar untersuchen.'
+
+    answers = [choice_1, choice_2]
+
+    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
+
+    choice = buttons_clog.display_answers_clicked(buttons)
+    match choice:
+        case "1":
+            raw_text = f'{hero.name} bereitet seinen Schlafplatz vor.'
+            y = display_outro(hero, raw_text, y, screen, font)
+            raw_text = f'Es ist äusserst still und {hero.name} schläft schnell ein.'
+            y = display_outro(hero, raw_text, y, screen, font)
+            hero.life = hero.max_life
+            return None
+
+        case "2":
+            raw_text = f'Bevor {hero.name} sich zur Ruhe bettet'
+            y = display_outro(hero, raw_text, y, screen, font)
+            raw_text = 'untersucht er im Kerzenlicht die Götzen.'
+            y = display_outro(hero, raw_text, y, screen, font)
+            raw_text = f'Als {hero.name} eine bestimmte Figur berührt'
+            y = display_outro(hero, raw_text, y, screen, font)
+            raw_text = 'wird er augenblicklich zurückgeschleudert und'
+            y = display_outro(hero, raw_text, y, screen, font)
+            raw_text = 'eine Lichtgestalt schwebt über dem Alter und fixiert dich.'
+            y = display_outro(hero, raw_text, y, screen, font)
+    
+    start = '"Lass mich in deine Seele schauen"'
+    a = '"Welchen Seegen erbittest du?"'
+
+    intro = [start, a,]
+
+    answers = [choice_1]
+
+    choice_1 = 'Seegen des Landarbeiter[+7 Max Leben]'
+
+    if hero.speed >= 100:
+        choice_2 = 'Seegen des Krieger[+2 Crit. Chance]'
+        answers.append(choice_2)
+    
+    if hero.mental_reduction >= 10:
+        choice_3 = 'Seegen des Gelehrten[+10 Max Odem]'
+        answers.append(choice_3)
+
+    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
+
+    choice = buttons_clog.display_answers_clicked(buttons)
+    match choice:
+        case "1":
+            raw_text = 'Ich segne deine Gesundheit, möge sie'
+            y = display_outro(hero, raw_text, y, screen, font)
+            raw_text = 'allen Widrigkeiten des Lebens widerstehen'
+            y = display_outro(hero, raw_text, y, screen, font)
+            hero.max_life += 7
+
+        case "2":
+            raw_text = 'Ich segne deinen Mut, möge dieser'
+            y = display_outro(hero, raw_text, y, screen, font)
+            raw_text = 'im Angesicht des Bösen dich nicht verlassen'
+            y = display_outro(hero, raw_text, y, screen, font)
+            hero.critical += 2
+
+        case "3":
+            raw_text = 'Ich segne deinen Geist, möge er'
+            y = display_outro(hero, raw_text, y, screen, font)
+            raw_text = 'dir ein Licht in den schwersten Stunden sein'
+            y = display_outro(hero, raw_text, y, screen, font)
+            hero.max_mana += 10
+    return None
+
+
+def event_template(hero, stage, screen):#template
     
     start = ''
     a = ''
@@ -831,3 +960,4 @@ def event_template(hero, screen):#template
 
         case "3":
             pass
+    return None
