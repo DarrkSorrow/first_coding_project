@@ -95,7 +95,8 @@ def forget_ability(hero, screen):
     pygame.display.flip()
     choice = buttons_clog.display_answers_clicked(buttons)
     screen.fill((50, 50, 50)), pygame.display.flip()
-   
+    
+    ability_forgotten = True
     match choice:
 
         case '1':
@@ -118,7 +119,8 @@ def forget_ability(hero, screen):
                     hero.game_state.forgotten_abilities.append(hero.abilities[3])
                     del hero.abilities[3]                  
         case '2':
-            return None
+            ability_forgotten = False
+    return ability_forgotten
     
 
 def abilities_from_events(hero, ability, screen):
@@ -129,15 +131,17 @@ def abilities_from_events(hero, ability, screen):
 
     if len(hero.abilities) < hero.max_abilities:
         hero.abilities.append(ability)
+        ability_learned = True
 
     elif len(hero.abilities) == hero.max_abilities:
         text = f"{hero.name} kann {ability.name} nicht lernen."
         y = buttons_clog.display_text(text, y, screen, font)
-        forget_ability(hero, screen)
-        hero.abilities.append(ability)
+        ability_learned = forget_ability(hero, screen)
 
-    text = f"{hero.name} hat {ability.name} gelernt!"
-    y = buttons_clog.display_text(text, y, screen, font)
+    if ability_learned:
+        text = f"{hero.name} hat {ability.name} gelernt!"
+        y = buttons_clog.display_text(text, y, screen, font)
+        hero.abilities.append(ability)
 
 
 def enemy_block_dodge(hero, enemy, combat_log):
@@ -147,6 +151,7 @@ def enemy_block_dodge(hero, enemy, combat_log):
     if magic_number < enemy.dodge:
         text = f"{enemy.name} konnte ausweichen!!!"
         combat_log.add(text, True)
+        MinusDodge(5, 5).buff(enemy)
         damage_taken = 0
         return damage_taken
     else:
@@ -220,19 +225,29 @@ def hero_critical_hit(hero, combat_log):
     return crit_factor
 
 
-def enemy_mental_dodge(ability, enemy, combat_log):
-#Verteidigungsmöglichkeit der Gegner
+def enemy_mental_dodge(hero, ability, enemy, combat_log):
+
     magic_number = random.randint(0, 150)
     if magic_number < enemy.dodge:
         text = f"{enemy.name} konnte dem ZAUBER ausweichen!!!"
         combat_log.add(text, True)
+        MinusDodge(5, 5).buff(enemy)
         damage_taken = 0
         return damage_taken
     else:
         block = (1 - enemy.mental_reduction / 100)
         if block > 1:
             block = 1
-        damage_taken = round(ability * block)
+
+        #base spell-dmg increases pseudo critical chance
+        magic_number = random.randint(ability, 500)
+        if magic_number >= 400:
+            extra_dmg = hero.magical_power
+        else:
+            extra_dmg = 0
+        #hero.magical_power gets added to dmg if "critical"
+            
+        damage_taken = round((ability + extra_dmg) * block)
         if damage_taken < 0:
             damage_taken = 0
         damage_taken = overhp_before_hp(enemy, damage_taken)
@@ -275,6 +290,7 @@ class Ability:
     def undo_ability(self, hero, enemy):
         pass
         
+
 #IMAGES LOADED, EVERY ABILITY INSTANCE POITNS TO THESE
 starting_ability = 'images/abilities/starting_ability.png'
 heavy_strike = 'images/abilities/heavy_strike.png'
@@ -303,7 +319,7 @@ class Ability0(Ability):#STARTFÄHIGKEIT
 
             hero.reduction += self.power * 2 #UNDO
             EmpoweredH2H(10, 4).buff(hero)
-            enemy_mental_dodge(self.power, enemy, combat_log)
+            enemy_mental_dodge(hero, self.power, enemy, combat_log)
 
             self._cost_and_cooldown(hero, self.cost)
             return True
@@ -419,7 +435,7 @@ class Ability4(Ability):# FEUERBALL
                 text = f"{hero.name} beschwört einen Feuerball!"
                 combat_log.add(text)
 
-                enemy_mental_dodge(self.power, enemy, combat_log)
+                enemy_mental_dodge(hero, self.power, enemy, combat_log)
 
                 self._cost_and_cooldown(hero, self.cost, cooldown=3)
                 return True
@@ -451,7 +467,7 @@ class Ability5(Ability): #MAGISCHER HIEB
 
             text = "Die Magie brennt nach."
             combat_log.add(text)
-            enemy_mental_dodge(self.power, enemy, combat_log)
+            enemy_mental_dodge(hero, self.power, enemy, combat_log)
 
             self._cost_and_cooldown(hero, self.cost)
             return True
@@ -607,11 +623,11 @@ class Ability10(Ability):#FROSTPFEIL
 
                 self._cost_and_cooldown(hero, self.cost, cooldown=2)
 
-                damage_taken = enemy_mental_dodge(self.power, enemy, combat_log)
+                damage_taken = enemy_mental_dodge(hero, self.power, enemy, combat_log)
                 if damage_taken > 0:
                     text = f"{hero.name}'s Zauber zeitigt seine Wirkung"
                     combat_log.add(text)
-                    FrostH2E(6, 3).buff(enemy)
+                    Frost(6, 3).buff(enemy)
                     return True
                 else:
                     text = 'Der Zauber konnte nichts anrichten!'
@@ -631,6 +647,7 @@ class Ability10(Ability):#FROSTPFEIL
 thunder = 'images/abilities/thunder.png'
 double_strike = 'images/abilities/double_strike.png'
 sword_dance = 'images/abilities/sword_dance.png'
+winter_fist = 'images/abilities/winter_fist.png'
 #IMAGES LOADED, EVERY ABILITY INSTANCE POITNS TO THESE
 
 
@@ -647,7 +664,7 @@ class Ability11(Ability):#BLITZSCHLAG
             text = f'Ein Blitz schiesst aus {hero.name} Fingern!'
             combat_log.add(text)
 
-            damage_taken = enemy_mental_dodge(self.power, enemy, combat_log)
+            damage_taken = enemy_mental_dodge(hero, self.power, enemy, combat_log)
             if damage_taken > 0:
                 text = f"{enemy.name} wurde geschockt."
                 combat_log.add(text)
@@ -721,3 +738,41 @@ class Ability13(Ability):#SCHWERTTANZ
     def undo_ability(self, hero, enemy):
         hero.dodge -= self.power
 
+
+class Ability14(Ability):#WINTERFAUST
+
+    def __init__(self):
+        super().__init__('Winterfaust', 40, 35, 1200,
+                        winter_fist)
+        
+    def use_ability(self, hero, enemy, combat_log):
+        if self.cooldown == 0:
+            if hero.mana >= self.cost:
+                text = f"{hero.name} beschwört den tiefsten Winter"
+                combat_log.add(text)
+                text = 'Das eisige Geschoss fliegt gen Feind!'
+                combat_log.add(text)
+
+                self._cost_and_cooldown(hero, self.cost, cooldown=2)
+
+                damage_taken = enemy_mental_dodge(hero, self.power, enemy, combat_log)
+                if damage_taken > 0:
+                    text = f"{hero.name}'s Zauber zeitigt seine Wirkung"
+                    combat_log.add(text)
+                    Frost(8, 5).buff(enemy)
+                    text = f'{enemy.name} ist äusserst vereist.'
+                    combat_log.add(text)
+                    StunH2E(80, 1).buff(enemy)
+                    return True
+                else:
+                    text = 'Der Zauber konnte nichts anrichten!'
+                    combat_log.add(text)
+                    return False
+            else:
+                text = 'Deine Macht reichte für eine kalte Briese.'
+                combat_log.add(text)
+                return False
+        else:
+            text = 'Die Finger sind noch zu vereist.'
+            combat_log.add(text)
+            return False
