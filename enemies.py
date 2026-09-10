@@ -143,6 +143,7 @@ class Enemy:
         if magic_number < hero.dodge:
             text = "Du konntest ausweichen!!!"
             combat_log.add(text)
+            abilities.MinusDodge(5, 5).buff(hero)
             hp_loss = 0
             return hp_loss
         else:
@@ -176,6 +177,7 @@ class Enemy:
         if magic_number < hero.dodge:
             text = f"{hero.name} konnte der Magie ausweichen!"
             combat_log.add(text)
+            abilities.MinusDodge(5, 5).buff(hero)
             hp_loss = 0
             return hp_loss
         else:
@@ -197,6 +199,7 @@ class Enemy:
         if magic_number < hero.dodge:
             text = "Du konntest widerstehen."
             combat_log.add(text)
+            abilities.MinusDodge(5, 5).buff(hero)
         else:
             block = (1 - hero.mental_reduction / 100)
             if block > 1:
@@ -261,7 +264,7 @@ class EasyPool1(Enemy):
     def __init__(self):
         super().__init__("GROSSE RATTE", 33, 33, 17, 55,
                         easy_pool_1 , dodge=7,
-                        critical=3)
+                        critical=5)
         
     def _frenzy(self, combat_log):#ENEMY-MOVE
         text = f"{self.name} wird schneller."
@@ -308,7 +311,7 @@ class EasyPool2(Enemy):
         abilities.SlowE2H(15, 4).buff(hero)
         text = f"{self.name} verschießt Schleim."
         combat_log.add(text, True)
-        self.heal_self(3, combat_log)
+        self.heal_self(4, combat_log)
 
     def enemy_ai(self, hero, key, combat_log):
         match key:
@@ -363,7 +366,7 @@ class Minion1(Enemy):
 class Minion2(Enemy):
 
     def __init__(self):
-        super().__init__("GRÜNER GOBLIN", 40, 40, 25, 45,
+        super().__init__("GRÜNER GOBLIN", 40, 40, 24, 45,
                          minion_2)
         self.counter = 0
 
@@ -406,7 +409,7 @@ class Minion2(Enemy):
 class Minion3(Enemy):
 
     def __init__(self):
-        super().__init__("IRRLICHT", 33, 33, 15, 30,
+        super().__init__("IRRLICHT", 33, 33, 17, 30,
                         minion_3,
                         reduction = 25, dodge=10, mental_reduction=30,
                         magic_power=7)
@@ -590,7 +593,7 @@ class Minion7(Enemy):
         super().__init__('ABENTEURER', 43, 43, 17, 36, 
                         minion_7, 
                         reduction=20, mental_reduction=10,
-                        magic_power=11)
+                        magic_power=12)
         
     def _random(self, hero, combat_log):
         magic_number = random.randint(0, 1)
@@ -615,7 +618,7 @@ class Minion7(Enemy):
                 combat_log.add(text, True)
                 self.block(8, combat_log)
             case 4:
-                self._random(self, hero, combat_log)
+                self._random(hero, combat_log)
 
     def enemy_intend(self, step, hero):
         if step == 0:
@@ -957,7 +960,7 @@ class Minion2Act2(Enemy):
             case 2:
                 magic_number = random.randint((1, 2))
                 if magic_number == 1:
-                    self.basic_attack
+                    self.basic_attack(hero, combat_log)
                 else:
                     abilities.FullDefenseE2E(14, 4).buff(self)
             case 3:
@@ -1014,15 +1017,87 @@ class Minion3Act2(Enemy):
             case 2:
                 magic_number = random.choice((1, 2))
                 if magic_number == 1:
-                    self.basic_attack
+                    self.basic_attack(hero, combat_log)
                 else:
-                    self.basic_magic
+                    self.basic_magic(hero, combat_log)
 
     def enemy_intend(self, step, hero):
         if step % 2 == 0:
             intend, key = '?', 1
         else:
             intend, key = 'Atk / Mag', 2
+        text = self.font.render(intend, True, (0, 0, 0))
+        return text, key
+
+
+@register(act=2)
+class Minion4Act2(Enemy):
+
+    def __init__(self):
+        super().__init__('Attentäter', 54, 54, 24, 100,
+                        act2_minion_4,
+                        reduction=10, dodge=15 ,mental_reduction=10,
+                        magic_power=20)
+        self.bomb_prepared = True
+        self.projectiles = 2
+
+    def _bomb(self, hero, combat_log):
+        if self.bomb_prepared:
+            text = f'Der {self.name} wirft ein Gefäß nach dir!'
+            combat_log.add(text, True)
+            text = 'KABUMM!!!'
+            combat_log.add(text, True)
+            self.basic_attack(hero, combat_log)
+            self.basic_magic(hero, combat_log)
+            self.bomb_prepared = False
+        else:
+            text = f'Der {self.name} greift nach etwas im seiner Tasche'
+            combat_log.add(text, True)
+            self.bomb_prepared = True
+
+    def _frost_scroll(self, hero, combat_log):
+        text = f'Der {self.name} zieht einen Eispfeil aus der Spruchrolle'
+        combat_log.add(text, True)
+        damage_taken = self.basic_magic(hero, combat_log)
+        if damage_taken > 5:
+            text = 'Du wurdest vereist'
+            combat_log.add(text, True)
+            abilities.Frost(6, 3).buff(hero)
+            self.projectiles -= 1
+
+    def enemy_ai(self, hero, key, combat_log):
+        match key:
+            case 1:
+                text = f'f{self.name} der Attentäter starrt dich an.'
+                combat_log.add(text, True)
+                abilities.AccuracyE2E(5, 3).buff(self)
+                self.block(round(self.magic_power / 2), combat_log)
+            case 2:
+                self.block(self.magic_power, combat_log)
+            case 3:
+                self.basic_attack(hero, combat_log)
+            case 4 | 5:
+                self._bomb(hero, combat_log)
+            case 6:
+                self._frost_scroll(hero, combat_log)
+
+    def enemy_intend(self, step, hero):
+        if step % 2 == 0:
+            if hero.dodge - self.accuracy > 10:
+                intend, key = 'Buff', 1
+            elif hero.life + hero.over_hp > 100:
+                intend, key = 'Block', 2
+            else:
+                intend, key = 'Atk', 3
+        elif step % 2 == 1:
+            magic_number = random.choice((1, 2, 3))
+            if self.projectiles > 0 and magic_number in (1, 2):
+                intend, key = 'Mag', 6
+            else:
+                if self.bomb_prepared:
+                        intend, key = 'Atk+', 4
+                else:
+                    intend, key = '...', 5
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
