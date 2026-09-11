@@ -2,6 +2,8 @@ import pygame
 from random import choice
 from buffs import *
 from abilities import overhp_before_hp
+from abilities import enemy_block_dodge
+from abilities import enemy_mental_dodge
 
 
 consumable_pool, consumable_pool_2, consumable_pool_3 = [], [], []
@@ -25,11 +27,12 @@ def register(type='gear', act=1):
         elif type == 'gear' and act == 3:
             gear_pool_3.append(item)
 
-        print(f'consumable_act1: {consumable_pool}')
-        print(f'consumable_act2: {consumable_pool_2}')
-        print(f'gear_act1: {gear_pool}')
-        print(f'gear_act2: {gear_pool_2}')
         return item
+    
+    #print(f'consumable_act1: {consumable_pool}')
+    #print(f'consumable_act2: {consumable_pool_2}')
+    #print(f'gear_act1: {gear_pool}')
+    #print(f'gear_act2: {gear_pool_2}')
 
     return decorate
 
@@ -259,7 +262,7 @@ class Item5(Consumable):#BERSERKER BLUT
 
     def __init__(self):
         super().__init__("BERSERKER-BLUT",
-                        0, 1, 70, "", berserk_blood)
+                        0, 1, 75, "", berserk_blood)
         
     def use_item(self, hero, enemy, combat_log):
         BerserkH2H(3, 10).buff(hero)
@@ -308,12 +311,13 @@ class Item6(Consumable):#verb. BRANDBOMBE
             self._remove(hero)
 
 
+@register(type='item', act=2)
 @register(type='item')
 class Item7(Consumable):#GUTE ODEM-ESSENZ
 
     def __init__(self):
         super().__init__("GUTE ODEM-ESSENZ",
-                        45, 1, 85,
+                        45, 1, 110,
                         '', good_mana_potion)
         self.dungeon = True
 
@@ -358,7 +362,7 @@ class ShortSword(Gear):
 
     def __init__(self):
         super().__init__("KURZSCHWERT",
-                          15, 144, '', short_sword)
+                          15, 143, '', short_sword)
         
     def equip(self, hero):
         hero.inventory.append(self)
@@ -376,7 +380,7 @@ class LongSword(Gear):
 
     def __init__(self):
         super().__init__("LANGSCHWERT",
-                          8, 144, '', long_sword)
+                          8, 143, '', long_sword)
         
     def equip(self, hero):
         hero.inventory.append(self)
@@ -392,11 +396,12 @@ class ShatteredRunes(Gear):
 
     def __init__(self):
         super().__init__("VERWITTERTE RUNE",
-                          10, 144, '', shattered_runes)
+                          10, 143, '', shattered_runes)
         
     def equip(self, hero):
         hero.inventory.append(self)
         hero.max_mana += self.power
+        hero.mana += self.power
         hero.damage += round(self.power / 2)
 
     def unequip(self, hero):
@@ -448,6 +453,7 @@ class SimpleWarmogs(Gear):
     def equip(self, hero):
         hero.inventory.append(self)
         hero.max_life += self.power
+        hero.life += self.power
 
     def unequip(self, hero):
         hero.max_life -= self.power
@@ -466,6 +472,7 @@ class ManaMantle(Gear):
     def equip(self, hero):
         hero.inventory.append(self)
         hero.max_mana += self.power
+        hero.mana += self.power
 
     def unequip(self, hero):
         hero.max_mana -= self.power
@@ -692,6 +699,8 @@ shuko_claws = 'images/items/gear/shuko_claws.png'
 sobi_mask = 'images/items/gear/sobi_mask.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 back_pack = 'images/items/gear/back_pack.png'
+war_bow = 'images/items/gear/war_bow.png'
+shield = 'images/items/gear/shield.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 
 
@@ -753,4 +762,60 @@ class BackPack(Gear):
         while not len(hero.pockets) <= hero.pocket_size:
             hero.xp += round(hero.pockets[-1].xp * 0.15)
             del hero.pockets[-1]
+        hero.inventory.remove(self)
+
+
+@register(act=2)
+class WarBow(Gear):
+
+    def __init__(self):
+        super().__init__('KRIEGSBOGEN',
+                         4, 630, '', war_bow)
+        self.spell_cost = 10
+        self.active = True
+        self.after_combat_effekt = True
+
+        
+    def equip(self, hero):
+        hero.inventory.append(self)
+        hero.damage += self.power * 2
+        hero.critical += self.power
+
+    def unequip(self, hero):
+        hero.critical -= self.power
+        hero.damage -= self.power * 2
+        hero.inventory.remove(self)
+
+    def use_item(self, hero, enemy, combat_log):
+        if hero.mana >= self.spell_cost and self.active:
+            text = f'{hero.name} spannt den den Bogen so weit er kann'
+            combat_log.add(text)
+            self.active = False
+            text = f'Der Pfeil zischt mit gewalt richtung {enemy.name}'
+            combat_log.add(text)
+            hero.damage *= 2
+            enemy_block_dodge(hero, enemy, combat_log)
+            hero.damage /= 2
+            hero.mana - self.spell_cost * 4
+            if hero.mana < 0:
+                hero.mana = 0
+
+    def after_combat(self, hero):
+        if not self.active:
+            self.active = True
+
+
+@register(act=2)
+class Shield(Gear):
+
+    def __init__(self):
+        super().__init__('WÄCHTERSCHILD',
+                        10, 610, '', shield)
+        self.extra_armor = self.power
+        self.extra_shield = self.power
+        
+    def equip(self, hero):
+        hero.inventory.append(self)
+
+    def unequip(self, hero):
         hero.inventory.remove(self)
