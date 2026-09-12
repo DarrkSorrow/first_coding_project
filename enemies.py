@@ -270,6 +270,7 @@ class EasyPool1(Enemy):
         text = f"{self.name} wird schneller."
         combat_log.add(text, True)
         abilities.AdrenalinE2E(5, 3).buff(self)
+        self.block(3, combat_log)
 
     def _random(self, hero, combat_log):
         magic_number = random.choice((1, 2))
@@ -281,22 +282,21 @@ class EasyPool1(Enemy):
 
     def enemy_ai(self, hero, key, combat_log):
         match key:
-            case 1 | 3:
+            case 1:
                 self._random(hero, combat_log)
             case 2:
                 self._frenzy(combat_log)
-            case 4:
+            case 3:
                 self.basic_attack(hero, combat_log)
 
     def enemy_intend(self, step, hero):
-        if step == 0:
+        if step % 4 == 2:
             intend, key = "Atk / Buff", 1
-        elif step % 2 == 1:
+        magic_number = random.randint(0, 100)
+        if magic_number < 40:
             intend, key = "Buff", 2
-        elif step % 4 == 0:
-            intend, key = "Atk / Buff", 3
         else:
-            intend, key = "Atk", 4
+            intend, key = "Atk", 3
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
@@ -304,9 +304,10 @@ class EasyPool1(Enemy):
 @register(rank='easy')
 class EasyPool2(Enemy):
     def __init__(self):
-        super().__init__("MAGISCHER SCHLEIM", 35, 35, 16, 14,
+        super().__init__("MAGISCHER SCHLEIM", 35, 35, 16, 25,
                         easy_pool_2)
-        
+        self.over_hp = 5
+
     def _slime(self, hero, combat_log):#ENEMY-MOVE
         abilities.SlowE2H(15, 4).buff(hero)
         text = f"{self.name} verschießt Schleim."
@@ -315,18 +316,23 @@ class EasyPool2(Enemy):
 
     def enemy_ai(self, hero, key, combat_log):
         match key:
-            case 1:
+            case 1 | 4:
                 self._slime(hero, combat_log)
-            case 2 | 3:
+            case 2:
+                self.block(18, combat_log)
+            case 3:
                 self.basic_attack(hero, combat_log)
 
     def enemy_intend(self, step, hero):
-        if step % 2 == 0:
+        if step == 0:
             intend, key = "Debuff", 1
-        elif hero.damage < 5:
-            intend, key = "Atk", 2
-        else:
+        elif step == 1:
+            intend, key = "Block", 2
+        magic_number = random.choice((1, 2))
+        if magic_number == 1:
             intend, key = "Atk", 3
+        else:
+            intend, key = "Debuff", 4
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
@@ -469,7 +475,7 @@ class Minion4(Enemy):
     def _illusion(self, combat_log):#ENEMY-MOVE
         text = f"Deine Augen scheinen dich zu trügen."
         combat_log.add(text, True)
-        abilities.IllusionE2E(8, 3).buff(self)
+        abilities.Illusion(8, 3).buff(self)
 
     def _random(self, hero, combat_log):
         magic_number = random.randint(0, 100)
@@ -514,7 +520,7 @@ class Minion5(Enemy):
     def _fortify(self, combat_log):#ENEMY-MOVE
         text = f"{self.name}'s Struktur verfestigt sich."
         combat_log.add(text, True)
-        abilities.HardenE2E(15, 2).buff(self)
+        abilities.Harden(15, 2).buff(self)
 
     def enemy_ai(self, hero, key, combat_log):
         match key:
@@ -699,7 +705,7 @@ class Elite2(Enemy):
         else:
             text = "Der Panzer verfestigt sich."
             combat_log.add(text, True)
-            abilities.HardenE2E(15, 3).buff(self)
+            abilities.Harden(15, 3).buff(self)
 
     def _random(self, hero, combat_log):
         magic_number = random.choice((1, 2, 3))
@@ -751,7 +757,7 @@ class Elite3(Enemy):
     def _ability_1(self, combat_log):
         text = "Der Kämpfer ist kaum zu erkennen!" 
         combat_log.add(text, True)
-        abilities.IllusionE2E(18, 3).buff(self)
+        abilities.Illusion(18, 3).buff(self)
 
     def _ability_2(self, hero, combat_log):
         text = f"{hero.name}'s Kraft schwindet." 
@@ -844,6 +850,7 @@ act2_minion_1 = ''
 act2_minion_2 = ''
 act2_minion_3 = ''
 act2_minion_4 = ''
+act2_minion_5 = ''
 karim = ''
 #IMAGES LOADED, EVERY ENEMY INSTANCE POINTS TO THESE
 
@@ -1000,7 +1007,7 @@ class Minion3Act2(Enemy):
             case 2:
                 text = 'Das Geistwesen verschwimmt mit der Umgebung'
                 combat_log.add(text, True)
-                abilities.IllusionE2E(self.magic_power, 2).buff(self)
+                abilities.Illusion(self.magic_power, 2).buff(self)
             case 3:
                 self.block(self.magic_power, combat_log)
             case 4:
@@ -1098,6 +1105,57 @@ class Minion4Act2(Enemy):
                         intend, key = 'Atk+', 4
                 else:
                     intend, key = '...', 5
+        text = self.font.render(intend, True, (0, 0, 0))
+        return text, key
+
+
+@register(act=2)
+class Minion5Act2(Enemy):
+
+    def __init__(self):
+        super().__init__('Magischer Zauberbrecher', 80, 80, 25, 65,
+                         act2_minion_5,
+                         reduction=30, dodge=0, mental_reduction=40,
+                         magic_power=16)
+        self.life_last_turn = self.life
+        
+    def _devine_intervention(self, hero, combat_log):
+        if self.life_last_turn - self.life > 40:
+            text = f'Der Erbauer unterstützt {self.name}'
+            combat_log.add(text, True)
+            self.heal_self(20, combat_log)
+            self.block(20, combat_log)
+        else:
+            text = f'{self.name} erbittet'
+            combat_log.add(text, True)
+            text = 'die Unterstützung des Erbauers'
+            combat_log.add(text, True)
+            if hero.magic_power > 0:
+                abilities.Barrier(20, 2).buff(self)
+            else:
+                abilities.Harden(20, 2).buff(self)
+        self.life_last_turn = self.life
+
+    def enemy_ai(self, hero, key, combat_log):
+        match key:
+            case 1:
+                self._devine_intervention(hero, combat_log)
+            case 2:
+                self.mana_burn(hero, combat_log)
+            case 3:
+                self.basic_magic(hero, combat_log)
+            case 4:
+                self.basic_attack(hero, combat_log)
+
+    def enemy_intend(self, step, hero):
+        if step % 3 == 0:
+            intend, key = 'Buff / Buff+', 1
+        elif hero.mana * 2 > hero.max:
+            intend, key = 'Mag', 2
+        elif hero.reduction >= 40:
+            intend, key = 'Mag', 3
+        else:
+            intend, key = 'Atk', 4
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
