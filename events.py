@@ -2,7 +2,6 @@ import pygame
 from time import sleep
 import random
 import world, buttons_clog, combat
-from combat import hero_combat_stats
 
 
 act_1_pool, act_2_pool, act_3_pool = [], [], []
@@ -77,7 +76,7 @@ def construct_intro(hero, intro, screen):
     world.hero_health_bar(hero, screen)
     world.hero_mana_bar(hero, screen)
     world.hero_xp
-    hero_combat_stats(hero, screen)
+    combat.hero_combat_stats(hero, screen)
     buttons_clog.dungeon_inventory(hero, screen)
     font = pygame.font.SysFont(None, 28)
     y = 100
@@ -127,31 +126,34 @@ def event_0(hero, stage, screen):
 
     intro = [start, a]
 
+    potion = world.Item1()
     item_1 = world.random_gear(stage)
     item_2 = world.random_gear(stage)
     while item_1.name == item_2.name:
         item_2 = world.random_gear(stage)
+    ability = random.choice(combat.spells_act_1)
+    spell = ability()
 
-    choice_1 = (f"{item_1.name}")
-    choice_2 = (f"{item_2.name}")
+    choice_1 = (f"{potion.name} + 75XP")
+    choice_2 = (f"{item_1.name}")
+    choice_3 = (f"{item_2.name}")
+    choice_4 = (f"{spell.name}")
 
-    answers = [choice_1, choice_2]
+    answers = [choice_1, choice_2, choice_3, choice_4]
 
-    font = pygame.font.SysFont(None, 28)
-    construct_intro(hero, intro, screen)
-    buttons = buttons_clog.display_answers(answers, screen)
-    pygame.display.flip()
+    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
 
-    screen.fill((255, 255, 0))
-    y = 100
     choice = buttons_clog.display_answers_clicked(buttons)
     match choice:
         case "1":
-            item = item_1
-            event_get_item(hero, item, screen)
+            hero.xp += 75
+            event_get_item(hero, potion, screen)
         case "2":
-            item = item_2
-            event_get_item(hero, item, screen)
+            event_get_item(hero, item_1, screen)
+        case "3":
+            event_get_item(hero, item_2, screen)
+        case "4":
+            combat.abilities_from_events(hero, spell, screen)
     return None
 
 
@@ -284,7 +286,10 @@ def event_3_act_1(hero, stage, screen):
                 while choice not in range(len(hero.inventory)):
                     choice = buttons_clog.display_answers_clicked(buttons)
                     choice = int(choice)
-                hero.inventory[choice].unequip(hero)
+                try:
+                    hero.inventory[choice].unequip(hero)
+                except AttributeError:
+                    hero.inventory[choice]._remove(hero)
                 raw_text = f"{hero.name} hat seinen Einsatz abgegeben."
                 y = display_outro(hero, raw_text, y, screen, font)
     
@@ -686,6 +691,7 @@ def event_8_act_1(hero, stage, screen):
 #*** --- *** --- *** --- *** --- ***
 
 
+@register(act=2)
 def event_1_act_2(hero, stage, screen):
 
     start = 'In den Gassen der Stadt trifft du auf zwielichtige Gestalten'
@@ -707,7 +713,9 @@ def event_1_act_2(hero, stage, screen):
     choice = buttons_clog.display_answers_clicked(buttons)
     match choice:
         case "1":
-            hero.xp -= 5
+            hero.xp -= 30
+            if hero.xp < 0:
+                hero.xp = 0
             raw_text = 'Du versuchst zu erklären,'
             y = display_outro(hero, raw_text, y, screen, font)
             raw_text = 'dass du dir die Wade unglücklicherweise gezerrt hast'
@@ -716,14 +724,14 @@ def event_1_act_2(hero, stage, screen):
             y = display_outro(hero, raw_text, y, screen, font)
             raw_text = 'Die Fremden schauen dir noch schelmisch hinterher.'
             y = display_outro(hero, raw_text, y, screen, font)
-            raw_text = '-5 XP'
+            raw_text = '-30 XP'
             y = display_outro(hero, raw_text, y, screen, font)
 
         case "2":
             raw_text = 'Dein Herausforderer macht sich bereit.'
             y = display_outro(hero, raw_text, y, screen, font)
             enemy = combat.EventMinionKirgo()
-            combat.main_fight(hero, enemy, screen)
+            combat.main_fight(hero, enemy, screen, stage)
             if hero.life > 0:
                 reward_list = ()#fill pool with gear
                 reward = random.choice(reward_list)
@@ -735,7 +743,7 @@ def event_1_act_2(hero, stage, screen):
             raw_text = 'Mach dich auf Schmerzen gefasst...'
             y = display_outro(hero, raw_text, y, screen, font)
             enemy = combat.EventEliteKarim()
-            combat.main_fight(hero, enemy, screen)
+            combat.main_fight(hero, enemy, screen, stage)
             if hero.life > 0:
                 reward_list = ()#fill pool with gear
                 reward = random.choice(reward_list)
@@ -743,6 +751,7 @@ def event_1_act_2(hero, stage, screen):
     return None
 
 
+@register(act=2)
 def event_2_act_2(hero, stage, screen):
 
     start = f'Beim Gehen entlang des Stadtrandes strahlt {hero.name}, '
@@ -850,6 +859,7 @@ def event_2_act_2(hero, stage, screen):
     return None
 
 
+@register(act=2)
 def event_3_act_2(hero, stage, screen):
     
     start = f'Für die Nacht sucht {hero.name} einen Übernachtungsplatz'
@@ -902,7 +912,7 @@ def event_3_act_2(hero, stage, screen):
         answers.append(choice_2)
     
     if hero.mental_reduction >= 10:
-        choice_3 = 'Seegen des Gelehrten[+10 Max Odem]'
+        choice_3 = 'Seegen des Gelehrten[+15 Max Odem]'
         answers.append(choice_3)
 
     font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
@@ -928,12 +938,170 @@ def event_3_act_2(hero, stage, screen):
             y = display_outro(hero, raw_text, y, screen, font)
             raw_text = 'dir ein Licht in den schwersten Stunden sein'
             y = display_outro(hero, raw_text, y, screen, font)
-            hero.max_mana += 10
+            hero.max_mana += 15
     return None
 
 
-def event_template(hero, stage, screen):#template
+@register(act=2)
+def event_4_act_2(hero, stage, screen):
+
+    start = 'Schützend vor der sengenden Mittagssonne'
+    a = f'liegt {hero.name} am Straßenrand und ruht sich aus.'
+    b = 'Plötzlich tauchen 2 Garnisonswachen auf und bauen sich auf.'
+    c = '"Na, Jungchen was treibst du dich in diesen Nebenstraßen rum"'
+    d = '"Du bist doch wohl nicht ein Dieb?"'
+    e = '"Ohne magisches Erz, werden wir dich mitnehmen..."'
+
+    intro = [start, a, b, c, d, e]
+
+    beaten_up = False
     
+    offer = 300
+    if hero.xp < 300:
+        offer = hero.xp
+
+    choice_1 = f'{offer} Brocken magisches Erz geben'
+    choice_2 = 'Versuchen blitzartig zu entkommen'
+    choice_3 = 'Den Wachen Schlimmes androhen'
+    choice_4 = 'Magische Suggestion einsetzen'
+
+    answers = [choice_1, choice_2, choice_3, choice_4]
+
+    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
+
+    choice = buttons_clog.display_answers_clicked(buttons)
+    match choice:
+        case "1":
+            if hero.xp >= 300:
+                raw_text = '"Alles klar, du scheinst in Ordnung zu sein"'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = '"Machs gut du Held!"'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'Die Wachen gehen und verkneifen sich keinen Lacher'
+                y = display_outro(hero, raw_text, y, screen, font)
+                hero.xp -= 300
+            
+            elif hero.xp >= 230:
+                raw_text = '"Na gut wir nehmen dich nicht mit"'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = '"Wir sehen uns noch"'
+                y = display_outro(hero, raw_text, y, screen, font)
+                hero.xp = 0
+
+            elif hero.xp >= 130:
+                raw_text = '"Das ist aber eine mickrige Summe, oder ?!"'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = '"Ja klein und mickrig" pflichtet ihm sein Kollege zu'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'Einer der Wachen schlägt dir in den Bauch'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'Hau lieber ab!'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'Einige Zeit liegt {hero.name} noch auf dem Boden'
+                y = display_outro(hero, raw_text, y, screen, font)
+                damage = round(hero.life * 0.1)
+                hero.life -= damage
+                hero.xp = 0
+
+            else:
+                raw_text = 'Kleine Planänderung wir nehmen dich nicht mit'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'Wir prügeln die Scheisse aus dich raus Jungchen'
+                y = display_outro(hero, raw_text, y, screen, font)
+                beaten_up = True
+
+        case "2":
+            raw_text = 'Noch bevor die Wache Ihre Worte ausspricht'
+            y = display_outro(hero, raw_text, y, screen, font)
+            raw_text = f'Spurtet {hero.name} los!!'
+            y = display_outro(hero, raw_text, y, screen, font)
+            magic_number = random.randint(0, 200)
+            magic_number += hero.speed
+            if magic_number > 150:
+                raw_text = f'Geschwindt wie der Wind entkommt {hero.name}'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'{hero.name} kann nichtmal die Rufe der Wachen noch hören.'
+                y = display_outro(hero, raw_text, y, screen, font)
+            else:
+                raw_text = 'Einer der Wachen packt dich am Kragen deiner Kleidung'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'So Freundchen jetzt bist du dran!'
+                y = display_outro(hero, raw_text, y, screen, font)
+                beaten_up = True
+
+        case "3":
+            magic_number = random.randint(0, 100)
+            magic_number += hero.damage
+            magic_number += hero.critical * 2
+            if magic_number > 55:
+                raw_text = f'{hero.name} weitet seinen Mantel und offenbart'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'seine Sammlung an Waffen und Granaten an seinem Gürtel'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = '"Keinen Grund zu eskalieren, wir gehen einfach weiter"'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'{hero.name} traut dem Frieden nicht und taucht'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'bei der Gelegenheit unter'
+                y = display_outro(hero, raw_text, y, screen, font)
+            else:
+                raw_text = 'Die Wachen ziehen Ihre Waffen'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'und fordern {hero.name} auf sich zu ergeben'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'{hero.name} ergibt sich und bereut seine dummer Idee'
+                y = display_outro(hero, raw_text, y, screen, font)
+                beaten_up = True
+
+        case "4":
+            if hero.magic_power > 0 or (hero.mental_resistance >= 10 and hero.mana >= 50):
+                raw_text = f'Mittels Suggestion erklärt {hero.name} den Wachen'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'dass Sie weiter gehen und Ihn in Ruhe lassen'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = '"Du bist schwer in Ordnung und definitv kein Dieb"'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = '"Wir lassen dich in Ruhe und gehen weiter"'
+                y = display_outro(hero, raw_text, y, screen, font)
+                if hero.magic_power == 0:
+                    hero.mana -= 50
+            else:
+                raw_text = '"Was fuchtelst du mit deinen Händen rum?"'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = '"Glaubst du wir sind Idioten?!"'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = '"Solche Tricks funktionieren bei uns nicht"'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'Die Wachen stürmen auf {hero.name} los'
+                y = display_outro(hero, raw_text, y, screen, font)
+                beaten_up = True
+
+    if beaten_up:
+        raw_text = f'Die Wachen schlagen und treten auf {hero.name} ein'
+        y = display_outro(hero, raw_text, y, screen, font)
+        raw_text = 'lange noch nach dem er zu Boden gegangen ist'
+        y = display_outro(hero, raw_text, y, screen, font)
+        raw_text = '"Na dann noch einen schönen Tag du Held!"'
+        y = display_outro(hero, raw_text, y, screen, font)
+
+        hero.life = round(hero.life / 2)
+        damage = 130 - hero.xp
+        if damage < 0:
+            damage = 5
+        hero.life -= damage
+        hero.xp - 600
+        if hero.xp < 0:
+            hero.xp = 0
+
+    if hero.life < 0:
+        raw_text = f'{hero.name} scheidet an Ort und Stelle davon'
+        y = display_outro(hero, raw_text, y, screen, font)
+
+    return None
+
+
+def event_template(hero, stage, screen):
+
     start = ''
     a = ''
     b = ''
@@ -952,12 +1120,5 @@ def event_template(hero, stage, screen):#template
     choice = buttons_clog.display_answers_clicked(buttons)
     match choice:
         case "1":
-            raw_text = 'TEMPLATE'
+            raw_text = 'Template'
             y = display_outro(hero, raw_text, y, screen, font)
-
-        case "2":
-            pass
-
-        case "3":
-            pass
-    return None
