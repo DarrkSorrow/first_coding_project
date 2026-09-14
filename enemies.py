@@ -137,7 +137,7 @@ class Enemy:
         return hp_loss
 
 
-    def basic_attack(self, hero, combat_log):
+    def _basic_attack(self, hero, combat_log):
         magic_number = random.randint(0, 100)
         magic_number += self.accuracy
         if magic_number < hero.dodge:
@@ -172,7 +172,7 @@ class Enemy:
         return crit_factor
 
 
-    def basic_magic(self, hero, combat_log):
+    def _basic_magic(self, hero, combat_log):
         magic_number = random.randint(0, 150)
         if magic_number < hero.dodge:
             text = f"{hero.name} konnte der Magie ausweichen!"
@@ -194,7 +194,7 @@ class Enemy:
             return hp_loss
 
 
-    def mana_burn(self, hero, combat_log):
+    def _mana_burn(self, hero, combat_log):
         magic_number = random.randint(0, 150)
         if magic_number < hero.dodge:
             text = "Du konntest widerstehen."
@@ -214,13 +214,13 @@ class Enemy:
             combat_log.add(text, True)
 
 
-    def block(self, power, combat_log):
+    def _block(self, power, combat_log):
         self.over_hp += power
         text = f"{self.name} + {power} Schild"
         combat_log.add(text, True)
 
 
-    def heal_self(self, power, combat_log):
+    def _heal_self(self, power, combat_log):
         self.life += power
         if self.life > self.max_life:
             self.life = self.max_life
@@ -276,7 +276,7 @@ class EasyPool1(Enemy):
         magic_number = random.choice((1, 2))
         match magic_number:
             case 1:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
             case 2:
                 self._frenzy(combat_log)
 
@@ -287,7 +287,7 @@ class EasyPool1(Enemy):
             case 2:
                 self._frenzy(combat_log)
             case 3:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
 
     def enemy_intend(self, step, hero):
         if step % 4 == 2:
@@ -319,9 +319,9 @@ class EasyPool2(Enemy):
             case 1 | 4:
                 self._slime(hero, combat_log)
             case 2:
-                self.block(18, combat_log)
+                self._block(18, combat_log)
             case 3:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
 
     def enemy_intend(self, step, hero):
         if step == 0:
@@ -355,7 +355,7 @@ class Minion1(Enemy):
     def enemy_ai(self, hero, key, combat_log):
         match key:
             case 1:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
             case 2:
                 self._unholy_aura(combat_log)
 
@@ -380,7 +380,7 @@ class Minion2(Enemy):
         text = f"{self.name} greift nach einem Stein.."
         combat_log.add(text, True)
         self.damage -= 6
-        self.basic_attack(hero, combat_log)
+        self._basic_attack(hero, combat_log)
         self.damage += 6
         abilities.WeakE2H(5, 2).buff(hero)
 
@@ -396,11 +396,11 @@ class Minion2(Enemy):
                 magic_number = random.choice((1, 2))
                 match magic_number:
                     case 1:
-                        self.basic_attack(hero, combat_log)
+                        self._basic_attack(hero, combat_log)
                     case 2:
                         self._throw_rock(hero, combat_log)
             case 2:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
 
     def enemy_intend(self, step, hero):
         if self.counter < 2:
@@ -424,7 +424,7 @@ class Minion3(Enemy):
         text = 'Das Wesen strahlt heftig!'
         combat_log.add(text, True)
         self.magic_power = hero.mana
-        self.basic_magic(hero, combat_log)
+        self._basic_magic(hero, combat_log)
         self.life = 0
         
     def enemy_ai(self, hero, key, combat_log):
@@ -432,7 +432,7 @@ class Minion3(Enemy):
             case 1:
                 self._magical_erruption(hero, combat_log)
             case 2:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
                 self.reduction += 25
                 text = f"{self.name} wechselt in die Geisterwelt."
                 combat_log.add(text, True)
@@ -445,7 +445,7 @@ class Minion3(Enemy):
                     text = f"{self.name} materialisiert sich."
                     combat_log.add(text, True)
                 else:
-                    self.basic_magic(hero, combat_log)
+                    self._basic_magic(hero, combat_log)
                     text = f"{hero.name} ist ausgesaugt und nimmt Schaden."
                     combat_log.add(text, True)
                     self.reduction -= 25
@@ -480,21 +480,21 @@ class Minion4(Enemy):
     def _random(self, hero, combat_log):
         magic_number = random.randint(0, 100)
         if magic_number <= 40:
-            self.basic_attack(hero, combat_log)
+            self._basic_attack(hero, combat_log)
         elif 40 < magic_number <= 65:
-            self.basic_magic(hero, combat_log)
+            self._basic_magic(hero, combat_log)
         else:
             self._illusion(combat_log)
 
     def enemy_ai(self, hero, key, combat_log):
         match key:
             case 1:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
             case 2:
                 text = f"{self.name}'s Kraft wächst weiter."
                 combat_log.add(text, True)
                 self.damage += 6
-                self.block(8, combat_log)
+                self._block(8, combat_log)
             case 3:
                 self._random(hero, combat_log)
 
@@ -525,19 +525,19 @@ class Minion5(Enemy):
     def enemy_ai(self, hero, key, combat_log):
         match key:
             case 1:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
             case 2:
                 magic_number = random.randint(0, 1)
                 if magic_number == 1:
                     self._fortify(combat_log)
                 else:
-                    self.basic_attack(hero, combat_log)
+                    self._basic_attack(hero, combat_log)
             case 3:
                 magic_number = random.randint(0, 1)
                 if magic_number == 1:
-                    self.block(12, combat_log)
+                    self._block(12, combat_log)
                 else:
-                    self.basic_attack(hero, combat_log)
+                    self._basic_attack(hero, combat_log)
 
     def enemy_intend(self, step, hero):
         if step % 3 == 0:
@@ -565,15 +565,15 @@ class Minion6(Enemy):
                 self.damage += 5
                 text = f"{self.name} zieht eine zweite Waffe."
                 combat_log.add(text, True)
-                self.block(20, combat_log)
+                self._block(20, combat_log)
             case 2:
-                self.block(20, combat_log)
+                self._block(20, combat_log)
             case 3:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
             case 4:
-                self.heal_self(18, combat_log)
+                self._heal_self(18, combat_log)
             case 5:
-                self.block(18, combat_log)
+                self._block(18, combat_log)
 
     def enemy_intend(self, step, hero):
         if step == 0:
@@ -604,25 +604,25 @@ class Minion7(Enemy):
     def _random(self, hero, combat_log):
         magic_number = random.randint(0, 1)
         if magic_number == 1:
-            self.block(15, combat_log)
+            self._block(15, combat_log)
         else:
             if self.damage > self.magic_power + 1:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
             else:
-                self.basic_magic(hero, combat_log)
+                self._basic_magic(hero, combat_log)
 
     def enemy_ai(self, hero, key, combat_log):
         match key:
             case 1:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
             case 2:
-                self.basic_magic(hero, combat_log)
+                self._basic_magic(hero, combat_log)
             case 3:
                 self.speed += 50
                 self.dodge += 5
                 text = f"{self.name} wechselt seine Strategie."
                 combat_log.add(text, True)
-                self.block(8, combat_log)
+                self._block(8, combat_log)
             case 4:
                 self._random(hero, combat_log)
 
@@ -664,14 +664,14 @@ class Elite1(Enemy):
                 text = f"{self.name} schlägt mit Brutalität zu!"
                 combat_log.add(text, True)
                 self.damage += 14
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
                 self.damage -= 14
             case 2:
                 self._war_cry(hero, combat_log)
             case 3:
                 magic_number = random.randint(0, 100)
                 if magic_number <= 65:
-                    self.basic_attack(hero, combat_log)
+                    self._basic_attack(hero, combat_log)
                 else:
                     self._war_cry(hero, combat_log)
 
@@ -698,7 +698,7 @@ class Elite2(Enemy):
         if self.life <= self.max_life * 0.25:
             text = f"{self.name} zerberstet in einem lauten Knall!"
             combat_log.add(text, True)
-            self.basic_attack(hero, combat_log)
+            self._basic_attack(hero, combat_log)
             self.life = 0
             text = f"{hero.name} kriegt einige Fragmente ab!" 
             combat_log.add(text, True)
@@ -711,22 +711,22 @@ class Elite2(Enemy):
         magic_number = random.choice((1, 2, 3))
         match magic_number:
             case 1:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
             case 2:
                 self._harden_or_burst(hero, combat_log)
             case 3:
-                self.block(17, combat_log)
+                self._block(17, combat_log)
 
     def enemy_ai(self, hero, key, combat_log):
         match key:
             case 1:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
             case 2:
                 self._harden_or_burst(hero, combat_log)
             case 3:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
             case 4:
-                self.block(17, combat_log)
+                self._block(17, combat_log)
             case 5:
                 self._random(hero, combat_log)
 
@@ -768,22 +768,22 @@ class Elite3(Enemy):
         magic_number = random.choice((1, 2))
         match key:
             case 1:
-                self.block(30, combat_log)
+                self._block(30, combat_log)
             case 2:
                 if magic_number == 1:
-                    self.basic_attack(hero, combat_log)
+                    self._basic_attack(hero, combat_log)
                 else:
                     self._ability_1(combat_log)
             case 3:
                 if magic_number == 1:
-                    self.basic_attack(hero, combat_log)
+                    self._basic_attack(hero, combat_log)
                 else:
                     self._ability_2(hero, combat_log)
             case 4:
                 if magic_number == 1:
-                    self.basic_attack(hero, combat_log)
+                    self._basic_attack(hero, combat_log)
                 else:
-                    self.block(17, combat_log)
+                    self._block(17, combat_log)
 
     def enemy_intend(self, step, hero):
         if step == 0:
@@ -819,11 +819,11 @@ class Boss1(Enemy):
             case 3:
                 text = f"{self.name} holt zum Schlag aus!"
                 combat_log.add(text, True)
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
             case 4:
                 text = f"{self.name} schleudert einen Feuerpfeil!"
                 combat_log.add(text, True)
-                self.basic_magic(hero, combat_log)
+                self._basic_magic(hero, combat_log)
             case 5:
                 text = f"Die Macht von {self.name} erhöht sich."
                 combat_log.add(text, True)
@@ -845,13 +845,13 @@ class Boss1(Enemy):
 
 
 #IMAGES LOADED, EVERY ENEMY INSTANCE POINTS TO THESE
-kirgo = ''
-act2_minion_1 = ''
-act2_minion_2 = ''
-act2_minion_3 = ''
-act2_minion_4 = ''
-act2_minion_5 = ''
-karim = ''
+kirgo = 'images/kirgo.png'
+act2_minion_1 = 'images/untoter_krieger.png'
+act2_minion_2 = 'images/waechter_golem.png'
+act2_minion_3 = 'images/dschinn.png'
+act2_minion_4 = 'images/attentaeter.png'
+act2_minion_5 = 'images/magischer_zauberbrecher.png'
+karim = 'images/karim.png'
 #IMAGES LOADED, EVERY ENEMY INSTANCE POINTS TO THESE
 
 
@@ -861,12 +861,12 @@ class EventMinionKirgo(Enemy):
         super().__init__('Kirgo', 80, 80, 25, 60,
                          kirgo,
                          reduction=20)
-        heal_used = False
+        self.heal_used = False
         
     def _poison_attack(self, hero, combat_log):
-        self.power -= 15
+        self.damage -= 15
         damage_taken = self.basic_attack(hero, combat_log)
-        self.power += 15
+        self.damage += 15
         if damage_taken > 0:
             abilities.PoisonE2H(8, 4).buff(hero)
             text = f'{hero.name} wurde vergiftet!'
@@ -875,23 +875,29 @@ class EventMinionKirgo(Enemy):
     def enemy_ai(self, hero, key, combat_log):
         match key:
             case 1:
-                self.block(20, combat_log)
+                self._block(20, combat_log)
             case 2:
-                self.heal_self(50, combat_log)
+                self._heal_self(50, combat_log)
                 self.heal_used = True
             case 3:
                 magic_number = random.choice((1, 2, 3))
                 if magic_number == 1:
                     self._poison_attack(hero, combat_log)
                 else:
-                    self.basic_attack(hero, combat_log)
+                    self._basic_attack(hero, combat_log)
             case 4:
-                abilities.HasteE2E(40, 4).buff(self)
-                text = f'{self.name} hat eine gute Beinarbeit'
-                combat_log.add(text, True)
+                magic_number = random.choice((1, 2))
+                if magic_number == 1:
+                    abilities.HasteE2E(40, 4).buff(self)
+                    text = f'{self.name}s Agilität erhöht sich'
+                    combat_log.add(text, True)
+                else:
+                    abilities.Harden().buff(hero, combat_log)
+                    text = f'{self.name}s Verteidigung erhöht sich'
+                    combat_log.add(text, True)
 
     def enemy_intend(self, step, hero):
-        cutoff = self.life < self.max_life / 7
+        cutoff = self.life < self.max_life / 5
         if self.life < hero.damage and cutoff and  not self.over_hp:
             intend, key = 'Block', 1
         elif cutoff and not self.heal_used:
@@ -917,9 +923,9 @@ class Minion1Act2(Enemy):
         magic_number = random.choice((1, 2, 3))
         match magic_number:
             case 1:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
             case 2:
-                self.mana_burn(hero, combat_log)
+                self._mana_burn(hero, combat_log)
             case 3:
                 text = f"{self.name} steht regungslos da" 
                 combat_log.add(text, True)
@@ -927,11 +933,11 @@ class Minion1Act2(Enemy):
     def enemy_ai(self, hero, key, combat_log):
         match key:
             case 1:
-                self.heal_self(26, combat_log)
+                self._heal_self(26, combat_log)
             case 2:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
             case 3:
-                self.mana_burn(hero, combat_log)
+                self._mana_burn(hero, combat_log)
             case 4:
                 self._random(hero, combat_log)
 
@@ -953,7 +959,7 @@ class Minion1Act2(Enemy):
 class Minion2Act2(Enemy):
 
     def __init__(self):
-        super().__init__('WÄCHTER GOLEM', 100, 100, 17, 22, 
+        super().__init__('WÄCHTER GOLEM', 100, 100, 20, 22, 
                          act2_minion_2, 
                          reduction=10, mental_reduction=10, dodge=0,
                          magic_power=39)
@@ -961,30 +967,38 @@ class Minion2Act2(Enemy):
     def enemy_ai(self, hero, key, combat_log):
         match key:
             case 1:
-                self.block(50, combat_log)
+                self._block(50, combat_log)
                 text = f'Der {self.name} wirkt unzerstörbar!'
                 combat_log.add(text, True)
             case 2:
-                magic_number = random.randint((1, 2))
+                magic_number = random.choice((1, 2))
                 if magic_number == 1:
-                    self.basic_attack(hero, combat_log)
+                    self._basic_attack(hero, combat_log)
                 else:
                     abilities.FullDefenseE2E(14, 4).buff(self)
+                    text = f'Die Verteidigung des {self.name} erhöht sich'
+                    combat_log.add(text, True)
             case 3:
-                self.basic_magic(hero, combat_log)
+                text = 'Ein gleißendes Licht!'
+                combat_log.add(text, True)
+                self._basic_magic(hero, combat_log)
             case 4:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
 
     def enemy_intend(self, step, hero):
         if step == 0:
             intend, key = 'Block+', 1
-        if step % 2 == 1:
+        elif step % 2 == 1:
             intend, key = 'Atk / Buff', 2
         else:
-            if hero.life > hero.max_life * 0.9:
+            if hero.life > hero.max_life * 0.8:
                 intend, key = 'Mag+', 3
             else:
-                intend, key = 'Atk', 4
+                magic_number = random.randint(0, 8)
+                if magic_number == 8:
+                    intend, key = 'Mag+', 3
+                else:
+                    intend, key = 'Atk', 4
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
     
@@ -997,19 +1011,19 @@ class Minion3Act2(Enemy):
                         act2_minion_3,
                         reduction=4, dodge=15 ,mental_reduction=32,
                         magic_power=24)
-        abilities.IllusionE2E(self.magic_power, 2).buff(self)
+        abilities.Illusion(self.magic_power, 2).buff(self)
 
     def _random(self, hero, combat_log):
         magic_number = random.randint(1, 4)
         match magic_number:
             case 1:
-                self.basic_magic(hero, combat_log)
+                self._basic_magic(hero, combat_log)
             case 2:
                 text = 'Das Geistwesen verschwimmt mit der Umgebung'
                 combat_log.add(text, True)
                 abilities.Illusion(self.magic_power, 2).buff(self)
             case 3:
-                self.block(self.magic_power, combat_log)
+                self._block(self.magic_power, combat_log)
             case 4:
                 text = f'Der starre Blick des {self.name}s'
                 combat_log.add(text, True)
@@ -1020,7 +1034,7 @@ class Minion3Act2(Enemy):
     def enemy_ai(self, hero, key, combat_log):
         match key:
             case 1:
-                self._random(self, hero, combat_log)
+                self._random(hero, combat_log)
             case 2:
                 magic_number = random.choice((1, 2))
                 if magic_number == 1:
@@ -1054,8 +1068,8 @@ class Minion4Act2(Enemy):
             combat_log.add(text, True)
             text = 'KABUMM!!!'
             combat_log.add(text, True)
-            self.basic_attack(hero, combat_log)
-            self.basic_magic(hero, combat_log)
+            self._basic_attack(hero, combat_log)
+            self._basic_magic(hero, combat_log)
             self.bomb_prepared = False
         else:
             text = f'Der {self.name} greift nach etwas im seiner Tasche'
@@ -1065,7 +1079,7 @@ class Minion4Act2(Enemy):
     def _frost_scroll(self, hero, combat_log):
         text = f'Der {self.name} zieht einen Eispfeil aus der Spruchrolle'
         combat_log.add(text, True)
-        damage_taken = self.basic_magic(hero, combat_log)
+        damage_taken = self._basic_magic(hero, combat_log)
         if damage_taken > 5:
             text = 'Du wurdest vereist'
             combat_log.add(text, True)
@@ -1078,11 +1092,11 @@ class Minion4Act2(Enemy):
                 text = f'f{self.name} der Attentäter starrt dich an.'
                 combat_log.add(text, True)
                 abilities.AccuracyE2E(5, 3).buff(self)
-                self.block(round(self.magic_power / 2), combat_log)
+                self._block(round(self.magic_power / 2), combat_log)
             case 2:
-                self.block(self.magic_power, combat_log)
+                self._block(self.magic_power, combat_log)
             case 3:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
             case 4 | 5:
                 self._bomb(hero, combat_log)
             case 6:
@@ -1120,11 +1134,11 @@ class Minion5Act2(Enemy):
         self.life_last_turn = self.life
         
     def _devine_intervention(self, hero, combat_log):
-        if self.life_last_turn - self.life > 40:
+        if self.life_last_turn - self.life > 50:
             text = f'Der Erbauer unterstützt {self.name}'
             combat_log.add(text, True)
-            self.heal_self(20, combat_log)
-            self.block(20, combat_log)
+            self._heal_self(20, combat_log)
+            self._block(20, combat_log)
         else:
             text = f'{self.name} erbittet'
             combat_log.add(text, True)
@@ -1141,16 +1155,16 @@ class Minion5Act2(Enemy):
             case 1:
                 self._devine_intervention(hero, combat_log)
             case 2:
-                self.mana_burn(hero, combat_log)
+                self._mana_burn(hero, combat_log)
             case 3:
-                self.basic_magic(hero, combat_log)
+                self._basic_magic(hero, combat_log)
             case 4:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
 
     def enemy_intend(self, step, hero):
         if step % 3 == 0:
             intend, key = 'Buff / Buff+', 1
-        elif hero.mana * 2 > hero.max:
+        elif hero.mana * 2 > hero.max_mana:
             intend, key = 'Mag', 2
         elif hero.reduction >= 40:
             intend, key = 'Mag', 3
@@ -1169,9 +1183,9 @@ class EventEliteKarim(Enemy):
                          critical=8)
         
     def _poison_attack(self, hero, combat_log):
-        self.power -= 13
-        damage_taken = self.basic_attack(hero, combat_log)
-        self.power += 13
+        self.damage -= 13
+        damage_taken = self._basic_attack(hero, combat_log)
+        self.damage += 13
         if damage_taken > 0:
             abilities.PoisonE2H(8, 4).buff(hero)
             text = f'{hero.name} wurde vergiftet!'
@@ -1182,7 +1196,9 @@ class EventEliteKarim(Enemy):
         combat_log.add(text, True)
         text = f'gegen {hero.name}s Kopf!'
         combat_log.add(text, True)
-        damage_taken = self.basic_attack(hero, combat_log)
+        self.damage -= 13
+        damage_taken = self._basic_attack(hero, combat_log)
+        self.damage += 13
         if damage_taken > 0:
             abilities.StunE2H(40, 2).buff(hero)
             text = f'{hero.name} hat die Orientierung verloren'
@@ -1199,9 +1215,9 @@ class EventEliteKarim(Enemy):
                 if magic_number == 1:
                     self._pommel_strike(hero, combat_log)
                 else:
-                    self.block(12, combat_log)
+                    self._block(12, combat_log)
             case 4:
-                self.basic_attack(hero, combat_log)
+                self._basic_attack(hero, combat_log)
 
     def enemy_intend(self, step, hero):
         if hero.dodge > 5 and not self.accuracy:
