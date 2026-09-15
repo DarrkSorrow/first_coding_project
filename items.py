@@ -562,7 +562,7 @@ class SoulStealer(Gear):
 
     def __init__(self):
         super().__init__("Seelen-Dieb",
-                        30, 200, '', soul_stealer)
+                        25, 200, '', soul_stealer)
         self.after_combat_effekt = True
 
     def equip(self, hero):
@@ -572,6 +572,8 @@ class SoulStealer(Gear):
         hero.inventory.remove(self)
 
     def after_combat(self, hero):
+        if hero.life < self.power:
+            hero.life = self.power
         if hero.mana < self.power:
             hero.mana = self.power
 
@@ -629,8 +631,31 @@ class MoonStone(Gear):
 
 
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
+smoke_bomb = 'images/items/smoke_bomb.png'
 healing_salve = 'images/items/healing_salve.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
+
+
+@register(type='item')
+@register(type='item', act=2)
+class SmokeBomb(Consumable):
+
+    def __init__(self):
+        super().__init__("Rauchbombe",
+                        0, 1, 20,
+                        '', smoke_bomb)
+        
+    def use_item(self, hero, enemy, combat_log):
+        text = 'In einem Augenblick zündet und wirft'
+        combat_log.add(text)
+        text = f'{hero.name} eine Rauchbombe'
+        combat_log.add(text)
+        text = f'{hero.name} konnte erfolgreich entkommen'
+        combat_log.add(text)
+        self.charges -= 1
+        if self.charges == 0:
+            self._remove(hero)
+        return 'escape'
 
 
 @register(type='item', act=2)
@@ -655,7 +680,7 @@ class HealingSalve(Consumable):
             RegenerationH2H(11, 10).buff(hero)
             text = "Du Salbe legt sich über die Haut"
             combat_log.add(text)
-            text = "wie Honig über einen Apfel."
+            text = "wie Honig über einen Apfel"
             combat_log.add(text)
         self.charges -= 1
         self.update_symbol()
