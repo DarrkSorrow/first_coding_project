@@ -26,12 +26,12 @@ class CombatLog:
     def draw(self):
 
         pygame.draw.rect(
-            self.screen, (60, 60, 60), (0, 0, 420, 400))
+            self.screen, (30, 30, 30), (0, 0, 420, 260))
 
         pygame.draw.rect(
-            self.screen, (255, 255, 255), (0, 0, 420, 400), 2)
+            self.screen, (255, 255, 255), (0, 0, 420, 260), 2)
         
-        y = 380
+        y = 240
         #line is tuple (text, isEnemy)
         for line in reversed(self.messages[-10:]):
             if line[1] == True:
@@ -39,9 +39,9 @@ class CombatLog:
             else:#Text gets rendered in white or red depending on isEnemy
                 text = self.font.render(line[0], True, (255, 255, 255))
 
-            self.screen.blit(text, (10, y))
+            self.screen.blit(text, (5, y))
 
-            y -= 30
+            y -= 25
 
 
 class Button:
@@ -96,7 +96,7 @@ def boss_reward_and_buttons(hero, screen):
     text = 'DU HAST GESIEGT!'
     y = display_text(text, 75, screen, font)
     text = 'Wähle deine Belohnung'
-    display_text(text, y, screen, font)
+    y = display_text(text, y, screen, font)
 
     life_reward = Button(200, 350,
         200, 100, '+100 Max-Hp, +10 Res', "1")
@@ -105,10 +105,10 @@ def boss_reward_and_buttons(hero, screen):
         200, 100, "+100 Max-Odem, +10 MentalRes.", "2")
     
     extra_item_slot = Button(200, 600,
-        200, 100, "Extra Item Slot, +Item", "3")
+        200, 100, "Extra Item Slot", "3")
 
     extra_ability_slot = Button(800, 600,
-            200, 100, "Extra Ability Slot, +XP", "4")
+        200, 100, "Extra Ability Slot", "4")
 
     buttons = [life_reward, mana_reward, extra_item_slot,
                extra_ability_slot]
@@ -134,7 +134,7 @@ def bond_fire_buttons(hero):
     250, 70, f"+{hero.max_mana} Odem", "2")
 
     button_xp = Button(675, 600,
-    250, 70, f"+{round(hero.xp * 0.7)} XP", "3")
+    250, 70, f"+{round(hero.xp * 0.5)} XP", "3")
 
     buttons = [button_heal, button_mana, button_xp]
 
@@ -193,20 +193,28 @@ def buttons_right_bottom_corn():
 
     font = pygame.font.SysFont(None, 20)
 
-    attack_button = Button(720, 540,
-    200, 100, "Angreifen", "0")
+    attack_button = Button(840, 560,
+                           180, 80, "Angreifen", "0")
+    defend_button = Button(1020, 560,
+                           180, 80, "Verteidigen", "1")
+    ability_button = Button(840, 640,
+                            180, 80, "Fähigkeiten", "2")
+    inventory_button = Button(1020, 640,
+                              180, 80, "Inventar", "3")
+    extra_1 = Button(840, 720,
+                     180, 80, "", "4")
+    extra_2 = Button(1020, 720,
+                     180, 80, "", "5")
+    extra_3 = Button(660, 560,
+                     180, 80, "", "6")
+    extra_4 = Button(660, 640,
+                     180, 80, "", "7")
+    extra_5 = Button(660, 720,
+                     180, 80, "", "8")
 
-    defend_button = Button(950, 540,
-    200, 100, "Verteidigen", "1")
-
-    ability_button = Button(720, 670,
-    200, 100, "Fähigkeiten", "2")
-
-    inventory_button = Button(950, 670,
-    200, 100, "Inventar", "3")
-
-    buttons = [attack_button, defend_button,
-                ability_button, inventory_button]
+    buttons = [attack_button, defend_button, ability_button,
+            inventory_button, extra_1, extra_2, extra_3,
+            extra_4, extra_5]
 
     return buttons, font
 
@@ -222,14 +230,12 @@ def choose_ability(hero, action, screen):
     while len(buttons) != len(hero.abilities):
         del buttons[-1]
     
-    i = 0
-    for button in buttons:
+    for i, button in enumerate(buttons):
         spell = hero.abilities[i]
         button.text = f"{spell.name}\n"
         button.text += f"ODEM:({str(spell.cost)})\n"
         if spell.cool_down > 0:
             button.text += f"COOLD.({str(spell.cool_down)})"
-        i += 1
 
     for button in buttons:
         button.draw(screen, font)
@@ -244,46 +250,47 @@ def item_buttons(hero, screen):
 #from world
     buttons, font = buttons_right_bottom_corn()
 
-    items = []
-    for item in hero.inventory:
-        items.append(item)
-    
-    while len(buttons) != len(items):
-        del buttons[-1]
-   
     i = 0
-    for button in buttons:
-        spell = items[i]
-        button.text = spell.name
-        button.draw(screen, font)
+    for item in hero.inventory:
+        buttons[i].text = item.name
+        buttons[i].key = i
+        buttons[i].draw(screen, font)
         i += 1
+
+    for x, item in enumerate(hero.pockets):
+        buttons[i].text = item.name
+        buttons[i].key = hero.max_inventory + x
+        buttons[i].draw(screen, font)
+        i += 1
+    
+    while len(buttons) != len(hero.inventory) + len(hero.pockets):
+        del buttons[-1]
 
     return buttons
 
 
 def item_in_combat(hero, enemy, screen):
-#from combat_interface
+
     buttons, font = buttons_right_bottom_corn()
 
-    items = []
+    i = 0
     for item in hero.inventory:
         if item.active:
-            items.append(item)
-    
-    while len(buttons) != len(items):
-        del buttons[-1]
-   
-    i = 0
-    for button in buttons:
-        spell = items[i]
-        button.text = spell.name
+            buttons[i].text = item.name
+            buttons[i].key = i
+            buttons[i].draw(screen, font)
+            i += 1
+
+    for x, item in enumerate(hero.pockets):
+        buttons[i].text = item.name
+        buttons[i].key = hero.max_inventory + x
+        buttons[i].draw(screen, font)
         i += 1
 
-    for button in buttons:
-        button.draw(screen, font)
+    while len(buttons) != i:
+        del buttons[-1]
 
     pygame.display.flip()
-
     item = display_answers_clicked(buttons)
     return int(item)
 
@@ -292,12 +299,15 @@ def choose_item(hero, screen):
 #from event
     buttons, font = buttons_right_bottom_corn()
     
-    while len(buttons) != len(hero.inventory):
+    while len(buttons) != len(hero.inventory) + len(hero.pockets):
         del buttons[-1]
    
     i = 0
     for button in buttons:
-        item = hero.inventory[i]
+        if i < hero.max_inventory:
+            item = hero.inventory[i]
+        else:
+            item = hero.pockets[i - hero.max_inventory]
         button.text = item.name
         button.draw(screen, font)
         i += 1
@@ -307,8 +317,11 @@ def choose_item(hero, screen):
 
 
 def combat_buttons(screen):
-    
+    """Attack, defense, ability, item"""
     buttons, font = buttons_right_bottom_corn()
+
+    while len(buttons) != 4:#4 general buttons,
+        del buttons[-1]     #they dont change at all
 
     for button in buttons:
         button.draw(screen, font)
@@ -321,50 +334,48 @@ def combat_buttons(screen):
 def dungeon_inventory(hero, screen):
 
     font = pygame.font.SysFont(None, 20)
+    buttons = []
+    c, i, x, y = 0, 0, 1095, 255
 
-#EMPTY-SLOTS 
-    x, y = 1050, 250
-    for slot in range(hero.max_inventory):
-        pygame.draw.rect(screen, (100, 100, 250),
-                         (x, y, 50, 50))
+    for slot in range(hero.max_inventory + hero.pocket_size):
+
+        pygame.draw.rect(screen, (100, 100+c, 250-c),
+                         (x, y, 50, 50))#Empty Slots
+        
+        if i < len(hero.inventory):
+            button = Button(x, y,
+                50, 50, " ", f"{str(i)}")
+            item = hero.inventory[i]
+            button.image = item.image
+            button.text = item.symbol
+            button.draw(screen, font)
+            buttons.append(button)
+
+        elif 0 <= i - hero.max_inventory < len(hero.pockets):
+            button = Button(x, y,
+                50, 50, " ", f"{str(i)}")
+            item = hero.pockets[i - hero.max_inventory]
+            button.image = item.image
+            button.text = item.symbol
+            button.draw(screen, font)
+            buttons.append(button)
+        
+        i += 1
         if slot % 2 == 0:
             x += 50
         else:
             x -= 50
             y += 50
-#EMPTY-SLOTS
 
-    button_1 = Button(1050, 250,
-    50, 50, " ", "0")
-
-    button_2 = Button(1100, 250,
-    50, 50, " ", "1")
-
-    button_3 = Button(1050, 300,
-    50, 50, " ", "2")
-
-    button_4 = Button(1100, 300,
-    50, 50, " ", "3")
-
-    buttons = [button_1, button_2, button_3, button_4]
-
-    while len(buttons) != len(hero.inventory):
-        del buttons[-1]
-
-    i = 0
-    for button in buttons:
-        item = hero.inventory[i]
-        button.image = item.image
-        button.text = item.symbol
-        button.draw(screen, font)
-        i += 1
+        if i == hero.max_inventory:
+            c += 150#changes rgb tupel in this func
     
     return buttons
 
 
 def abilities_displayed(hero, screen):
 
-    x, y = 420, 710
+    x, y = 380, 715
     for slot in range(hero.max_abilities):#SLOTS
         pygame.draw.rect(screen, (250, 100, 100),
                          (x, y, 65, 65))
@@ -393,7 +404,10 @@ def dungeon_buttons_clicked(hero, buttons, screen, event):
     for button in buttons:
         if button.clicked(event.pos):
             i = int(button.key)
-            item = hero.inventory[i]
+            if i >= len(hero.inventory):
+                item = hero.pockets[i - hero.max_inventory]
+            else:
+                item = hero.inventory[i]
             if item.dungeon:
                 item.use_item(hero, None, None)
 
