@@ -2,72 +2,89 @@ from time import sleep
 from random import randint
 from functools import partial
 from combat_interface import *
-import enemies, abilities, buttons_clog
+from abilities import *
+from enemies import *
+import buttons_clog
 
 
 def start_fight(hero, stage, screen):
-    enemy = enemies.random_enemy(hero, stage)
+    enemy = random_enemy(hero, stage)
     combat_start_screen(enemy, screen), sleep(1.5)
-    main_fight(hero, enemy, screen)
+    enemy_defeated = main_fight(hero, enemy, screen, stage)
+    return enemy_defeated
 
 
 def start_elite(hero, stage, screen):
-    enemy = enemies.random_elite(hero, stage)
-    combat_start_screen(enemy, screen), sleep(2)
-    main_fight(hero, enemy, screen)
+    enemy = random_elite(hero, stage)
+    combat_start_screen(enemy, screen), sleep(2.5)
+    enemy_defeated = main_fight(hero, enemy, screen, stage)
+    return enemy_defeated
 
 
 def start_boss(hero, stage, screen):
-    enemy = enemies.random_boss(hero, stage)
-    combat_start_screen(enemy, screen), sleep(2)
-    main_fight(hero, enemy, screen)
+    enemy = random_boss(hero, stage)
+    combat_start_screen(enemy, screen), sleep(3.5)
+    main_fight(hero, enemy, screen, stage)
 
 
-def main_fight(hero, enemy, screen):
+def main_fight(hero, enemy, screen, stage):
     
     font = pygame.font.SysFont(None, 20)
     combat_log = buttons_clog.CombatLog(screen, font)
-    step = 0
-    while enemy.life > 0 and hero.life > 0:
+    step, action = 0, ''
 
+    while enemy.life > 0 and hero.life > 0 and action != 'escape':
+
+        screen.fill((150,100,0)), combat_log.draw()
         cooldown_and_passive_trigger(hero, screen, combat_log)
+        combat_interface(hero, enemy, screen)
 
-        action, key = combat_interface(hero, enemy, screen, step)
+        action, key = combat_inputs(hero, enemy, screen, step)
         action = pre_hero_turn(
             hero, action, combat_log, screen, font)
         attack_order = []
         attack_order = who_first(hero, enemy, attack_order,
                                   key, action, combat_log, screen)
-        #attack_order[] gets initialzied by () due to partial
-        action_1 = attack_order[0]()#First move
+        
+        # *** FIRST MOVE ***
+        action_1 = attack_order[0]()
         if action_1 != None:
             action = action_1
+        #screen.fill((150,100,0)), combat_log.draw()
+        #combat_interface(hero, enemy, screen), enemy.blitme(screen)
         pygame.display.flip()
-        
-        if hero.life > 0 and enemy.life > 0:# second move
-            action_2 = attack_order[1]()
-            if action_2 != None:
-                action = action_2
+        # *** FIRST MOVE ***
+
+        if not action == 'escape':
+            # *** SECONDE MOVE ***
+            if hero.life > 0 and enemy.life > 0:
+                action_2 = attack_order[1]()
+                if action_2 != None:
+                    action = action_2
+            #  screen.fill((150,100,0)), combat_log.draw()
+            #   combat_interface(hero, enemy, screen), enemy.blitme(screen)
             pygame.display.flip()
+            # *** SECONDE MOVE ***
         
-        debuff_hero_enemy(hero, enemy, combat_log, screen, font)
-        undo(hero, enemy, action, combat_log, screen, font)
+        debuff_hero_enemy(hero, enemy, combat_log, screen)
+        undo(hero, enemy, action, combat_log, screen)
         step += 1
 
     hero_alive = after_combat(hero, enemy, combat_log)
     if not hero_alive:
         return None
-    sleep(1), abilities.learn_ability(hero, screen), sleep(1)
+    elif action == 'escape':
+        return False
+    sleep(1), learn_ability(hero, screen, stage), sleep(1)
+    return True
 
 
 def cooldown_and_passive_trigger(hero, screen, combat_log):
 
-    screen.fill((150,100,0)), combat_log.draw()
-
     for spell in hero.abilities:#cooldown -1
         spell.reduce_cool_down()
         
-    for item in hero.inventory:# triggers items if
+    for item in hero.inventory:# triggers items with
         if item.passive_effekt:# passive_effekt 
             item.trigger_passive(hero)
 
@@ -77,8 +94,10 @@ def pre_hero_turn(hero, action, combat_log, screen, font):
     match action:
         case "0":  #Angriff
             None
+
         case "1":  #Abwehr
             hero.instant_defend()
+
         case "2":  #Fähigkeiten
             if hero.abilities == []:
                 text = ("Du kannst doch garnichts.")
@@ -88,24 +107,10 @@ def pre_hero_turn(hero, action, combat_log, screen, font):
                     screen, (150,100,0), (650, 500, 1100, 730)) #old buttons
                 pygame.display.flip()
                 action = buttons_clog.choose_ability(hero, action, screen)
+                
         case "3":  #Gegenstände
-            active_items = []
-            for item in hero.inventory:
-                if item.active:
-                    active_items.append(item)
-            if active_items == []:
-                text = ("Du hast doch garnichts.")
-                combat_log.add(text)
-                hero.dodge += 15
-                hero.speed += 300
-            else:
-                hero.dodge += 15
-                hero.speed += 300
-                text = (f"{hero.name} versucht blitzschnell in seine Tasche zu greifen!")
-                combat_log.add(text)
-        case _:
-            text = ("!!Du hast das Gleichgewicht für einen Moment verloren!!")
-            combat_log.add(text)
+            hero.instant_item(combat_log)
+        
     sleep(1)
     return action
 
@@ -135,20 +140,29 @@ def who_first(hero, enemy, attack_order, key, action, combat_log, screen):
 
 def enemy_turn(hero, enemy, key, combat_log):
     if enemy.life > 0:
-       enemy.enemy_ai(hero, key, combat_log)
+        stunned = enemy.stunned_or_not()
+        if stunned:
+            text = f'{enemy.name} ist BENOMMEN und kann nichts tun.'
+            combat_log.add(text, True)
+        else:
+            enemy.enemy_ai(hero, key, combat_log)
     return None
 
 
 def hero_turn(hero, enemy, action, combat_log, screen):
-    
+
+    stunned = hero.stunned_or_not()
+    if stunned:
+        action = "4"
+
     match action:
 
         case "0":
-            abilities.enemy_block_dodge(hero, enemy, combat_log)
+            enemy_block_dodge(hero, enemy, combat_log)
+
         case "1":
             hero.defend(combat_log)
-            if hero.mana >= hero.max_mana:
-                hero.mana = hero.max_mana
+
         case "a":
             casted = hero.abilities[0].use_ability(hero, enemy, combat_log)
             if casted:
@@ -165,22 +179,33 @@ def hero_turn(hero, enemy, action, combat_log, screen):
             casted = hero.abilities[3].use_ability(hero, enemy, combat_log)
             if casted:
                 action = "w"
+
         case "3":
             active_items = []
+            hero.item_use()#only extra dodge for a round 
             for item in hero.inventory:
                 if item.active:
                     active_items.append(item)
-            if active_items != []:
+            if active_items or hero.pockets:
                 pygame.draw.rect(                               #drawn to cover up
                     screen, (150,100,0), (650, 500, 1100, 730)) #old buttons
                 pygame.display.flip()
                 choice = buttons_clog.item_in_combat(hero, enemy, screen)
-                hero.inventory[choice].use_item(hero, enemy, combat_log)
-    
+                if choice < hero.max_inventory:
+                    action = hero.inventory[choice].use_item(hero, enemy, combat_log)
+                else:
+                    action = hero.pockets[choice - hero.max_inventory].use_item(hero, enemy, combat_log)
+                if action == None:#almost all items have no return
+                    action = "3"
+
+        case "4":
+                text = f'{hero.name} ist BENOMMEN und kann nichts tun'
+                combat_log.add(text)
+
     return action
 
 
-def undo(hero, enemy, action, combat_log, screen, font):
+def undo(hero, enemy, action, combat_log, screen):
     
     match action:
         case "0":
@@ -195,12 +220,11 @@ def undo(hero, enemy, action, combat_log, screen, font):
             hero.abilities[2].undo_ability(hero, enemy)
         case "w":
             hero.abilities[3].undo_ability(hero, enemy)
-        case "3":
-            hero.dodge -= 15
-            hero.speed -= 300
+        case "3" | 'escape':
+            hero.undo_instant_item()
 
 
-def debuff_hero_enemy(hero, enemy, combat_log, screen, font):
+def debuff_hero_enemy(hero, enemy, combat_log, screen):
 
     if hero.over_hp > 0:
         hero.decay_over_hp()
@@ -231,8 +255,9 @@ def after_combat(hero, enemy, combat_log):
         sleep(2)
         return False
     
-    text = f"***Du hast {enemy.name} niedergestreckt***"
-    combat_log.add(text)
+    elif enemy.life <= 0:
+        text = f"***Du hast {enemy.name} niedergestreckt***"
+        combat_log.add(text)
     
     for spell in hero.abilities:#strip cooldowns after fight
         while spell.cool_down > 0:
@@ -246,12 +271,13 @@ def after_combat(hero, enemy, combat_log):
     
     hero.over_hp = 0 # strip remaining block after fight
 
-    for item in hero.inventory:# triggers items if
+    for item in hero.inventory:# triggers items if item has
         if item.after_combat_effekt:# after_combat_effekt
             item.after_combat(hero)
 
     return True
 
 
+#NOT USED IN COMBAT.PY
 def train_hero(hero):#only called during the beginning
-    hero.abilities.append(abilities.Ability0())
+    hero.abilities.append(Ability0())
