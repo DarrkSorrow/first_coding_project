@@ -157,7 +157,7 @@ def event_0(hero, stage, screen):
     return None
 
 
-@register(act=1)
+@register(act=1)#AveragePayout 0.5
 def event_1_act_1(hero, stage, screen):
 
     start = f"{hero.name} marschiert schnellen Fußes durch fremde Landschaften. "
@@ -205,7 +205,7 @@ def event_1_act_1(hero, stage, screen):
     return None
 
 
-@register(act=1)
+@register(act=1)#AveragePayout 1
 def event_2_act_1(hero, stage, screen):
 
     start = f"In der entfernung zeichnen sich Umrisse eines Mannes, im Dunst, ab. "
@@ -227,7 +227,6 @@ def event_2_act_1(hero, stage, screen):
     match choice:
         case "1":
             raw_text = f"Der Fremde zwinkert und drückt {hero.name} etwas in die Hand."
-            y = display_outro(hero, raw_text, y, screen, font) 
             item = world.Item3()
             raw_text = 'Der Fremde geht weiter...'
             display_outro(hero, raw_text, y, screen, font)
@@ -244,7 +243,7 @@ def event_2_act_1(hero, stage, screen):
     return None
 
 
-@register(act=1)
+@register(act=1)#AveragePayout 0
 def event_3_act_1(hero, stage, screen):
 
     start = f"{hero.name} geht, in einer kleinen Siedlung, eine kleine Treppe "
@@ -313,7 +312,7 @@ def event_3_act_1(hero, stage, screen):
     return None
 
 
-@register(act=1)
+@register(act=1)#AveragePayout 0.5
 def event_4_act_1(hero, stage, screen):
 
     start = f"{hero.name} erreicht eine kleine Lichtung tief im Wald. "
@@ -394,7 +393,7 @@ def event_4_act_1(hero, stage, screen):
     return None
 
 
-@register(act=1)
+@register(act=1)#AveragePayout 0.5
 def event_5_act_1(hero, stage, screen):
 
     start = f"{hero.name} erblickt einen steinernen Torbogen, "
@@ -456,7 +455,7 @@ def event_5_act_1(hero, stage, screen):
     return None
 
 
-@register(act=1)
+@register(act=1)#AveragePayout 0.5
 def event_6_act_1(hero, stage, screen):
 
     start = f"{hero.name} erreicht einen verlassenen Wachposten. "
@@ -520,7 +519,7 @@ def event_6_act_1(hero, stage, screen):
     return None
 
 
-@register(act=1)
+@register(act=1)#AveragePayout 1
 def event_7_act_1(hero, stage, screen):
 
     start = f"{hero.name} erkennt in den Büschen den Schein eines kleinen Feuers. "
@@ -580,7 +579,7 @@ def event_7_act_1(hero, stage, screen):
     return None
 
 
-@register(act=1)
+@register(act=1)#AveragePayout 1
 def event_8_act_1(hero, stage, screen):
 
     start = f"{hero.name} wandert auf einer gut befestigten Straße, "
@@ -691,7 +690,7 @@ def event_8_act_1(hero, stage, screen):
 #*** --- *** --- *** --- *** --- ***
 
 
-@register(act=2)
+@register(act=2)#AveragePayout 0
 def event_1_act_2(hero, stage, screen):
 
     start = 'In den Gassen der Stadt trifft du auf zwielichtige Gestalten'
@@ -751,7 +750,7 @@ def event_1_act_2(hero, stage, screen):
     return None
 
 
-@register(act=2)
+@register(act=2)#AveragePayout 0
 def event_2_act_2(hero, stage, screen):
 
     start = f'Beim Gehen entlang des Stadtrandes strahlt {hero.name}, '
@@ -767,7 +766,7 @@ def event_2_act_2(hero, stage, screen):
 
     danger, enemy_arrived, hero_left = 1, False, False
 
-    while not enemy_arrived or not hero_left:
+    while not enemy_arrived and not hero_left:
 
         display_danger = 10
         if danger == 5:
@@ -781,7 +780,12 @@ def event_2_act_2(hero, stage, screen):
 
         answers = [choice_1, choice_2]
 
-        screen.fill((255, 255, 0))
+        #screen.fill((255, 255, 0))
+        #world.hero_health_bar(hero, screen)
+        #world.hero_mana_bar(hero, screen)
+        #world.hero_xp
+        #combat.hero_combat_stats(hero, screen)
+        #buttons_clog.dungeon_inventory(hero, screen)
         buttons = buttons_clog.display_answers(answers, screen)
         pygame.display.flip()
         y = 100
@@ -859,7 +863,7 @@ def event_2_act_2(hero, stage, screen):
     return None
 
 
-@register(act=2)
+@register(act=2)#AveragePayout 1
 def event_3_act_2(hero, stage, screen):
     
     start = f'Für die Nacht sucht {hero.name} einen Übernachtungsplatz'
@@ -903,9 +907,9 @@ def event_3_act_2(hero, stage, screen):
 
     intro = [start, a,]
 
-    answers = [choice_1]
-
     choice_1 = 'Seegen des Landarbeiter[+7 Max Leben]'
+
+    answers = [choice_1]
 
     if hero.speed >= 100:
         choice_2 = 'Seegen des Krieger[+2 Crit. Chance]'
@@ -942,12 +946,12 @@ def event_3_act_2(hero, stage, screen):
     return None
 
 
-@register(act=2)
+@register(act=2)#AveragePayout -1
 def event_4_act_2(hero, stage, screen):
 
     start = 'Schützend vor der sengenden Mittagssonne'
-    a = f'liegt {hero.name} am Straßenrand und ruht sich aus.'
-    b = 'Plötzlich tauchen 2 Garnisonswachen auf und bauen sich auf.'
+    a = f'liegt {hero.name} am Straßenrand und ruht sich aus'
+    b = 'Plötzlich tauchen 2 Garnisonswachen auf und bauen sich auf'
     c = '"Na, Jungchen was treibst du dich in diesen Nebenstraßen rum"'
     d = '"Du bist doch wohl nicht ein Dieb?"'
     e = '"Ohne magisches Erz, werden wir dich mitnehmen..."'
@@ -1006,7 +1010,7 @@ def event_4_act_2(hero, stage, screen):
             else:
                 raw_text = 'Kleine Planänderung wir nehmen dich nicht mit'
                 y = display_outro(hero, raw_text, y, screen, font)
-                raw_text = 'Wir prügeln die Scheisse aus dich raus Jungchen'
+                raw_text = 'Wir prügeln die Scheisse aus dir raus, Jungchen'
                 y = display_outro(hero, raw_text, y, screen, font)
                 beaten_up = True
 
@@ -1025,7 +1029,7 @@ def event_4_act_2(hero, stage, screen):
             else:
                 raw_text = 'Einer der Wachen packt dich am Kragen deiner Kleidung'
                 y = display_outro(hero, raw_text, y, screen, font)
-                raw_text = 'So Freundchen jetzt bist du dran!'
+                raw_text = '"So Freundchen jetzt bist du dran!"'
                 y = display_outro(hero, raw_text, y, screen, font)
                 beaten_up = True
 
@@ -1038,18 +1042,18 @@ def event_4_act_2(hero, stage, screen):
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = 'seine Sammlung an Waffen und Granaten an seinem Gürtel'
                 y = display_outro(hero, raw_text, y, screen, font)
-                raw_text = '"Keinen Grund zu eskalieren, wir gehen einfach weiter"'
+                raw_text = '"Keinen Grund zu eskalieren..wir gehen einfach weiter"'
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = f'{hero.name} traut dem Frieden nicht und taucht'
                 y = display_outro(hero, raw_text, y, screen, font)
-                raw_text = 'bei der Gelegenheit unter'
+                raw_text = 'bei der nächsten Gelegenheit unter'
                 y = display_outro(hero, raw_text, y, screen, font)
             else:
                 raw_text = 'Die Wachen ziehen Ihre Waffen'
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = f'und fordern {hero.name} auf sich zu ergeben'
                 y = display_outro(hero, raw_text, y, screen, font)
-                raw_text = f'{hero.name} ergibt sich und bereut seine dummer Idee'
+                raw_text = f'{hero.name} ergibt sich und bereut seine dumme Idee'
                 y = display_outro(hero, raw_text, y, screen, font)
                 beaten_up = True
 
@@ -1081,7 +1085,7 @@ def event_4_act_2(hero, stage, screen):
         y = display_outro(hero, raw_text, y, screen, font)
         raw_text = 'lange noch nach dem er zu Boden gegangen ist'
         y = display_outro(hero, raw_text, y, screen, font)
-        raw_text = '"Na dann noch einen schönen Tag du Held!"'
+        raw_text = '"Na dann noch einen schönen Tag, du Held!"'
         y = display_outro(hero, raw_text, y, screen, font)
 
         hero.life = round(hero.life / 2)
@@ -1097,6 +1101,112 @@ def event_4_act_2(hero, stage, screen):
         raw_text = f'{hero.name} scheidet an Ort und Stelle davon'
         y = display_outro(hero, raw_text, y, screen, font)
 
+    return None
+
+
+@register(act=2)#AveragePayout -0.5
+def event_5_act_2(hero, stage, screen):
+
+    start = 'Bei grauem Himmel und kühler Morgenluft'
+    a = f'hört {hero.name} den rythmischen Singsang'
+    b = 'von merkwürdigen Kultisten an einem Ort, der '
+    c = 'vor einiger Zeit ein Marktplatz gewesen sein muss'
+    d = f'Als {hero.name} sich der Versammlung nähert'
+    e = 'bemerken und umstellen die Kultisten Ihn'
+
+    intro = [start, a, b, c, d, e]
+
+    choice_1 = 'In den Gesang einstimmen und untertauchen'
+    choice_2 = 'Dem Druck standhalten[mind 30 mentale Resistenz]'
+    choice_3 = 'Selber mental Druck auf die Kultisten ausüben'
+
+    answers = [choice_1, choice_2, choice_3]
+
+    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
+
+    choice = buttons_clog.display_answers_clicked(buttons)
+    match choice:
+        case "1":
+            magic_number = random.choice((1, 2))
+            if magic_number == 1:
+                raw_text = 'Die Kultisten scheinen wieder von dir abzulassen'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'Nach einiger Zeit entfernt sich {hero.name}'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = "von der Ansammlung"
+                y = display_outro(hero, raw_text, y, screen, font)
+            else:
+                raw_text = 'Die Kultisten scheinen nicht von dir abzulassen'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = '"Ich denke du möchtest unserer Gemeinde etwas spenden"'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'{hero.name} wagt es nicht sich zu protestieren'
+                y = display_outro(hero, raw_text, y, screen, font)
+                cult_donation = 300
+                hero.xp -= cult_donation
+                if hero.xp < 0:
+                    cult_donation += hero.xp
+                    hero.xp = 0
+                raw_text = f'-{cult_donation} magisches Erz'
+                y = display_outro(hero, raw_text, y, screen, font)
+
+        case '2':
+            if hero.mental_resistance >= 30:
+                raw_text = f'{hero.name} wehrst die mentalen Angriffe stoisch ab'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'Die Kultisten schauen abwechselnd verblüfft'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'und anerkennend {hero.name} an'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'Nach kurzer Zeit widmen sich die Kultisten Ihrem Singsang'
+                y = display_outro(hero, raw_text, y, screen, font)
+            else:
+                raw_text = f'{hero.name} verliert die Konzentration und kann'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'den mentalen Übergriffen nicht mehr standhalten'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'die Kultisten durchkämmen {hero.name}s Verstand'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'wie Diebe ein fremdes Haus'
+                y = display_outro(hero, raw_text, y, screen, font)
+                xp_loss, mana_loss = 200, 100
+                hero.xp, hero.mana -= xp_loss, mana_loss
+                if hero.xp < 0:
+                    hero.xp = 0
+                if hero.mana < 0:
+                    hero.aman = 0
+                raw_text = f'"Erbärmlich Fremder", die Kultisten wende sich ab'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'-{xp_loss} Erfahrung  -{mana_loss} Odem'
+                y = display_outro(hero, raw_text, y, screen, font)
+
+        case '3':
+            magic_number = random.randint(50, 140)
+            magic_number -= hero.magic_power
+            if magic_number <= hero.mana:
+                hero.mana += 70
+                if hero.mana > hero.max_mana:
+                    hero.mana = hero.max_mana
+                raw_text = f'{hero.name} kann seiner seits massiven'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'mentalen Druck auf die Kultisten ausüben'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'Erschrocken und ungläubig machen sie {hero.name}'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'genug Platz und meiden seinen Blickkontakt'
+                y = display_outro(hero, raw_text, y, screen, font)
+            else:
+                hero.mana -= 80
+                if hero.mana < 0:
+                    hero.mana = 0
+                raw_text = 'Deine psychologischen Angriffe zeitigen keinerlei'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'Wirkung, {hero.name} gibt erschöpft auf'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = '"Du hast wilde Pläne.. gib lieber auf"'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = '"Finde dich mit deinem Schicksal ab!"'
+                y = display_outro(hero, raw_text, y, screen, font)
     return None
 
 
