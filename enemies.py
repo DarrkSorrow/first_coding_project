@@ -137,6 +137,17 @@ class Enemy:
         return hp_loss
 
 
+    def _critical_hit(self, combat_log):
+        magic_number = random.randint(0, 100)
+        if magic_number < self.critical:
+            text = "KRITISCHER TREFFER!!"
+            combat_log.add(text, True)
+            crit_factor = 1.5
+        else:
+            crit_factor = 1
+        return crit_factor
+    
+
     def _basic_attack(self, hero, combat_log):
         magic_number = random.randint(0, 100)
         magic_number += self.accuracy
@@ -159,17 +170,6 @@ class Enemy:
             text = f"{hero.name} erleidet {hp_loss} Schaden!"
             combat_log.add(text, True)
             return hp_loss
-
-
-    def _critical_hit(self, combat_log):
-        magic_number = random.randint(0, 100)
-        if magic_number < self.critical:
-            text = "KRITISCHER TREFFER!!"
-            combat_log.add(text, True)
-            crit_factor = 1.5
-        else:
-            crit_factor = 1
-        return crit_factor
 
 
     def _basic_magic(self, hero, combat_log):
@@ -228,6 +228,40 @@ class Enemy:
         combat_log.add(text, True)
 
 
+    def _life_steal(self, hero, combat_log):
+        text = f'Es dürstet {self.name} nach Blut'
+        combat_log.add(text, True)
+        damage_taken = self._basic_attack(hero, combat_log)
+        if damage_taken > 0:
+            self._heal_self(damage_taken, combat_log)
+
+
+    def _stun_attack(self, hero, combat_log, chance, duration):
+        text = f'{self.name} holt aus und zielt auf {hero.name}s Kopf'
+        combat_log.add(text, True)
+        debuff = round(self.damage / 4)
+        self.damage -= debuff
+        damage_taken = self._basic_attack
+        self.damage += debuff
+        if damage_taken > 0:
+            abilities.Stun(chance, duration).buff(hero)
+            text = f'{hero.name} wurde ordentlich erwischt!'
+            combat_log.add(text)
+
+
+    def _stun_magic(self, hero, combat_log, chance, duration):
+        text = f'{self.name} bereitet einen mentalen Angriff vor'
+        combat_log.add(text, True)
+        debuff = round(self.magic_power / 2)
+        self.magic_power -= debuff
+        damage_taken = self._basic_magic
+        self.magic_power += debuff
+        if damage_taken > 0:
+            abilities.Stun(chance, duration).buff(hero)
+            text = f'Der Verstand von {hero.name} ist beeinträchtigt'
+            combat_log.add(text)
+
+
     def decay_over_hp(self):
         if self.over_hp == 1:
             self.over_hp = 0
@@ -270,7 +304,7 @@ class EasyPool1(Enemy):
         text = f"{self.name} wird schneller."
         combat_log.add(text, True)
         abilities.AdrenalinE2E(5, 3).buff(self)
-        self.block(3, combat_log)
+        self._block(3, combat_log)
 
     def _random(self, hero, combat_log):
         magic_number = random.choice((1, 2))
@@ -290,10 +324,10 @@ class EasyPool1(Enemy):
                 self._basic_attack(hero, combat_log)
 
     def enemy_intend(self, step, hero):
+        magic_number = random.randint(0, 100)
         if step % 4 == 2:
             intend, key = "Atk / Buff", 1
-        magic_number = random.randint(0, 100)
-        if magic_number < 40:
+        elif magic_number < 40:
             intend, key = "Buff", 2
         else:
             intend, key = "Atk", 3
@@ -312,7 +346,7 @@ class EasyPool2(Enemy):
         abilities.SlowE2H(15, 4).buff(hero)
         text = f"{self.name} verschießt Schleim."
         combat_log.add(text, True)
-        self.heal_self(4, combat_log)
+        self._heal_self(4, combat_log)
 
     def enemy_ai(self, hero, key, combat_log):
         match key:
@@ -324,12 +358,12 @@ class EasyPool2(Enemy):
                 self._basic_attack(hero, combat_log)
 
     def enemy_intend(self, step, hero):
+        magic_number = random.choice((1, 2))
         if step == 0:
             intend, key = "Debuff", 1
         elif step == 1:
             intend, key = "Block", 2
-        magic_number = random.choice((1, 2))
-        if magic_number == 1:
+        elif magic_number == 1:
             intend, key = "Atk", 3
         else:
             intend, key = "Debuff", 4
@@ -438,7 +472,7 @@ class Minion3(Enemy):
                 combat_log.add(text, True)
             case 3:
                 if hero.mana > 0:
-                    self.mana_burn(hero, combat_log)
+                    self._mana_burn(hero, combat_log)
                     text = f"{self.name} entzieht die magische Essenz."
                     combat_log.add(text, True)
                     self.reduction -= 25
@@ -851,6 +885,7 @@ act2_minion_2 = 'images/waechter_golem.png'
 act2_minion_3 = 'images/dschinn.png'
 act2_minion_4 = 'images/attentaeter.png'
 act2_minion_5 = 'images/magischer_zauberbrecher.png'
+act2_minion_6 = ''
 karim = 'images/karim.png'
 #IMAGES LOADED, EVERY ENEMY INSTANCE POINTS TO THESE
 
@@ -914,10 +949,10 @@ class EventMinionKirgo(Enemy):
 class Minion1Act2(Enemy):
 
     def __init__(self):
-        super().__init__("UNTOTER KRIEGER", 83, 83, 22, 54,
+        super().__init__("UNTOTER KRIEGER", 88, 88, 22, 54,
                         act2_minion_1, 
-                        reduction=10,
-                        magic_power=10, critical=5)
+                        reduction=15,
+                        magic_power=10, critical=10)
         
     def _random(self, hero, combat_log):
         magic_number = random.choice((1, 2, 3))
@@ -943,7 +978,7 @@ class Minion1Act2(Enemy):
 
     def enemy_intend(self, step, hero):
         if step % 3 == 0:
-            if self.life < self.max_life * 0.35:
+            if self.life < self.max_life * 0.4:
                 intend, key = 'Heal', 1
             else:
                 intend, key = 'Atk', 2
@@ -959,9 +994,9 @@ class Minion1Act2(Enemy):
 class Minion2Act2(Enemy):
 
     def __init__(self):
-        super().__init__('WÄCHTER GOLEM', 100, 100, 20, 22, 
+        super().__init__('WÄCHTER GOLEM', 110, 110, 20, 22, 
                          act2_minion_2, 
-                         reduction=10, mental_reduction=10, dodge=0,
+                         reduction=20, mental_reduction=10, dodge=0,
                          magic_power=39)
         
     def enemy_ai(self, hero, key, combat_log):
@@ -1007,9 +1042,9 @@ class Minion2Act2(Enemy):
 class Minion3Act2(Enemy):
 
     def __init__(self):
-        super().__init__('Dschinn', 60, 60, 12, 70,
+        super().__init__('Dschinn', 67, 67, 15, 70,
                         act2_minion_3,
-                        reduction=4, dodge=15 ,mental_reduction=32,
+                        reduction=4, dodge=20 ,mental_reduction=32,
                         magic_power=24)
         abilities.Illusion(self.magic_power, 2).buff(self)
 
@@ -1038,9 +1073,9 @@ class Minion3Act2(Enemy):
             case 2:
                 magic_number = random.choice((1, 2))
                 if magic_number == 1:
-                    self.basic_attack(hero, combat_log)
+                    self._basic_attack(hero, combat_log)
                 else:
-                    self.basic_magic(hero, combat_log)
+                    self._basic_magic(hero, combat_log)
 
     def enemy_intend(self, step, hero):
         if step % 2 == 0:
@@ -1055,10 +1090,10 @@ class Minion3Act2(Enemy):
 class Minion4Act2(Enemy):
 
     def __init__(self):
-        super().__init__('Attentäter', 54, 54, 24, 100,
+        super().__init__('Attentäter', 60, 60, 24, 100,
                         act2_minion_4,
                         reduction=10, dodge=15 ,mental_reduction=10,
-                        magic_power=20)
+                        magic_power=24, critical=10)
         self.bomb_prepared = True
         self.projectiles = 2
 
@@ -1127,7 +1162,7 @@ class Minion4Act2(Enemy):
 class Minion5Act2(Enemy):
 
     def __init__(self):
-        super().__init__('Magischer Zauberbrecher', 80, 80, 25, 65,
+        super().__init__('Magischer Zauberbrecher', 90, 90, 25, 65,
                          act2_minion_5,
                          reduction=30, dodge=0, mental_reduction=40,
                          magic_power=16)
@@ -1170,6 +1205,59 @@ class Minion5Act2(Enemy):
             intend, key = 'Mag', 3
         else:
             intend, key = 'Atk', 4
+        text = self.font.render(intend, True, (0, 0, 0))
+        return text, key
+
+
+class Minion6Act2(Enemy):
+
+    def __init__(self):
+        super().__init__('Kultist', 63, 63, 10, 75,
+                        act2_minion_5,
+                        reduction=0, dodge=10, mental_reduction=30,
+                        magic_power=26, critical=20)
+        
+    def _random(self, hero, combat_log):
+        magic_number =random.choice((1, 2, 3, 4))
+        if magic_number == 1:
+            self._basic_attack(hero, combat_log)
+        elif magic_number == 2:
+            self._basic_magic(hero, combat_log)
+        elif magic_number == 3:
+            text = f'{self.name} verflucht {hero.name}'
+            combat_log.add(text, True)
+            abilities.MinusDodge(10, 3).buff(hero)
+        else:
+            text = f'{self.name} beschwört ein Feuersiegel'
+            combat_log.add(text, True)
+            text = f'auf {hero.name}s Haut'
+            combat_log.add(text, True)
+            abilities.FireSealE2H(5, 4).buff(hero)
+
+    def enemy_ai(self, hero, key, combat_log):
+        match key:
+            case 1:
+                 self._stun_magic(self, hero, combat_log, 33, )
+            case 2:
+                self._life_steal(hero, combat_log)
+            case 3:
+                magic_number = random.choice((1, 2))
+                if magic_number == 1:
+                    self._life_steal(hero, combat_log)
+                else:
+                    self._basic_magic(hero, combat_log)
+            case 4:
+                self._random(hero, combat_log)
+
+    def enemy_intend(self, step, hero):
+        if step % 4 == 0:
+            intend, key = 'Debuff+', 1
+        elif step % 4 == 1:
+            intend, key = 'Atk', 2
+        elif step % 4 == 2:
+            intend, key = 'Mag / Atk', 3
+        elif step % 4 == 3:
+            intend, key = '?', 4
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
