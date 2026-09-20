@@ -362,7 +362,7 @@ class ShortSword(Gear):
 
     def __init__(self):
         super().__init__("KURZSCHWERT",
-                          15, 143, '', short_sword)
+                          15, 140, '', short_sword)
         
     def equip(self, hero):
         hero.inventory.append(self)
@@ -380,7 +380,7 @@ class LongSword(Gear):
 
     def __init__(self):
         super().__init__("LANGSCHWERT",
-                          8, 143, '', long_sword)
+                          8, 140, '', long_sword)
         
     def equip(self, hero):
         hero.inventory.append(self)
@@ -396,7 +396,7 @@ class ShatteredRunes(Gear):
 
     def __init__(self):
         super().__init__("VERWITTERTE RUNE",
-                          10, 143, '', shattered_runes)
+                          10, 140, '', shattered_runes)
         
     def equip(self, hero):
         hero.inventory.append(self)
@@ -417,7 +417,7 @@ class SimpleArmor(Gear):
 
     def __init__(self):
         super().__init__("LEDERHARNISCH",
-                         7, 138, '', simple_armor)
+                         7, 135, '', simple_armor)
         
     def equip(self, hero):
         hero.inventory.append(self)
@@ -432,7 +432,7 @@ class SimpleArmor(Gear):
 class Boots(Gear):
     def __init__(self):
         super().__init__("WANDERSTIEFEL",
-                        34, 138, '', boots)
+                        34, 130, '', boots)
         
     def equip(self, hero):
         hero.inventory.append(self)
@@ -467,7 +467,7 @@ class ManaMantle(Gear):
 
     def __init__(self):
         super().__init__("Mantel der Intelligenz",
-                        25, 138, '', mana_mantle)
+                        25, 132, '', mana_mantle)
         
     def equip(self, hero):
         hero.inventory.append(self)
@@ -489,7 +489,7 @@ class LifeStone(Gear):
 
     def __init__(self):
         super().__init__("Stein des Lebens",
-                         2, 210, '', life_stone)
+                         2, 200, '', life_stone)
         self.passive_effekt = True
 
     def equip(self, hero):
@@ -509,7 +509,7 @@ class KhansHat(Gear):
 
     def __init__(self):
         super().__init__("Helm des Eroberers", 
-                        4, 195, '', khans_hat)
+                        6, 190, '', khans_hat)
         
     def equip(self, hero):
         hero.inventory.append(self)
@@ -545,7 +545,7 @@ class RitualDagger(Gear):
 
     def __init__(self):
         super().__init__("Ritual-Dolch",
-                         3, 195, '', ritual_dagger)
+                         3, 185, '', ritual_dagger)
         self.execution_10 = True
 
     def equip(self, hero):
@@ -562,7 +562,7 @@ class SoulStealer(Gear):
 
     def __init__(self):
         super().__init__("Seelen-Dieb",
-                        25, 200, '', soul_stealer)
+                        30, 165, '', soul_stealer)
         self.after_combat_effekt = True
 
     def equip(self, hero):
@@ -583,7 +583,7 @@ class OldPistole(Gear):
 
     def __init__(self):
         super().__init__("Alte Pistole",
-                         14, 210, '', old_pistole)
+                         14, 200, '', old_pistole)
         
     def equip(self, hero):
         hero.inventory.append(self)
@@ -601,7 +601,7 @@ class MoonStone(Gear):
 
     def __init__(self):
         super().__init__('Mondfragment',
-                         15, 210, '', moon_stone)
+                         15, 170, '', moon_stone)
         self.active = True
         self.after_combat_effekt = True
 
@@ -630,13 +630,17 @@ class MoonStone(Gear):
             self.active = True
 
 
+class MagicWand(Gear):
+    pass#noch einzufügen
+
+
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 smoke_bomb = 'images/items/smoke_bomb.png'
 healing_salve = 'images/items/healing_salve.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 
 
-@register(type='item')
+@register(type='item', act=1)
 @register(type='item', act=2)
 class SmokeBomb(Consumable):
 
@@ -663,7 +667,7 @@ class HealingSalve(Consumable):
 
     def __init__(self):
         super().__init__("Heilsalbe",
-                        33, 2, 160,
+                        33, 2, 200,
                         '', healing_salve)
         self.update_symbol()
 
@@ -693,7 +697,7 @@ class HandyManaPotion(Consumable):#reused and altered for act 2
     
     def __init__(self):
         super().__init__("PRAKTISCHE ODEM-ESSENZ",
-                        45, 2, 165,
+                        45, 2, 200,
                         '', good_mana_potion)#icon png from act 1
         self.dungeon = True
         self.update_symbol()
@@ -722,6 +726,8 @@ class HandyManaPotion(Consumable):#reused and altered for act 2
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 shuko_claws = 'images/items/gear/shuko_claws.png'
 sobi_mask = 'images/items/gear/sobi_mask.png'
+item_belt = 'images/items/gear/item_belt.png'
+magi_robe = 'images/items/gear/magi_robe.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 back_pack = 'images/items/gear/back_pack.png'
 war_bow = 'images/items/gear/war_bow.png'
@@ -751,7 +757,7 @@ class SobiMask(Gear):
 
     def __init__(self):
         super().__init__("Sobi-Maske",
-                        5, 350, '', sobi_mask)
+                        8, 390, '', sobi_mask)
         
     def equip(self, hero):
         hero.inventory.append(self)
@@ -768,6 +774,44 @@ class SobiMask(Gear):
         hero.inventory.remove(self)
 
 
+@register(act=2)
+class ItemBelt(Gear):
+
+    def __init__(self):
+        super().__init__('praktischer Gürtel',
+                         5, 400, '', item_belt)
+        self.extra_dodge = self.power
+        self.extra_spd = self.power * 20
+
+    def equip(self, hero):
+        hero.inventory.append(self)
+        hero.pocket_size += 1
+
+    def unequip(self, hero):
+        hero.pocket_size -= 1
+        while not len(hero.pockets) <= hero.pocket_size:
+            del hero.pockets[-1]
+        hero.inventory.remove(self)
+
+
+@register(act=2)
+class MagiRobe(Gear):
+
+    def __init__(self):
+        super().__init__('Magier-Robe',
+                         10, 420, '', magi_robe)
+        
+    def equip(self, hero):
+        hero.inventory.append(self)
+        hero.magic_power += self.power
+        hero.mana += self.power * 4
+
+    def unequip(self, hero):
+        hero.mana -= self.power * 4
+        hero.magic_power -= self.power
+        hero.inventory.remove(self)
+
+
 #^^^ UNDER 450 XP | obtainable from normal enemies ^^^
         
 
@@ -776,7 +820,7 @@ class BackPack(Gear):
 
     def __init__(self):
         super().__init__('RUCKSACK',
-                        1, 615, '', back_pack)
+                        1, 580, '', back_pack)
         
     def equip(self, hero):
         hero.inventory.append(self)
@@ -785,7 +829,6 @@ class BackPack(Gear):
     def unequip(self, hero):
         hero.pocket_size -= 2
         while not len(hero.pockets) <= hero.pocket_size:
-            hero.xp += round(hero.pockets[-1].xp * 0.15)
             del hero.pockets[-1]
         hero.inventory.remove(self)
 
@@ -795,7 +838,7 @@ class WarBow(Gear):
 
     def __init__(self):
         super().__init__('KRIEGSBOGEN',
-                         4, 630, '', war_bow)
+                         4, 580, '', war_bow)
         self.spell_cost = 10
         self.active = True
         self.after_combat_effekt = True
@@ -816,7 +859,7 @@ class WarBow(Gear):
             text = f'{hero.name} spannt den den Bogen so weit er kann'
             combat_log.add(text)
             self.active = False
-            text = f'Der Pfeil zischt mit gewalt richtung {enemy.name}'
+            text = f'Der Pfeil zischt mit Gewalt richtung {enemy.name}'
             combat_log.add(text)
             hero.damage *= 2
             enemy_block_dodge(hero, enemy, combat_log)
@@ -835,7 +878,7 @@ class Shield(Gear):
 
     def __init__(self):
         super().__init__('WÄCHTERSCHILD',
-                        10, 610, '', shield)
+                        10, 580, '', shield)
         self.extra_armor = self.power
         self.extra_shield = self.power
         
