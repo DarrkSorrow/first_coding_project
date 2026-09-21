@@ -5,15 +5,34 @@ from buffs import *
 import buttons_clog 
 
 
-spells = []
+spells_act_1, spells_act_2, spells_act_3 = [], [], []
 
-def register(ability):
-    spells.append(ability)
-    return ability
+def register(act=1):
+
+    def decorate(ability):
+
+        if act == 1:
+            spells_act_1.append(ability)
+        elif act == 2:
+            spells_act_2.append(ability)
+        elif act == 3:
+            spells_act_3.append(ability)
+        
+        return ability
+    
+    return decorate
 
 
-def random_abilities(hero):
+def random_abilities(hero, stage):
 
+    spells = []
+    match stage:
+        case 0 | 1 | 2 | 3:
+            spells = spells_act_1
+        case 3 | 5 | 6:
+            spells = spells_act_2
+        case 7 | 8 | 9:
+            spells = spells_act_3
     canditates = []
     
     for spell in spells: 
@@ -42,42 +61,41 @@ def random_abilities(hero):
     return canditates
 
 
-def learn_ability(hero, screen):
+def learn_ability(hero, screen, stage):
     
     font = pygame.font.SysFont(None, 28)
     screen.fill((50, 50, 50)), pygame.display.flip()
 
-    canditates = random_abilities(hero)
+    canditates = random_abilities(hero, stage)
     
     if len(canditates) != 0:
         spell = random.choice(canditates)
         instance = spell()
+        if instance.xp <= hero.xp:
+            y = 100
 
-    if instance.xp <= hero.xp:
-        y = 100
-
-        if len(hero.abilities) < hero.max_abilities:#same
-            pass
-        else:
-            text = f"Willst du {instance.name} lernen?"
-            y = buttons_clog.display_text(text, y, screen, font)
-            buttons = buttons_clog.yes_no_button(screen, font)
-            answer = buttons_clog.display_answers_clicked(buttons)
-
-            if answer == "1":
-                if len(hero.abilities) == hero.max_abilities:
-                    forget_ability(hero, screen)
-
-            elif answer == "2":
-                text = f"{hero.name} verwirft {instance.name}"
+            if len(hero.abilities) < hero.max_abilities:#same
+                pass
+            else:
+                text = f"Willst du {instance.name} lernen?"
                 y = buttons_clog.display_text(text, y, screen, font)
-                hero.game_state.last_refused_abilities.append(spell) #hero.game_state
+                buttons = buttons_clog.yes_no_button(screen, font)
+                answer = buttons_clog.display_answers_clicked(buttons)
 
-        if len(hero.abilities) < hero.max_abilities:#same
-            hero.abilities.append(instance)
-            hero.xp -= instance.xp
-            text = f"{hero.name} hat {instance.name} gelernt!"
-            y = buttons_clog.display_text(text, y, screen, font)
+                if answer == "1":
+                    if len(hero.abilities) == hero.max_abilities:
+                        forget_ability(hero, screen)
+
+                elif answer == "2":
+                    text = f"{hero.name} verwirft {instance.name}"
+                    y = buttons_clog.display_text(text, y, screen, font)
+                    hero.game_state.last_refused_abilities.append(spell) #hero.game_state
+
+            if len(hero.abilities) < hero.max_abilities:#same
+                hero.abilities.append(instance)
+                hero.xp -= instance.xp
+                text = f"{hero.name} hat {instance.name} gelernt!"
+                y = buttons_clog.display_text(text, y, screen, font)
 
 
 def forget_ability(hero, screen):
@@ -129,16 +147,12 @@ def abilities_from_events(hero, ability, screen):
     screen.fill((50, 50, 50)), pygame.display.flip()
     y = 100
 
-    if len(hero.abilities) < hero.max_abilities:
-        hero.abilities.append(ability)
-        ability_learned = True
-
-    elif len(hero.abilities) == hero.max_abilities:
+    if len(hero.abilities) == hero.max_abilities:
         text = f"{hero.name} kann {ability.name} nicht lernen."
         y = buttons_clog.display_text(text, y, screen, font)
-        ability_learned = forget_ability(hero, screen)
+        forget_ability(hero, screen)
 
-    if ability_learned:
+    if len(hero.abilities) < hero.max_abilities:
         text = f"{hero.name} hat {ability.name} gelernt!"
         y = buttons_clog.display_text(text, y, screen, font)
         hero.abilities.append(ability)
@@ -240,11 +254,18 @@ def enemy_mental_dodge(hero, ability, enemy, combat_log):
             block = 1
 
         #base spell-dmg increases pseudo critical chance
-        magic_number = random.randint(ability, 500)
-        if magic_number >= 400:
-            extra_dmg = hero.magical_power
-        else:
-            extra_dmg = 0
+        extra_dmg = 0
+        if hero.magic_power > 0:
+            magic_number = random.randint(ability, 500)
+            if magic_number >= 500 - ability - hero.magic_power:
+                extra_dmg = hero.magic_power
+            else:
+                extra_dmg = 0
+            if extra_dmg > 0:
+                text = 'PERFEKTE * ARKANE * KUNST'
+                combat_log.add(text)
+                text = f'** +{extra_dmg} **'
+                combat_log.add(text)
         #hero.magical_power gets added to dmg if "critical"
             
         damage_taken = round((ability + extra_dmg) * block)
@@ -272,6 +293,9 @@ class Ability:
         self.rect = self.image.get_rect()
     
     def __repr__(self):
+        return self.name
+    
+    def __str__(self):
         return self.name
 
     def _cost_and_cooldown(self, hero, mana_cost, cooldown=0, life_cost=0):
@@ -309,7 +333,7 @@ frost_arrow = 'images/abilities/frost_arrow.png'
 class Ability0(Ability):#STARTFÄHIGKEIT
 
     def __init__(self):
-        super().__init__("WAPPNEN", 5, 25, 0, 
+        super().__init__("WAPPNEN", 10, 25, 0, 
                         starting_ability)
         
     def use_ability(self, hero, enemy, combat_log):
@@ -317,8 +341,8 @@ class Ability0(Ability):#STARTFÄHIGKEIT
             text = f"{hero.name} wappnet sich."
             combat_log.add(text)
 
-            hero.reduction += self.power * 2 #UNDO
-            EmpoweredH2H(10, 4).buff(hero)
+            hero.reduction += self.power * 3 #UNDO
+            EmpoweredH2H(self.power, 4).buff(hero)
             enemy_mental_dodge(hero, self.power, enemy, combat_log)
 
             self._cost_and_cooldown(hero, self.cost)
@@ -329,10 +353,10 @@ class Ability0(Ability):#STARTFÄHIGKEIT
             return False
         
     def undo_ability(self, hero, enemy):
-        hero.reduction -= self.power * 2
+        hero.reduction -= self.power * 3
 
 
-@register
+@register()
 class Ability1(Ability):#SCHWERER HIEB
 
     def __init__(self):
@@ -356,7 +380,7 @@ class Ability1(Ability):#SCHWERER HIEB
             return False
 
 
-@register
+@register()
 class Ability2(Ability):# VERKRÜPPELNDER HIEB
 
     def __init__(self):
@@ -389,7 +413,7 @@ class Ability2(Ability):# VERKRÜPPELNDER HIEB
             return False
 
 
-@register
+@register()
 class Ability3(Ability):# PRÄZISER STICH
         
         def __init__(self):
@@ -422,7 +446,7 @@ class Ability3(Ability):# PRÄZISER STICH
                 return False
 
 
-@register
+@register()
 class Ability4(Ability):# FEUERBALL
 
     def __init__(self):
@@ -449,7 +473,7 @@ class Ability4(Ability):# FEUERBALL
             return False
 
 
-@register
+@register()
 class Ability5(Ability): #MAGISCHER HIEB
 
     def __init__(self):
@@ -477,7 +501,7 @@ class Ability5(Ability): #MAGISCHER HIEB
             return False
 
 
-@register
+@register()
 class Ability6(Ability): #MORDHAU
 
     def __init__(self):
@@ -506,7 +530,7 @@ class Ability6(Ability): #MORDHAU
             return False
 
 
-@register
+@register()
 class Ability7(Ability): #KLEINER GIFTPFEIL
 
     def __init__(self):
@@ -543,11 +567,11 @@ class Ability7(Ability): #KLEINER GIFTPFEIL
             return False
 
 
-@register
+@register()
 class Ability8(Ability): #SCHILD-HALTUNG
 
     def __init__(self):
-        super().__init__('SCHILD-HALTUNG', 10, 30, 300,
+        super().__init__('SCHILD-HALTUNG', 16, 15, 300,
                          harden)
         
     def use_ability(self, hero, enemy, combat_log):
@@ -558,7 +582,7 @@ class Ability8(Ability): #SCHILD-HALTUNG
 
                 hero.reduction += self.power #UNDO
                 hero.over_hp += self.power * 2
-                HardenH2H(8, 6).buff(hero)
+                Harden(8, 6).buff(hero)
 
                 self._cost_and_cooldown(hero, self.cost, cooldown=7)
                 return True
@@ -575,7 +599,7 @@ class Ability8(Ability): #SCHILD-HALTUNG
         hero.reduction -= self.power
 
 
-@register
+@register()
 class Ability9(Ability): #HEILUNG
 
     def __init__(self):
@@ -608,7 +632,7 @@ class Ability9(Ability): #HEILUNG
         hero.dodge -= self.power / 8
 
 
-@register
+@register()
 class Ability10(Ability):#FROSTPFEIL
 
     def __init__(self):
@@ -648,9 +672,11 @@ thunder = 'images/abilities/thunder.png'
 double_strike = 'images/abilities/double_strike.png'
 sword_dance = 'images/abilities/sword_dance.png'
 winter_fist = 'images/abilities/winter_fist.png'
+arcane_art = 'images/abilities/arcane_art.png'
 #IMAGES LOADED, EVERY ABILITY INSTANCE POITNS TO THESE
 
 
+@register(act=2)
 class Ability11(Ability):#BLITZSCHLAG
     
     def __init__(self):
@@ -678,6 +704,7 @@ class Ability11(Ability):#BLITZSCHLAG
             return False
 
 
+@register(act=2)
 class Ability12(Ability):#DOPPELSCHLAG
 
     def __init__(self):
@@ -703,6 +730,7 @@ class Ability12(Ability):#DOPPELSCHLAG
             return False
         
 
+@register(act=2)
 class Ability13(Ability):#SCHWERTTANZ
 
     def __init__(self):
@@ -739,6 +767,7 @@ class Ability13(Ability):#SCHWERTTANZ
         hero.dodge -= self.power
 
 
+@register(act=2)
 class Ability14(Ability):#WINTERFAUST
 
     def __init__(self):
@@ -762,7 +791,7 @@ class Ability14(Ability):#WINTERFAUST
                     Frost(8, 5).buff(enemy)
                     text = f'{enemy.name} ist äusserst vereist.'
                     combat_log.add(text)
-                    StunH2E(80, 1).buff(enemy)
+                    Stun(80, 1).buff(enemy)
                     return True
                 else:
                     text = 'Der Zauber konnte nichts anrichten!'
@@ -776,3 +805,38 @@ class Ability14(Ability):#WINTERFAUST
             text = 'Die Finger sind noch zu vereist.'
             combat_log.add(text)
             return False
+        
+
+@register(act=2)
+class Ability15(Ability):#ARKANE KUNST
+
+    def __init__(self):
+        super().__init__('Arkane Kunst', 50, 50, 1100,
+                         arcane_art)
+        
+    def use_ability(self, hero, enemy, combat_log):
+        if self.cooldown == 0:
+            if hero.mana >= self.cost:
+                text = f'{hero.name} erhöht seine magische Macht'
+                combat_log.add(text)
+
+                self._cost_and_cooldown(hero, self.cost, cooldown=3)
+
+                AbilityPower(self.power, 5).buff(hero)
+                ClarityH2H(7, 5).buff(hero)
+                hero.over_hp += round(self.power / 2)
+                hero.mental_reduction += round(self.power / 2)#UNDO
+                return True
+            else:
+                text = f'{hero.name} wurde nicht erhöht'
+                combat_log.add(text)
+                return False
+        else:
+            text = 'Die Technik zu übertreiben'
+            combat_log.add(text)
+            text = 'kann deine Seele verzehren'
+            combat_log.add(text)
+            return False
+
+    def undo_ability(self, hero, enemy):
+        hero.mental_reduction -= round(self.power / 2)
