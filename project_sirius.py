@@ -22,64 +22,141 @@ class Hero:
         self.game_state = GameState()
 
         self.name = name
-        self.life, self.max_life = 100, 100
+        self.life, self.max_life = 60, 100
         self.reduction, self.dodge = 0, 0 #Percent
         self.mental_reduction = 0 #percent
         self.damage = 15
         self.speed = 50
         self.critical = 0
+        self.magic_power = 0
         self.accuracy = 0
         self.mana, self.max_mana = 0, 100
-        self.xp = 0
+        self.xp = 300
 
-        self.max_inventory, self.max_abilities = 4, 2
+        self.max_inventory, self.max_abilities = 5, 2
         self.inventory, self.abilities = [], []
         self.pocket_size, self.pockets = 0, []
         self.over_hp = 0
         self.buffs = []
-    
+
+
+    def _items_improve_defend(self):
+
+        armor, shield, mental, mana_gain, evasion, spd = 0, 0, 0, 0, 0, 0
+        
+        for item in self.inventory:
+
+            try:
+                armor += item.extra_armor
+            except AttributeError:
+                pass
+            try:
+                shield += item.extra_shield
+            except AttributeError:
+                pass
+            try:
+                mental += item.extra_mental
+            except AttributeError:
+                pass
+            try:
+                mana_gain += item.extra_mana
+            except AttributeError:
+                pass
+            try:
+                evasion += item.extra_dodge
+            except AttributeError:
+                pass
+            try:
+                spd += item.extra_spd
+            except AttributeError:
+                pass
+
+        return armor, shield, mental, mana_gain, evasion, spd
+
 
     def defend(self, combat_log):
-        self.dodge += 15
-        self.reduction += 30
-        self.mana += 15
+        stats = self._items_improve_defend()
+        armor, shield, mental, mana_gain, evasion, spd = stats
+        self.dodge += 15 + evasion
+        self.reduction += 20 + armor
+        self.mental_reduction += 0 + mental
+        self.mana += 10 + mana_gain
         if self.mana >= self.max_mana:
             self.mana = self.max_mana
-        self.over_hp += 10
+        self.over_hp += 10 + shield
         text = "ZERTUS geht in Verteidigungsstellung!"
         combat_log.add(text)
 
 
     def instant_defend(self):
-        self.speed += 600
+        stats = self._items_improve_defend()
+        armor, shield, mental, mana_gain, evasion, spd = stats
+        self.speed += 600 + spd
 
 
     def undo_defend(self):
-        self.speed -= 600
-        self.reduction -= 30
-        self.dodge -= 15
+        stats = self._items_improve_defend()
+        armor, shield, mental, mana_gain, evasion, spd = stats
+        self.speed -= 600 + spd
+        self.reduction -= 20 + armor
+        self.mental_reduction -= 0 + mental
+        self.dodge -= 15 + evasion
+
+
+    def _items_improve_itemuse(self):
+        
+        armor, mental, evasion, spd = 0, 0, 0, 0
+        
+        for item in self.inventory:
+
+            try:
+                armor += item.extra_armor
+            except AttributeError:
+                pass
+            try:
+                mental += item.extra_mental
+            except AttributeError:
+                pass
+            try:
+                evasion += item.extra_dodge
+            except AttributeError:
+                pass
+            try:
+                spd += item.extra_spd
+            except AttributeError:
+                pass
+
+        return armor, mental, evasion, spd
 
 
     def instant_item(self, combat_log):
+        stats = self._items_improve_itemuse()
+        armor, mental, evasion, spd = stats
         active_items = []
         for item in self.inventory:
             if item.active:
                 active_items.append(item)
-        if active_items == []:
+        if active_items == [] and self.pockets == []:
             text = ("Du hast doch garnichts.")
             combat_log.add(text)
-            self.dodge += 15
-            self.speed += 300
+            self.speed += 300 + spd
         else:
-            self.dodge += 15
-            self.speed += 300
+            self.speed += 300 + spd
             text = (f"{self.name} versucht blitzschnell in seine Tasche zu greifen!")
             combat_log.add(text)
 
 
+    def item_use(self):
+        stats = self._items_improve_itemuse()
+        armor, mental, evasion, spd = stats
+        self.dodge += 15 + evasion
+
+
     def undo_instant_item(self):
-        self.dodge -= 15
-        self.speed -= 300
+        stats = self._items_improve_itemuse()
+        armor, mental, evasion, spd = stats
+        self.dodge -= 15 + evasion
+        self.speed -= 300 + spd
 
 
     def decay_over_hp(self):
@@ -139,7 +216,7 @@ screen = pygame.display.set_mode((1200,800))
 pygame.display.set_caption("Dungeon")
 clock = pygame.time.Clock()
 
-stage = 0
+stage = 4
 dungeon = world.generate_world(stage)
 hero = Adventurer()
 world.arm_hero(hero)
@@ -196,6 +273,13 @@ while hero.life > 0:
     #*** TELEPORT ***
 
 
+    #*** MERCHANT ***
+    elif dungeon[position[0]][position[1]].merchant == True:
+        pass
+        dungeon[position[0]][position[1]] = world.EmptyRoom()
+    #*** MERCHANT ***
+
+
     #*** NORMAL FIGHT ***
     if dungeon[position[0]][position[1]].fight == True:
 # this random if is needed
@@ -224,21 +308,22 @@ while hero.life > 0:
         #*** SURPRISE ELITE ***
 
         if dungeon[position[0]][position[1]].fight == True:
-            combat.start_fight(hero, stage, screen)
             if hero.life > 0:
+                enemy_defeated = combat.start_fight(hero, stage, screen)
+            if hero.life > 0 and enemy_defeated:
                 enemy = 1 # normaler Gegner
                 world.reward(hero, enemy, stage, screen)
-                dungeon[position[0]][position[1]] = world.EmptyRoom()
+            dungeon[position[0]][position[1]] = world.EmptyRoom()
     #*** NORMAL FIGHT ***
 
 
     #*** ELITE FIGHT ***
     elif dungeon[position[0]][position[1]].elite == True:
-        combat.start_elite(hero, stage, screen)
-        if hero.life > 0:
+        enemy_defeated = combat.start_elite(hero, stage, screen)
+        if hero.life > 0 and enemy_defeated:
             enemy = 2 # elite Gegner
             world.reward(hero, enemy, stage, screen)
-            dungeon[position[0]][position[1]] = world.EmptyRoom()
+        dungeon[position[0]][position[1]] = world.EmptyRoom()
     #*** ELITE FIGHT ***
 
 
