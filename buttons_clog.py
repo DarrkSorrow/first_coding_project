@@ -98,17 +98,17 @@ def boss_reward_and_buttons(hero, screen):
     text = 'Wähle deine Belohnung'
     y = display_text(text, y, screen, font)
 
-    life_reward = Button(200, 350,
-        200, 100, '+100 Max-Hp, +10 Res', "1")
+    life_reward = Button(150, 350,
+        250, 100, '+100 Max-Hp, +10 Res', "1")
     
-    mana_reward = Button(800, 350,
-        200, 100, "+100 Max-Odem, +10 MentalRes.", "2")
+    mana_reward = Button(750, 350,
+        250, 100, "+100 Max-Odem, +10 MentalRes.", "2")
     
-    extra_item_slot = Button(200, 600,
-        200, 100, "Extra Item Slot", "3")
+    extra_item_slot = Button(150, 600,
+        250, 100, "+1 Inventarplatz", "3")
 
-    extra_ability_slot = Button(800, 600,
-        200, 100, "Extra Ability Slot", "4")
+    extra_ability_slot = Button(750, 600,
+        250, 100, "+1 Fähigkeitensockel", "4")
 
     buttons = [life_reward, mana_reward, extra_item_slot,
                extra_ability_slot]
@@ -139,6 +139,33 @@ def bond_fire_buttons(hero):
     buttons = [button_heal, button_mana, button_xp]
 
     return buttons
+
+
+def merchant_buttons(hero, screen):
+
+    abilities_displayed(hero, screen)
+    
+    i = len(hero.inventory) + len(hero.pockets)
+    consumable_1 = Button(750, 700,
+                    120, 70, '', i + 1)
+    consumable_2 = Button(900, 700, 
+                    120, 70, '', i + 2)
+    consumable_3 = Button(1050, 700,
+                    120, 70, '', i + 3)
+    gear_1 = Button(900, 600,
+                    120, 70, '', i + 4)
+    gear_2 = Button(1050, 600,
+                    120, 70, '', i + 5)
+    spell = Button(1000, 500,
+                   180, 70, '', i + 6)
+    shop_exit = Button(1050, 30,
+                    120, 70, '', i + 7)
+    shop_offering = [consumable_1, consumable_2, consumable_3,
+                     gear_1, gear_2, spell, shop_exit]
+
+    hero_inventory = dungeon_inventory(hero, screen)
+
+    return shop_offering, hero_inventory
 
 
 def yes_no_button(screen, font):
