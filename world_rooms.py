@@ -3,23 +3,24 @@ from random import choices
 
 class Room:
 
-    def __init__(self, name, image=None):
+    name = "Raum"
+    image_path = None
+    enter = True
+    fight, elite, boss = False, False, False
+    event = False
+    rest = False
+    merchant = False
+    warp = False
+    color = (150, 150, 150)
 
-        self.name = name
-        self.fight = False
-        self.event = False
-        self.warp = False
-        self.elite = False
-        self.boss = False
-        self.rest = False
-        self.enter = True
-        self.color = (150, 150, 150)
-        self.image = image
-
-        if image is not None:
-            self.image = pygame.image.load(image)
-            self.image =pygame.transform.scale(self.image, (70, 70))
+    def __init__(self):
+        if self.image_path is not None:
+            self.image = pygame.image.load(self.image_path)
+            self.image = pygame.transform.scale(self.image, (70, 70))
             self.rect = self.image.get_rect()
+        else:
+            self.image = None
+            self.rect = None
 
     def __repr__(self):
         return self.name
@@ -37,73 +38,63 @@ event_room = 'images/rooms/event_room.png'
 elite_room = 'images/rooms/elite_room.png'
 bond_fire = 'images/rooms/bond_fire.png'
 no_room = 'images/rooms/no_room.png'
+merchant = 'images/rooms/merchant.png'
         
 
 class EmptyRoom(Room):
-    def __init__(self):
-        super().__init__("LEERER RAUM")
-        self.color = (50, 50, 50)
-        
-        
+    name = "LEERER RAUM"
+    color = (50, 50, 50)
+            
 class EnemyRoom(Room):
-    def __init__(self):
-        super().__init__("GEGNERRAUM", enemy_room)
-        self.color = (250, 0, 0)
-        self.fight = True
-
+    name = "GEGNERRAUM"
+    image_path = enemy_room
+    fight = True
 
 class WarpRoom(Room):
-    def __init__(self):
-        super().__init__("WARP", warp_room)
-        self.color = (0, 0, 250)
-        self.warp = True
-
+    name = "WARP"
+    image_path = warp_room
+    warp = True
 
 class EventRoom(Room):
-    def __init__(self):
-        super().__init__("DUNKLER RAUM", event_room)
-        self.color = (255, 255, 0)
-        self.event = True
-
+    name = "DUNKLER RAUM"
+    image_path = event_room
+    event = True
 
 class EliteRoom(Room):
-    def __init__(self):
-        super().__init__("ELITERAUM", elite_room)
-        self.color = (250, 0, 250)
-        self.elite = True
-
+    name = "ELITERAUM"
+    image_path = elite_room
+    elite = True
 
 class BossRoom(Room):
-    def __init__(self):
-        super().__init__("BOSSRAUM")
-        self.color = (200, 100, 100)
-        self.boss = True
-
+    name = "BOSSRAUM"
+    boss = True
 
 class BondFire(Room):
-    def __init__(self):
-        super().__init__("LAGERPLATZ", bond_fire)
-        self.color = (50, 200, 40)
-        self.rest = True
+    name = "LAGERPLATZ"
+    image_path = bond_fire
+    rest = True
 
+class Merchant(Room):
+    name = 'WANDERNDER HÄNDLER'
+    image_path = merchant
+    merchant = True
 
 class NoRoom(Room):
-    def __init__(self):
-        super().__init__("WAND", no_room)
-        self.color = (0, 0, 0)
-        self.enter = False
+    name = "WAND"
+    image_path = no_room
+    enter = False
 
 
 o, e, w = EmptyRoom(), EnemyRoom(), WarpRoom()
 r, b, q = EventRoom(), EliteRoom(), BossRoom()
-ü, n, x = BondFire(), NoRoom(), None
+ü, n, m, x = BondFire(), NoRoom(), Merchant(), None
 
 
 def dungeon_by_stage(stage): 
 
     if stage == 0:
         dungeon =  [[o, o, e],
-                    [o, n, r],
+                    [m, n, r],
                     [e, n, w]]
         
     elif stage in (1, 4, 7):
