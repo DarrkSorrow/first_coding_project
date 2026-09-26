@@ -35,20 +35,6 @@ class EmpoweredH2H(Buff):#START-FÄHIGKEIT
         hero.buffs.remove(self)
 
 
-class HardenH2H(Buff):#Schild-Haltung
-
-    def __init__(self, power, duration):
-        super().__init__("schild", power, duration)
-
-    def buff(self, hero):
-        hero.buffs.append(self)
-        hero.reduction += self.power
-
-    def debuff(self, hero):
-        hero.reduction -= self.power
-        hero.buffs.remove(self)
-
-
 class BerserkH2H(Buff):#Berserker
 
     def __init__(self, power, duration):
@@ -118,19 +104,6 @@ class AgileH2H(Buff):
 # *** HERO --> ENEMY ***
 
 
-class StunH2E(Buff):
-    """self.power is int in percent"""
-    def __init__(self, power, duration):
-        super().__init__("STUN", power, duration)
-        self.stun = True
-
-    def buff(self, enemy):
-        enemy.buffs.append(self)
-
-    def debuff(self, enemy):
-        enemy.buffs.remove(self)
-
-
 class CrippleH2E(Buff):#Verkrüppelt
 
     def __init__(self, power, duration):
@@ -159,22 +132,6 @@ class PoisonH2E(Buff):#Vergiftet
 
     def effekt(self, hero):
         hero.life -= self.power
-
-
-class FrostH2E(Buff):#Frost
-
-    def __init__(self, power, duration):
-        super().__init__("frost", power, duration)
-
-    def buff(self, enemy):
-        enemy.buffs.append(self)
-        enemy.speed -= self.power * 5
-        enemy.reduction -= self.power 
-
-    def debuff(self, enemy):
-        enemy.reduction += self.power
-        enemy.speed += self.power * 5
-        enemy.buffs.remove(self)
 
 
 class ShockH2E(Buff):#Shock
@@ -210,20 +167,6 @@ class FireH2E(Buff):#Brand
 # *** ENEMY --> ENEMY ***
         
 
-class HardenE2E(Buff):#Stabil
-
-    def __init__(self, power, duration):
-        super().__init__("stabil", power, duration)
-
-    def buff(self, enemy):
-        enemy.buffs.append(self)
-        enemy.reduction += self.power
-
-    def debuff(self, enemy):
-        enemy.reduction -= self.power
-        enemy.buffs.remove(self)
-
-
 class AdrenalinE2E(Buff):#Adrenalin
 
     def __init__(self, power, duration):
@@ -251,22 +194,6 @@ class HasteE2E(Buff):
 
     def debuff(self, enemy):
         enemy.speed -= self.power
-        enemy.buffs.remove(self)
-
-
-class IllusionE2E(Buff):#Illusion
-
-    def __init__(self, power, duration):
-        super().__init__("illusion", power, duration)
-
-    def buff(self, enemy):
-        enemy.buffs.append(self)
-        enemy.dodge += self.power 
-        enemy.mental_reduction += self.power
-
-    def debuff(self, enemy):
-        enemy.mental_reduction -= self.power
-        enemy.dodge -= self.power
         enemy.buffs.remove(self)
 
 
@@ -300,21 +227,7 @@ class AccuracyE2E(Buff):
         enemy.buffs.remove(self)
 
 
-
 # *** ENEMY --> HERO ***
-
-
-class StunE2H(Buff):
-    """self.power is int in percent"""
-    def __init__(self, power, duration):
-        super().__init__("STUN", power, duration)
-        self.stun = True
-
-    def buff(self, hero):
-        hero.buffs.append(self)
-
-    def debuff(self, hero):
-        hero.buffs.remove(self)
 
 
 class WeakE2H(Buff):
@@ -375,3 +288,107 @@ class PoisonE2H(Buff):#like FireSealE2H
         
     def effekt(self, hero):
         hero.life -= self.power
+
+
+#*** --- *** --- *** --- *** --- ***
+
+
+class AbilityPower(Buff):
+    """Only Hero can have this attribute"""
+    def __init__(self, power, duration):
+        super().__init__("Magie", power, duration)
+
+    def buff(self, subject):
+        subject.buffs.append(self)
+        subject.magic_power += self.power
+
+    def debuff(self, subject):
+        subject.magic_power -= self.power
+        subject.buffs.remove(self)
+
+
+class Stun(Buff):
+    """self.power is int in percent"""
+    def __init__(self, power, duration):
+        super().__init__("STUN", power, duration)
+        self.stun = True
+
+    def buff(self, subject):
+        subject.buffs.append(self)
+
+    def debuff(self, subject):
+        subject.buffs.remove(self)
+
+
+class Barrier(Buff):
+
+    def __init__(self, power, duration):
+        super().__init__('Barriere', power, duration)
+
+    def buff(self, subject):
+        subject.buffs.append(self)
+        subject.mental_reduction += self.power
+
+    def debuff(self, subject):
+        subject.mental_reduction += self.power
+        subject.buffs.remove(self)
+
+
+class Illusion(Buff):
+
+    def __init__(self, power, duration):
+        super().__init__("illusion", power, duration)
+
+    def buff(self, subject):
+        subject.buffs.append(self)
+        subject.dodge += self.power 
+        subject.mental_reduction += self.power
+
+    def debuff(self, subject):
+        subject.mental_reduction -= self.power
+        subject.dodge -= self.power
+        subject.buffs.remove(self)
+
+
+class Harden(Buff):
+
+    def __init__(self, power, duration):
+        super().__init__("schild", power, duration)
+
+    def buff(self, subject):
+        subject.buffs.append(self)
+        subject.reduction += self.power
+
+    def debuff(self, subject):
+        subject.reduction -= self.power
+        subject.buffs.remove(self)
+
+
+class Frost(Buff):#Frost
+
+    def __init__(self, power, duration):
+        super().__init__("frost", power, duration)
+
+    def buff(self, subject):
+        subject.buffs.append(self)
+        subject.speed -= self.power * 4
+        subject.reduction -= self.power 
+
+    def debuff(self, subject):
+        subject.reduction += self.power
+        subject.speed += self.power * 4
+        subject.buffs.remove(self)
+
+
+class MinusDodge(Buff):
+
+    def __init__(self, power, duration):
+        super().__init__("träge", power, duration)
+
+    def buff(self, subject):
+        subject.buffs.append(self)
+        subject.dodge -= self.power
+
+    def debuff(self, subject):
+        subject.dodge += self.power
+        subject.buffs.remove(self)
