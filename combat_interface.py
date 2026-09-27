@@ -16,7 +16,15 @@ def combat_start_screen(enemy, screen):
     pygame.display.flip()
 
 
-def combat_interface(hero, enemy, screen, step):
+def combat_inputs(hero, enemy, screen, step):
+
+    key = enemy_sprite(hero, enemy, screen, step)
+    action = buttons_clog.combat_buttons(screen)
+    
+    return action, key
+
+
+def combat_interface(hero, enemy, screen):
 
     hero_health_bar(hero, screen)
     hero_mana_bar(hero, screen)
@@ -25,16 +33,11 @@ def combat_interface(hero, enemy, screen, step):
     hero_combat_stats(hero, screen)
     show_buffs(hero, screen)
     
-    key = enemy_sprite(hero, enemy, screen, step)
     enemy_health_bar(enemy, screen)
     enemy_combat_stats(enemy, screen)
     show_enemy_buffs(enemy, screen)
 
     pygame.display.flip()
-
-    action = buttons_clog.combat_buttons(screen)
-    
-    return action, key
 
 
 def hero_health_bar(hero, screen):
@@ -45,17 +48,17 @@ def hero_health_bar(hero, screen):
 
     width, height = 300, 25
     pygame.draw.rect(screen, (0, 0, 0),
-                      (80, 710, width, height), 2)
+                      (30, 715, width, height), 2)
     current_width = round(width * hero.life / hero.max_life)
     pygame.draw.rect(screen, (40, 250, 55),
-                      (80, 710, current_width, height))
+                    (30, 715, current_width, height))
 
     if hero.over_hp > 0:
         block_width = width * hero.over_hp / hero.max_life
         pygame.draw.rect(screen, (100, 100, 100),
-                    (80+current_width, 710, block_width, height))
+                    (30+current_width, 715, block_width, height))
 
-    screen.blit(text_image, (100, 717))
+    screen.blit(text_image, (50, 722))
 
 
 def hero_mana_bar(hero, screen):
@@ -65,10 +68,12 @@ def hero_mana_bar(hero, screen):
     text_image = font.render(stat_mana, True, (255, 255, 255))
 
     width, height = 300, 25
-    pygame.draw.rect(screen, (255, 255, 255), (80, 750, width, height), 2)
+    pygame.draw.rect(screen, (255, 255, 255),
+                    (30, 755, width, height), 2)
     current_width = round(width * hero.mana / hero.max_mana)
-    pygame.draw.rect(screen, (40, 55, 255), (80, 750, current_width, height))
-    screen.blit(text_image, (100, 755))
+    pygame.draw.rect(screen, (40, 55, 255),
+                    (30, 755, current_width, height))
+    screen.blit(text_image, (50, 760))
 
 
 def hero_combat_stats(hero, screen):
@@ -82,8 +87,10 @@ def hero_combat_stats(hero, screen):
         f"DODGE: {hero.dodge}",
         f"ARMOR: {hero.reduction}",
         f"MENTAL: {hero.mental_reduction}",
-        f"enemy: {hero.game_state.enemy_counter}",
-        f"event: {hero.game_state.events_in_row}",
+        f'CRIT: {hero.critical}',
+        f'ACC: {hero.accuracy}',
+        f"enemies in row: {hero.game_state.enemy_counter}",
+        f"event in row: {hero.game_state.events_in_row}",
     ]
 
     for stat in stats:
@@ -105,7 +112,7 @@ def show_buffs(hero, screen):
         text = font.render(
             buff_text, True, (0, 0, 0))
         screen.blit(text, (x, 690))
-        x += 100
+        x += 80
 
 
 def enemy_sprite(hero, enemy, screen, step):#Images
@@ -140,7 +147,7 @@ def enemy_health_bar(enemy, screen):
 def enemy_combat_stats(enemy, screen):
 
     font = pygame.font.SysFont(None, 20)
-    y = 150
+    y = 120
 
     stats = [
         f"DMG: {enemy.damage}",
@@ -148,6 +155,8 @@ def enemy_combat_stats(enemy, screen):
         f"DODGE: {enemy.dodge}",
         f"ARMOR: {enemy.reduction}",
         f"MENTAL: {enemy.mental_reduction}",
+        f'CRIT: {enemy.critical}',
+        f'ACC: {enemy.accuracy}'
     ]
 
     for stat in stats:
@@ -169,4 +178,4 @@ def show_enemy_buffs(enemy, screen):
         text = font.render(
             buff_text, True, (0, 0, 0))
         screen.blit(text, (x, 100))
-        x += 100
+        x += 80
