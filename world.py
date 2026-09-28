@@ -77,12 +77,8 @@ def bond_fire(hero, stage, screen):
 
 def wandering_merchant(hero, stage, screen):
     """hero can buy items and abilities"""
-    screen.fill((250, 250, 250))
-    font = pygame.font.SysFont(None, 18)
-    hero_health_bar(hero, screen)
-    hero_mana_bar(hero, screen)
-    hero_xp(hero, screen)
     hero_left = False#if true the merchant dissapears
+    font = pygame.font.SysFont(None, 12)
 
     merchant_offer = []
     while len(merchant_offer) < 6:
@@ -102,26 +98,35 @@ def wandering_merchant(hero, stage, screen):
             spell = random.choice(spells)
             merchant_offer.append(spell())
 
-    shop, inventory = buttons_clog.merchant_buttons(hero, screen)
-    buttons = inventory + shop
+    buttons = buttons_clog.merchant_buttons(hero, screen)
 
-    inventory_index = len(hero.inventory) + len(hero.pockets)
     for i, button in enumerate(buttons):
-        if inventory_index <= i < inventory_index + 6:
-            buttons[i].text = merchant_offer[i-inventory_index].name
-        button.draw(screen, font)
-    buttons[-1].text = 'EXIT'
+        if i < 6:
+            buttons[i].text = merchant_offer[i].name
+        else:
+            buttons[-1].text = 'EXIT'
+        buttons[i].draw(screen, font)
 
     while not hero_left:
-        inventory_index = len(hero.inventory) + len(hero.pockets)
+
+        screen.fill((250, 250, 250))
+        hero_health_bar(hero, screen)
+        hero_mana_bar(hero, screen)
+        hero_xp(hero, screen)
+        hero_items = buttons_clog.dungeon_inventory(hero, screen)
+        buttons_clog.abilities_displayed(hero, screen)
+
+        buttons = hero_items + buttons
+        for button in buttons:
+            button.draw(screen, font)
         pygame.display.flip()
         
         choice = buttons_clog.display_answers_clicked(buttons)
-        choice = int(choice)
         match choice:
 
             #SELL-ITEMS *** SELL-ITEMS *** SELL-ITEMS
-            case i if 1 <= i <= inventory_index:
+            case i if i in '0123456789':
+                i = int(i)
                 if hero.inventory[i].gear:
                     hero.xp += round(hero.inventory[i].xp * 0.65)
                     hero.inventory[i].unequip(hero)
@@ -131,7 +136,7 @@ def wandering_merchant(hero, stage, screen):
                         if hero.inventory[i].dungeon:
                             hero.inventory[i].use_item(hero, None, None)
                         else:#just some pennies
-                            hero.xp += round(hero.inventory[i] * 0.1)
+                            hero.xp += round(hero.inventory[i].xp * 0.1)
                             hero.inventory[i]._remove(hero)
 
                     except ValueError:
@@ -139,19 +144,33 @@ def wandering_merchant(hero, stage, screen):
                             hero.pocket[i].use_item(hero, None, None)
                         else:#health and mana potions consumed
                             hero.pocktes[i]._remove(hero)
-            #SELL-ITEMS *** SELL-ITEMS ***SELL-ITEMS
+            #SELL-ITEMS *** SELL-ITEMS *** SELL-ITEMS
 
             #CONSUMABLES *** CONSUMABLES *** CONSUMABLES
-            case i if inventory_index < i <= inventory_index + 3:
+            case 'con1' | 'con2' | 'con3':
+                
+                if choice == 'con1':
+                    i = 0
+                elif choice == 'con2':
+                    i = 1
+                else:
+                    i = 2
+
                 inventory_space = len(hero.inventory)<hero.max_inventory
-                has_space = inventory_space or len(hero.pockets)<hero.pcoket_size
+                has_space = inventory_space or len(hero.pockets)<hero.pocket_size
                 if has_space and merchant_offer[i].xp*1.2 <= hero.xp:
                     hero.xp -= round(merchant_offer[i].xp * 1.2)
                     merchant_offer[i]._append(hero)
             #CONSUMABLES *** CONSUMABLES *** CONSUMABLES
 
             #GEAR *** GEAR *** GEAR
-            case i if inventory_index + 3 < i <= inventory_index + 5:
+            case 'gear1' | 'gear2':
+
+                if choice == 'gear1':
+                    i = 3
+                else:
+                    i = 4
+
                 has_space = len(hero.inventory)<hero.max_inventory
                 if has_space and merchant_offer[i].xp*1.5 <= hero.xp:
                     hero.xp -= round(merchant_offer[i].xp * 1.5)
@@ -159,14 +178,16 @@ def wandering_merchant(hero, stage, screen):
             #GEAR *** GEAR *** GEAR
 
             #ABILITY *** ABILITY *** ABILITY
-            case i if inventory_index + 5 < i <= inventory_index + 6:
-                ability = merchant_offer[i]
-                abilities.abilities_from_events(hero, ability, screen)
-
+            case 'spell':
+                if hero.xp >= merchant_offer[5].xp * 2:
+                    ability = merchant_offer[5]
+                    learned = abilities.abilities_from_events(hero, ability, screen)
+                if learned:
+                    hero.xp -= merchant_offer[5].xp * 2
             #ABILITY *** ABILITY *** ABILITY
 
             #EXIT *** EXIT *** EXIT
-            case i if inventory_index + 6 < i <= inventory_index + 7:
+            case 'exit':
                 hero_left = True
             #EXIT *** EXIT *** EXIT
     return None
@@ -395,8 +416,7 @@ def hero_xp(hero, screen):
 
 def arm_hero(hero):#only called during the beginning
 
-    #items = (ShortSword(), RitualDagger(), ElvenBoots())
-    items = ()
+    items = (Item1(), RitualDagger(), ElvenBoots())
 
     try:
         for item in items:
