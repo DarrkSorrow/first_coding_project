@@ -229,7 +229,7 @@ class Enemy:
 
 
     def _life_steal(self, hero, combat_log):
-        text = f'Es dürstet {self.name} nach Blut'
+        text = f'Es dürstet {self.name} nach Blut!'
         combat_log.add(text, True)
         damage_taken = self._basic_attack(hero, combat_log)
         if damage_taken > 0:
@@ -240,7 +240,7 @@ class Enemy:
         text = f'{self.name} holt aus und zielt auf {hero.name}s Kopf'
         combat_log.add(text, True)
         debuff = round(self.damage / 4)
-        self.damage -= debuff
+        self.damage -= debuff#75 percent power
         damage_taken = self._basic_attack
         self.damage += debuff
         if damage_taken > 0:
@@ -253,7 +253,7 @@ class Enemy:
         text = f'{self.name} bereitet einen mentalen Angriff vor'
         combat_log.add(text, True)
         debuff = round(self.magic_power / 2)
-        self.magic_power -= debuff
+        self.magic_power -= debuff# 50 percent power
         damage_taken = self._basic_magic
         self.magic_power += debuff
         if damage_taken > 0:
@@ -886,6 +886,7 @@ act2_minion_3 = 'images/dschinn.png'
 act2_minion_4 = 'images/attentaeter.png'
 act2_minion_5 = 'images/magischer_zauberbrecher.png'
 act2_minion_6 = ''
+act2_elite_1 = ''
 karim = 'images/karim.png'
 #IMAGES LOADED, EVERY ENEMY INSTANCE POINTS TO THESE
 
@@ -1209,6 +1210,7 @@ class Minion5Act2(Enemy):
         return text, key
 
 
+#No Sprite
 class Minion6Act2(Enemy):
 
     def __init__(self):
@@ -1258,6 +1260,56 @@ class Minion6Act2(Enemy):
             intend, key = 'Mag / Atk', 3
         elif step % 4 == 3:
             intend, key = '?', 4
+        text = self.font.render(intend, True, (0, 0, 0))
+        return text, key
+
+
+#No Sprite
+class Elite1Act2(Enemy):
+
+    def __init__(self):
+        super().__init__('Riesen-Zyklop', 150, 150, 36, 80,
+                        act2_elite_1,
+                        reduction=20, dodge=12, mental_reduction=15,
+                        critical=10)
+
+    def _giant_strength(self, hero, combat_log):
+        text = f'{self.name} baut sich vor {hero.name} auf'
+        combat_log.add(text, True)
+        text = 'und spannt die Muskeln an'
+        combat_log.add(text, True)
+        self._heal_self(12, combat_log)
+        abilities.Deadly(12, 3)
+
+    def enemy_ai(self, hero, key, combat_log):
+        match key:
+            case 1:
+                self._giant_strength(hero, combat_log)
+            case 2 | 4:
+                self._stun_attack(hero, combat_log, self.critical, 3)
+            case 3 | 6:
+                self._basic_attack(hero, combat_log)
+            case 5:
+                text = f'Der {self.name} schaut höhnisch'
+                combat_log.add(text, True)
+                text = f'auf {hero.name} hinab.'
+                combat_log.add(text, True)
+
+    def enemy_intend(self, step, hero):
+        if step % 3 == 0:
+            if hero.reduction > self.critical:
+                intend, key = 'Buff+', 1
+            else:
+                intend, key = 'Atk+', 2
+        elif step % 3 == 1:
+            intend, key = 'Atk', 3
+        elif step % 3 == 2:
+            if hero.life > self.life * 2:
+                intend, key = 'Atk+', 4
+            elif hero.life * 2 < self.life and self.life > self.max_life / 4:
+                intend, key = '...', 5
+            else:
+                intend, key = 'Atk', 6
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
