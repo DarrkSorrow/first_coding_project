@@ -118,6 +118,7 @@ class Gear:
         self.gear = True
         self.active = False
         self.passive_effekt = False
+        self.magic_attack = False
         self.after_combat_effekt = False
         self.dungeon = False
 
@@ -354,6 +355,7 @@ ritual_dagger = 'images/items/gear/ritual_dagger.png'
 soul_stealer = 'images/items/gear/soul_stealer.png'
 old_pistole = 'images/items/gear/old_pistole.png'
 moon_stone = 'images/items/gear/moon_stone.png'
+magic_key = 'images/items/gear/magic_key.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 
 
@@ -537,7 +539,7 @@ class ElvenBoots(Gear):
     def unequip(self, hero):
         hero.speed -= 3 * self.power
         hero.dodge -= self.power
-        hero.inventory.append(self)
+        hero.inventory.remove(self)
 
 
 @register()
@@ -630,8 +632,21 @@ class MoonStone(Gear):
             self.active = True
 
 
+@register()
 class MagicWand(Gear):
-    pass#noch einzufügen
+
+    def __init__(self):
+        super().__init__('Mysteriöser Schlüssel',
+                    16, 195, '', magic_key)
+        self.magic_attack = True
+
+    def equip(self, hero):
+        hero.inventory.append(self)
+        hero.magic_power += self.power
+
+    def unequip(self, hero):
+        hero.magic_power -= self.power
+        hero.inventory.remove(self)
 
 
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
@@ -732,6 +747,7 @@ magi_robe = 'images/items/gear/magi_robe.png'
 back_pack = 'images/items/gear/back_pack.png'
 war_bow = 'images/items/gear/war_bow.png'
 shield = 'images/items/gear/shield.png'
+mage_wand = 'images/items/gear/mage_wand.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 
 
@@ -886,4 +902,23 @@ class Shield(Gear):
         hero.inventory.append(self)
 
     def unequip(self, hero):
+        hero.inventory.remove(self)
+
+
+@register(act=2)
+class HighMageRod(Gear):
+
+    def __init__(self):
+        super().__init__('',
+                    20, 570, '', mage_wand)
+        self.magic_attack = True
+
+    def equip(self, hero):
+        hero.inventory.append(self)
+        hero.magic_power += self.power
+        hero.max_mana += self.power * 2
+
+    def unequip(self, hero):
+        hero.max_mana -= self.power * 2
+        hero.magic_power -= self.power
         hero.inventory.remove(self)
