@@ -57,7 +57,9 @@ def start_event(hero, stage, screen):
         #increases eventStreak
         hero.game_state.events_in_row += 1
         hero.game_state.enemy_counter = 0 # reset
-        event(hero, stage, screen)
+        merchant = event(hero, stage, screen)
+        if merchant == 'merchant':
+            return merchant
         return False
 
 
@@ -155,6 +157,23 @@ def event_0(hero, stage, screen):
         case "4":
             combat.abilities_from_events(hero, spell, screen)
     return None
+
+
+register(act=3)#@ fehlt
+register(act=2)#@ fehlt
+@register(act=1)
+def wandering_merchant(hero, stage, screen):
+
+    start = f'In der Ferne erblickt {hero.name}'
+    a = 'den zarten bekannten goldenen Schimmer'
+    b = 'des fahrenden Händlers!'
+    c = f'Mit Freude marschiert {hero.name} dort hin'
+
+    intro = [start, a, b, c]
+
+    construct_intro(hero, intro, screen), sleep(2)
+
+    return 'merchant'
 
 
 @register(act=1)#AveragePayout 0.5
@@ -1117,7 +1136,7 @@ def event_5_act_2(hero, stage, screen):
     intro = [start, a, b, c, d, e]
 
     choice_1 = 'In den Gesang einstimmen und untertauchen'
-    choice_2 = 'Dem Druck standhalten[mind 30 mentale Resistenz]'
+    choice_2 = 'Dem Druck standhalten [mind 30 mentale Resistenz]'
     choice_3 = 'Selber mental Druck auf die Kultisten ausüben'
 
     answers = [choice_1, choice_2, choice_3]
@@ -1170,7 +1189,8 @@ def event_5_act_2(hero, stage, screen):
                 raw_text = 'wie Diebe ein fremdes Haus'
                 y = display_outro(hero, raw_text, y, screen, font)
                 xp_loss, mana_loss = 200, 100
-                hero.xp, hero.mana -= xp_loss, mana_loss
+                hero.xp -= xp_loss
+                hero.mana -= mana_loss
                 if hero.xp < 0:
                     hero.xp = 0
                 if hero.mana < 0:
@@ -1207,6 +1227,84 @@ def event_5_act_2(hero, stage, screen):
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = '"Finde dich mit deinem Schicksal ab!"'
                 y = display_outro(hero, raw_text, y, screen, font)
+    return None
+
+
+#AveragePayout 0.5
+def event_6_act_2(hero, stage, screen):
+
+    start = 'Zwischen den Gassen der Stadt hat'
+    a = f'sich {hero.name} ein wenig verlaufen'
+    b = 'Eine bestimmte Sackgasse, die er erreicht'
+    c = 'hat sein Interesse geweckt!'
+    d = 'Es scheint sich eine geheime Tür hinter einer'
+    e = f"Wand zu verbergen, {hero.name}'s Neugier ist geweckt"
+
+    intro = [start, a, b, c, d, e]
+
+    choice_1 = f'Mit einer Parole die Tür öffnen [mag. Kraft:{hero.magic_power}]'
+    choice_2 = f'Vielleicht kann ein gezielter kräftiger Tritt Zutritt verschaffen'
+
+    answers = [choice_1, choice_2]
+    
+    for item in hero.inventory:
+        if isinstance(item, world.MagicWand):
+            choice_3 = ("Den Schlüssel zum öffnen der Geheimtür verwenden.")
+            answers.append(choice_3)
+            break
+
+    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
+
+    choice = buttons_clog.display_answers_clicked(buttons)
+    match choice:
+        case "1":
+            magic_number = random.randint(1, 50)
+            if magic_number < hero.magic_power: 
+                raw_text = f'"Melon!" just als {hero.name} diese Worte ausspricht'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'öffnet sich so gleich die Geheimtür'
+                y = display_outro(hero, raw_text, y, screen, font)
+            else:#Payout fehlt
+                raw_text = '"Simsalabim!", "3 mal scharzer Kater!"'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = '"ARKANE * KUNST !", "Quadratisch, Praktisch, Gut"'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'keine magische Formel vermag es die Tür zu bewegen'
+                y = display_outro(hero, raw_text, y, screen, font)
+
+        case "2":
+            magic_number = random.randint(50, 300)
+            impact = round(hero.damage * hero.critical)
+            if magic_number < impact:
+                raw_text = f'{hero.name} verlagert sein Gewicht nach hinten'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'und tritt mit voller Härte gegen die fragwürdige'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'Fassade! Die Tür bewegt sich tatsächlich!'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'Ein weiterer Tritt und die Tür ist offen'
+                y = display_outro(hero, raw_text, y, screen, font)
+            else:#payout fehlt
+                raw_text = f'{hero.name} tritt, schiebt und versucht alles'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'doch die vermeintliche Tür bewegt sich keine'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'keine Haaresbreite ...'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = '"Vielleicht ist es doch nur eine normale Wand"'
+                y = display_outro(hero, raw_text, y, screen, font)
+
+        case "3":#payout fehlt
+            raw_text = 'Das unscheinbare Loch in der vermeintlichen Tür'
+            y = display_outro(hero, raw_text, y, screen, font)
+            raw_text = f"Entpuppt sich als Schlüsselloch in das {hero.name}'s"
+            y = display_outro(hero, raw_text, y, screen, font)
+            raw_text = 'Schlüsselartefakt perfekt reinpasst!'
+            y = display_outro(hero, raw_text, y, screen, font)
+            raw_text = 'Elegant und fast geräuschlos schwingt die wuchtige'
+            y = display_outro(hero, raw_text, y, screen, font)
+            raw_text = 'Tür auf und offenbart seine Reichtümer'
+            y = display_outro(hero, raw_text, y, screen, font)
     return None
 
 
