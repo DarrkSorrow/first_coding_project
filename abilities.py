@@ -145,6 +145,7 @@ def abilities_from_events(hero, ability, screen):
 
     font = pygame.font.SysFont(None, 28)
     screen.fill((50, 50, 50)), pygame.display.flip()
+    spell_learned = False
     y = 100
 
     if len(hero.abilities) == hero.max_abilities:
@@ -156,6 +157,9 @@ def abilities_from_events(hero, ability, screen):
         text = f"{hero.name} hat {ability.name} gelernt!"
         y = buttons_clog.display_text(text, y, screen, font)
         hero.abilities.append(ability)
+        spell_learned = True
+
+    return spell_learned
 
 
 def enemy_block_dodge(hero, enemy, combat_log):
@@ -673,6 +677,7 @@ double_strike = 'images/abilities/double_strike.png'
 sword_dance = 'images/abilities/sword_dance.png'
 winter_fist = 'images/abilities/winter_fist.png'
 arcane_art = 'images/abilities/arcane_art.png'
+smite = 'images/abilities/smite.png'
 #IMAGES LOADED, EVERY ABILITY INSTANCE POITNS TO THESE
 
 
@@ -840,3 +845,39 @@ class Ability15(Ability):#ARKANE KUNST
 
     def undo_ability(self, hero, enemy):
         hero.mental_reduction -= round(self.power / 2)
+
+
+@register(act=2)
+class Ability16(Ability):#ZERSCHMETTERN
+
+    def __init__(self):
+        super().__init__('Zerschmettern', 5, 17, 500,
+                        smite)
+        
+    def use_ability(self, hero, enemy, combat_log):
+        if hero.mana >= self.cost:
+            text = f'Mit gewaltiger Wucht schwingt {hero.name}'
+            combat_log.add(text)
+            text = f'seine Waffe um {enemy.name} zu zerschmettern'
+            combat_log.add(text)
+
+            self._cost_and_cooldown(hero, self.cost)
+
+            hero.damage += self.power
+            damage_taken = enemy_block_dodge(hero, enemy, combat_log)
+            hero.damage -= self.power
+            if damage_taken > 0:
+                text = f'{enemy.name} verzieht das Gesicht vor Schmerz'
+                combat_log.add(text)
+                text = 'Der Treffer hat gesessen!'
+                combat_log.add(text)
+                Stun(30, 2).buff(enemy)
+                return True
+            else:
+                text = 'Es fehlt maßgeblich die Gewalt'
+                combat_log.add(text)
+                return False
+        else:
+            text = f"{hero.name} hat sich eine Sehne gezerrt."
+            combat_log.add(text)
+            return False
