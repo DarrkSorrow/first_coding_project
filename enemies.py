@@ -147,6 +147,7 @@ class Enemy:
             crit_factor = 1
         return crit_factor
     
+#General Enemy Moves ** General Enemy Moves
 
     def _basic_attack(self, hero, combat_log):
         magic_number = random.randint(0, 100)
@@ -261,6 +262,25 @@ class Enemy:
             text = f'Der Verstand von {hero.name} ist beeinträchtigt'
             combat_log.add(text)
 
+
+    def _multi_strike(self, hero, combat_log, number_strikes=2):
+        text = f'{self.name} setzt zu einer Angriffskette an!'
+        combat_log.add(text)
+        hits = 0
+        while hits < number_strikes:
+            damage_taken = self._basic_attack(hero, combat_log)
+            if damage_taken > 0:
+                i += 1
+            else:
+                break
+        if hits > 0:
+            text = f'{hero.name} wurde {hits} mal getroffen!'
+        else:
+            text = f'{self.name} konnte {hero.name} nichts anhaben!'
+        combat_log.add(text)
+        return hits
+
+#General Enemy Moves ** General Enemy Moves
 
     def decay_over_hp(self):
         if self.over_hp == 1:
@@ -888,6 +908,7 @@ act2_minion_5 = 'images/magischer_zauberbrecher.png'
 act2_minion_6 = ''
 act2_elite_1 = ''
 karim = 'images/karim.png'
+act2_boss_1 = 'images/master_earth_bender.png'
 #IMAGES LOADED, EVERY ENEMY INSTANCE POINTS TO THESE
 
 
@@ -1127,7 +1148,7 @@ class Minion4Act2(Enemy):
             case 1:
                 text = f'f{self.name} der Attentäter starrt dich an.'
                 combat_log.add(text, True)
-                abilities.AccuracyE2E(5, 3).buff(self)
+                abilities.Accuracy(5, 3).buff(self)
                 self._block(round(self.magic_power / 2), combat_log)
             case 2:
                 self._block(self.magic_power, combat_log)
@@ -1257,7 +1278,7 @@ class Minion6Act2(Enemy):
         elif step % 4 == 1:
             intend, key = 'Atk', 2
         elif step % 4 == 2:
-            intend, key = 'Mag / Atk', 3
+            intend, key = 'Mag / Atk+', 3
         elif step % 4 == 3:
             intend, key = '?', 4
         text = self.font.render(intend, True, (0, 0, 0))
@@ -1368,5 +1389,66 @@ class EventEliteKarim(Enemy):
             intend, key = 'Atk / Block', 3
         elif step % 3 == 2:
             intend, key = 'Atk', 4
+        text = self.font.render(intend, True, (0, 0, 0))
+        return text, key
+
+
+@register(act=2)
+class Boss1Act2(Enemy):
+
+    def __init__(self):
+        super().__init__('MEISTER-ERDBÄNDIGER', 600, 600, 25, 100,
+                        act2_boss_1,
+                        reduction=20, dodge=12, mental_reduction=15,
+                        critical=10, magic_power=20)
+        self.life_last_turn = self.life
+
+    def enemy_ai(self, hero, key, combat_log):
+        power_mod = self.life - self.life_last_turn
+        if power_mod > 40:
+            text = f"{self.name}'s Macht ist gerade gewaltig!"
+            combat_log.add(text, True)
+        match key:
+            case 1:
+                self._life_steal(hero, combat_log)
+            case 2:
+                block = self.magic_power + power_mod
+                self._block(block, combat_log)
+            case 3:
+                self._multi_strike(hero, combat_log)
+            case 4:
+                if power_mod < 10:
+                    power_mod = 10
+                self._block(power_mod, combat_log)
+            case 5:
+                self._stun_attack(hero, combat_log, power_mod, 3)
+            case 6:
+                text = 'Erde, Staub, Gestein wirbeln umher'
+                combat_log.add(text, True)
+                text = f'und umgeben den {self.name}'
+                combat_log.add(text, True)
+                mod = round(power_mod / 2)
+                abilities.Accuracy(mod, 2).buff(self)
+                abilities.Empowered(mod, 3).buff(self)
+        self.life_last_turn = self.life
+
+    def enemy_intend(self, step, hero):
+        magic_number = random.choice((1, 2, 3, 4, 5))
+        if magic_number == 5:
+            if self.life < self.max_life * 0.25:
+                intend, key = 'Atk+', 1
+            else:
+                intend, key = 'Block+', 2
+        else:
+            if step % 3 == 0:
+                intend, key = 'multi Atk', 3
+            elif step % 3 == 1:
+                intend, key = 'Block', 4
+            elif step % 3 == 2:
+                magic_number = random.choice((1, 2))
+                if magic_number == 1:
+                    intend, key = 'Atk+', 5
+                else:
+                    intend, key = 'Buff', 6
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
