@@ -1,9 +1,10 @@
-import pygame
 from random import choice
 from buffs import *
 from abilities import overhp_before_hp
 from abilities import enemy_block_dodge
 from abilities import enemy_mental_dodge
+
+import pygame
 
 
 consumable_pool, consumable_pool_2, consumable_pool_3 = [], [], []
@@ -171,7 +172,6 @@ class Item1(Consumable):#HEILTRANK
             text = f"+{self.power} HP"
             combat_log.add(text)
 
-
 @register(type='item')
 class Item2(Consumable):#ODEM-ESSENZ
 
@@ -193,7 +193,6 @@ class Item2(Consumable):#ODEM-ESSENZ
             combat_log.add(text)
             text = f"+{self.power} ODEM"
             combat_log.add(text)
-
 
 @register(type='item')
 class Item3(Consumable):#BRANDBOMBE
@@ -226,7 +225,6 @@ class Item3(Consumable):#BRANDBOMBE
         if self.charges == 0:
             self._remove(hero)
 
-
 @register(type='item', act=2)
 @register(type='item')
 class Item4(Consumable):#prakt. HEILTRANK
@@ -256,7 +254,6 @@ class Item4(Consumable):#prakt. HEILTRANK
             text = f"{self.charges} Ladungen noch übrig."
             combat_log.add(text)
 
-
 @register(type='item')
 class Item5(Consumable):#BERSERKER BLUT
     item_name = "BERSERKER-BLUT" #needed for an event
@@ -272,7 +269,6 @@ class Item5(Consumable):#BERSERKER BLUT
         self.charges -= 1
         if self.charges == 0:
             self._remove(hero)
-
 
 @register(type='item', act=2)
 @register(type='item')
@@ -310,7 +306,6 @@ class Item6(Consumable):#verb. BRANDBOMBE
         self.update_symbol()
         if self.charges == 0:
             self._remove(hero)
-
 
 @register(type='item', act=2)
 @register(type='item')
@@ -376,7 +371,6 @@ class ShortSword(Gear):
         hero.damage -= self.power / 3
         hero.inventory.remove(self)
 
-
 @register()
 class LongSword(Gear):
 
@@ -391,7 +385,6 @@ class LongSword(Gear):
     def unequip(self, hero):
         hero.damage -= self.power
         hero.inventory.remove(self)
-
 
 @register()
 class ShatteredRunes(Gear):
@@ -413,7 +406,6 @@ class ShatteredRunes(Gear):
             hero.mana = hero.max_mana
         hero.inventory.remove(self)
 
-
 @register()
 class SimpleArmor(Gear):
 
@@ -429,7 +421,6 @@ class SimpleArmor(Gear):
         hero.reduction -= self.power
         hero.inventory.remove(self)
 
-
 @register()
 class Boots(Gear):
     def __init__(self):
@@ -443,7 +434,6 @@ class Boots(Gear):
     def unequip(self, hero):
         hero.speed -= self.power
         hero.inventory.remove(self)
-
 
 @register()
 class SimpleWarmogs(Gear):
@@ -462,7 +452,6 @@ class SimpleWarmogs(Gear):
         if hero.life > hero.max_life:
             hero.life = hero.max_life
         hero.inventory.remove(self)
-
 
 @register()
 class ManaMantle(Gear):
@@ -500,11 +489,10 @@ class LifeStone(Gear):
     def unequip(self, hero):
         hero.inventory.remove(self)
 
-    def trigger_passive(self, hero):
+    def trigger_passive(self, hero, combat_log):
         hero.life += self.power
         if hero.life > hero.max_life:
             hero.life = hero.max_life
-
 
 @register()
 class KhansHat(Gear):
@@ -523,7 +511,6 @@ class KhansHat(Gear):
         hero.damage -= self.power
         hero.inventory.remove(self)
 
-
 @register()
 class ElvenBoots(Gear):
 
@@ -541,7 +528,6 @@ class ElvenBoots(Gear):
         hero.dodge -= self.power
         hero.inventory.remove(self)
 
-
 @register()
 class RitualDagger(Gear):
 
@@ -557,7 +543,6 @@ class RitualDagger(Gear):
     def unequip(self, hero):
         hero.damage -= self.power
         hero.inventory.remove(self)
-
 
 @register()
 class SoulStealer(Gear):
@@ -579,7 +564,6 @@ class SoulStealer(Gear):
         if hero.mana < self.power:
             hero.mana = self.power
 
-
 @register()
 class OldPistole(Gear):
 
@@ -596,7 +580,6 @@ class OldPistole(Gear):
         hero.speed += self.power * 2
         hero.damage -= self.power
         hero.inventory.remove(self)
-
 
 @register()
 class MoonStone(Gear):
@@ -630,7 +613,6 @@ class MoonStone(Gear):
         if not self.active:
             hero.mental_reduction += self.power
             self.active = True
-
 
 @register()
 class MagicWand(Gear):
@@ -676,7 +658,6 @@ class SmokeBomb(Consumable):
             self._remove(hero)
         return 'escape'
 
-
 @register(type='item', act=2)
 class HealingSalve(Consumable):
 
@@ -705,7 +686,6 @@ class HealingSalve(Consumable):
         self.update_symbol()
         if self.charges == 0:
             self._remove(hero)
-
 
 @register(type='item', act=2)
 class HandyManaPotion(Consumable):#reused and altered for act 2
@@ -743,11 +723,13 @@ shuko_claws = 'images/items/gear/shuko_claws.png'
 sobi_mask = 'images/items/gear/sobi_mask.png'
 item_belt = 'images/items/gear/item_belt.png'
 magi_robe = 'images/items/gear/magi_robe.png'
+magic_haste_ring = 'images/items/gear/magic_haste_ring.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 back_pack = 'images/items/gear/back_pack.png'
 war_bow = 'images/items/gear/war_bow.png'
 shield = 'images/items/gear/shield.png'
 mage_wand = 'images/items/gear/mage_wand.png'
+warden_plate = 'images/items/gear/waechter_panzer.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 
 
@@ -766,7 +748,6 @@ class ShukoClaws(Gear):
     def unequip(self, hero):
         hero.damage -= self.power
         hero.inventory.remove(self)
-
 
 @register(act=2)
 class SobiMask(Gear):
@@ -789,7 +770,6 @@ class SobiMask(Gear):
         hero.mental_reduction -= self.power
         hero.inventory.remove(self)
 
-
 @register(act=2)
 class ItemBelt(Gear):
 
@@ -809,7 +789,6 @@ class ItemBelt(Gear):
             del hero.pockets[-1]
         hero.inventory.remove(self)
 
-
 @register(act=2)
 class MagiRobe(Gear):
 
@@ -827,6 +806,23 @@ class MagiRobe(Gear):
         hero.magic_power -= self.power
         hero.inventory.remove(self)
 
+@register(act=2)
+class MagicHasteRing(Gear):
+
+    def __init__(self):
+        super().__init__('Ring der magischen Eile',
+                         7, 400, '', magic_haste_ring)
+        
+    def equip(self, hero):
+        hero.inventory.append(self)
+        hero.mental_reduction += self.power
+        hero.speed += self.power * 7
+
+    def unequip(self, hero):
+        hero.speed -= self.power * 7
+        hero.mental_reduction -= self.power
+        hero.inventory.remove(self)
+
 
 #^^^ UNDER 450 XP | obtainable from normal enemies ^^^
         
@@ -836,22 +832,22 @@ class BackPack(Gear):
 
     def __init__(self):
         super().__init__('RUCKSACK',
-                        1, 580, '', back_pack)
+                        2, 580, '', back_pack)
         
     def equip(self, hero):
         hero.inventory.append(self)
-        hero.pocket_size += 2
+        hero.pocket_size += self.power
 
     def unequip(self, hero):
-        hero.pocket_size -= 2
+        hero.pocket_size -= self.power
         while not len(hero.pockets) <= hero.pocket_size:
             del hero.pockets[-1]
         hero.inventory.remove(self)
 
-
 @register(act=2)
 class WarBow(Gear):
-
+    """Has active ability once usable per battle
+    where the hero performs an auto-attack with 2x damage"""
     def __init__(self):
         super().__init__('KRIEGSBOGEN',
                          4, 580, '', war_bow)
@@ -875,7 +871,7 @@ class WarBow(Gear):
             text = f'{hero.name} spannt den den Bogen so weit er kann'
             combat_log.add(text)
             self.active = False
-            text = f'Der Pfeil zischt mit Gewalt richtung {enemy.name}'
+            text = f'Der Pfeil zischt in Richtung {enemy.name}'
             combat_log.add(text)
             hero.damage *= 2
             enemy_block_dodge(hero, enemy, combat_log)
@@ -888,10 +884,9 @@ class WarBow(Gear):
         if not self.active:
             self.active = True
 
-
 @register(act=2)
 class Shield(Gear):
-
+    """Buffs defend move of hero"""
     def __init__(self):
         super().__init__('WÄCHTERSCHILD',
                         10, 580, '', shield)
@@ -904,12 +899,12 @@ class Shield(Gear):
     def unequip(self, hero):
         hero.inventory.remove(self)
 
-
 @register(act=2)
 class HighMageRod(Gear):
-
+    """Changes physical auto-attacks
+    to magical auto-attacks"""
     def __init__(self):
-        super().__init__('',
+        super().__init__('STAB DES ZAUBERERS',
                     20, 570, '', mage_wand)
         self.magic_attack = True
 
@@ -922,3 +917,35 @@ class HighMageRod(Gear):
         hero.max_mana -= self.power * 2
         hero.magic_power -= self.power
         hero.inventory.remove(self)
+
+@register(act=2)
+class WardenPlate(Gear):
+    """If during the fight the current hero.life drops
+    below 50%, hero gets hp_shield as big as current self.life"""
+    def __init__(self):
+        super().__init__('WÄCHTER-PANZER',
+                        8, 550, '', warden_plate)
+        self.active = True
+        self.initial_life = 0
+        
+    def equip(self, hero):
+        hero.inventory.append(self)
+        hero.reduction += self.power
+
+    def unequip(self, hero):
+        hero.reduction -= self.power
+        hero.inventory.remove(self)
+
+    def trigger_passive(self, hero, combat_log):
+        if self.initial_life == 0:
+            self.initial_life = hero.life
+        elif self.active and hero.life < self.initial_life * 2:
+            text = f'{self.name} erwacht zum Leben'
+            combat_log.add(text)
+            text = f'und hüllt {hero.name} in einen Panzer'
+            hero.over_hp += hero.life
+            self.active = False
+
+    def after_combat(self, hero):
+        self.initial_life = 0
+        self.active = True
