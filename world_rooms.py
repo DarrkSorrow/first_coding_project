@@ -1,5 +1,7 @@
-import pygame
 from random import choices
+
+import pygame
+
 
 class Room:
 
@@ -11,6 +13,7 @@ class Room:
     rest = False
     merchant = False
     warp = False
+    random = False
     color = (150, 150, 150)
 
     def __init__(self):
@@ -56,7 +59,7 @@ class WarpRoom(Room):
     warp = True
 
 class EventRoom(Room):
-    name = "DUNKLER RAUM"
+    name = "EREIGNISRAUM"
     image_path = event_room
     event = True
 
@@ -84,17 +87,23 @@ class NoRoom(Room):
     image_path = no_room
     enter = False
 
+class RandomRoom(Room):
+    name = 'UNBEKANNTER RAUM'
+    random = True
+    color = (50, 50, 50)
+
 
 o, e, w = EmptyRoom(), EnemyRoom(), WarpRoom()
 r, b, q = EventRoom(), EliteRoom(), BossRoom()
-ü, n, m, x = BondFire(), NoRoom(), Merchant(), None
+ü, n, m = BondFire(), NoRoom(), Merchant()
+c, x = RandomRoom(), None
 
 
-def dungeon_by_stage(stage): 
+def dungeon_by_stage(stage):
 
     if stage == 0:
         dungeon =  [[o, o, e],
-                    [m, n, r],
+                    [o, n, r],
                     [e, n, w]]
         
     elif stage in (1, 4, 7):
@@ -111,13 +120,12 @@ def dungeon_by_stage(stage):
 
 def procedual_dungeon(stage):
 
-    rnd_room = choices(
-        population=[o, e, r],
-        weights=[30, 45, 25],
-        k=35) #Sets number of tuples
-
     match stage:
         case 1:
+            rnd_room = choices(
+            population=[o, e, r, m],
+            weights=[30, 45, 24, 1], k=20)
+
             template = [[o, o, x, x, o],
                         [o, o, x, x, x],
                         [x, x, x, x, x],
@@ -126,6 +134,10 @@ def procedual_dungeon(stage):
             l = 3 #NoRoom
 
         case 4:
+            rnd_room = choices(
+            population=[o, e, r, c, m],
+            weights=[30, 42, 23, 4, 1], k=35)
+
             template = [[o, o, x, x, x, o],
                         [o, x, x, x, x, e],
                         [e, x, x, x, x, o],
@@ -135,6 +147,10 @@ def procedual_dungeon(stage):
             l = 5 #NoRoom
 
         case 7:
+            rnd_room = choices(
+            population=[o, e, r, c, m],
+            weights=[27, 39, 21, 12, 1], k=40)
+
             template = [[o, o, o, e, o, e, o],
                         [o, x, x, x, x, x, x],
                         [x, x, x, x, x, x, x],
@@ -150,14 +166,13 @@ def procedual_dungeon(stage):
 
 
 def procedual_dungeon_elite(stage):
-    
-    rnd_rooms = choices(
-        population=[o, e, r],
-        weights=[30, 50, 20],
-        k=35) #Sets number of tuples
 
     match stage:
         case 2:
+            rnd_rooms = choices(
+            population=[o, e, r, m],
+            weights=[29, 49, 19, 3], k=20) 
+
             template = [[o, o, x, x, o],
                         [o, o, x, x, x],
                         [x, x, x, x, x],
@@ -166,6 +181,10 @@ def procedual_dungeon_elite(stage):
             l = 3 #NoRoom
 
         case 5:
+            rnd_rooms = choices(
+            population=[o, e, r, c, m],
+            weights=[28, 42, 19, 8, 3], k=35) 
+
             template = [[o, o, x, x, x, o],
                         [o, x, x, x, x, o],
                         [e, x, x, x, x, e],
@@ -175,6 +194,10 @@ def procedual_dungeon_elite(stage):
             l = 5 #NoRoom
 
         case 8:
+            rnd_rooms = choices(###
+            population=[o, e, r, c, m],
+            weights=[26, 39, 16, 16, 3], k=40) 
+
             template = [[o, o, o, e, o, e, o],
                         [o, x, x, x, x, x, x],
                         [x, x, x, x, x, x, x],
@@ -204,8 +227,7 @@ def set_no_rooms(template, l):
     """Function to limit NoRoom generation"""
     rnd_rooms = choices(
         population=[x, n],
-        weights=[80, 20],
-        k=30)
+        weights=[75, 25], k=40)
     
     a, k = 0, 0
 
