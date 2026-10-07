@@ -1,5 +1,6 @@
-import pygame
 import random, abilities
+
+import pygame
 
 
 easy_pool, normal_pool, elite_pool, boss_pool = [], [], [], []
@@ -280,6 +281,18 @@ class Enemy:
         combat_log.add(text)
         return hits
 
+
+    def _poison_attack(self, hero, combat_log, power, duration):
+        """Enemy attacks with 70% force, poison effect by damage > 0"""
+        malus = round(self.damage * 0.3)
+        self.damage -= malus
+        damage_taken = self._basic_attack(hero, combat_log)
+        self.damage += malus
+        if damage_taken > 0:
+            abilities.Poison(power, duration).buff(hero)
+            text = f'{hero.name} wurde vergiftet!'
+            combat_log.add(text)
+
 #General Enemy Moves ** General Enemy Moves
 
     def decay_over_hp(self):
@@ -354,7 +367,6 @@ class EasyPool1(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
-
 @register(rank='easy')
 class EasyPool2(Enemy):
     def __init__(self):
@@ -363,7 +375,7 @@ class EasyPool2(Enemy):
         self.over_hp = 5
 
     def _slime(self, hero, combat_log):#ENEMY-MOVE
-        abilities.SlowE2H(15, 4).buff(hero)
+        abilities.Slow(15, 4).buff(hero)
         text = f"{self.name} verschießt Schleim."
         combat_log.add(text, True)
         self._heal_self(4, combat_log)
@@ -390,6 +402,7 @@ class EasyPool2(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
+#*** AKT 1 *** AKT 1 *** AKT 1 ***
 
 @register()
 class Minion1(Enemy):
@@ -420,7 +433,6 @@ class Minion1(Enemy):
             intend, key = "Heal", 2
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
-
 
 @register()
 class Minion2(Enemy):
@@ -463,7 +475,6 @@ class Minion2(Enemy):
             intend, key = "Atk", 1
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
-
 
 @register()
 class Minion3(Enemy):
@@ -516,7 +527,6 @@ class Minion3(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
-
 @register()
 class Minion4(Enemy):
 
@@ -562,7 +572,6 @@ class Minion4(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
-
 @register()
 class Minion5(Enemy):
 
@@ -602,7 +611,6 @@ class Minion5(Enemy):
             intend, key = "Atk / BLOCK", 3
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
-    
 
 @register()
 class Minion6(Enemy):
@@ -644,7 +652,6 @@ class Minion6(Enemy):
                 intend, key = 'Block', 5
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
-
 
 @register()
 class Minion7(Enemy):
@@ -692,6 +699,7 @@ class Minion7(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
+#*** AKT 1 *** AKT 1 *** AKT 1 ***
 
 @register(rank='elite')
 class Elite1(Enemy):
@@ -738,7 +746,6 @@ class Elite1(Enemy):
             intend, key = "Atk / Debuff", 3
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
-
 
 @register(rank='elite')
 class Elite2(Enemy):
@@ -798,7 +805,6 @@ class Elite2(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
     
-
 @register(rank='elite')
 class Elite3(Enemy):
 
@@ -816,7 +822,7 @@ class Elite3(Enemy):
     def _ability_2(self, hero, combat_log):
         text = f"{hero.name}'s Kraft schwindet." 
         combat_log.add(text, True)
-        abilities.SlowE2H(10, 2).buff(hero)
+        abilities.Slow(10, 2).buff(hero)
 
     def enemy_ai(self, hero, key, combat_log):
         magic_number = random.choice((1, 2))
@@ -851,6 +857,7 @@ class Elite3(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
+#*** AKT 1 *** AKT 1 *** AKT 1 ***
 
 @register(rank='boss')
 class Boss1(Enemy):
@@ -907,6 +914,7 @@ act2_minion_4 = 'images/attentaeter.png'
 act2_minion_5 = 'images/magischer_zauberbrecher.png'
 act2_minion_6 = ''
 act2_elite_1 = ''
+act2_elite_2 = ''
 karim = 'images/karim.png'
 act2_boss_1 = 'images/master_earth_bender.png'
 #IMAGES LOADED, EVERY ENEMY INSTANCE POINTS TO THESE
@@ -919,15 +927,6 @@ class EventMinionKirgo(Enemy):
                          kirgo,
                          reduction=20)
         self.heal_used = False
-        
-    def _poison_attack(self, hero, combat_log):
-        self.damage -= 15
-        damage_taken = self.basic_attack(hero, combat_log)
-        self.damage += 15
-        if damage_taken > 0:
-            abilities.PoisonE2H(8, 4).buff(hero)
-            text = f'{hero.name} wurde vergiftet!'
-            combat_log.add(text)
 
     def enemy_ai(self, hero, key, combat_log):
         match key:
@@ -939,7 +938,7 @@ class EventMinionKirgo(Enemy):
             case 3:
                 magic_number = random.choice((1, 2, 3))
                 if magic_number == 1:
-                    self._poison_attack(hero, combat_log)
+                    self._poison_attack(hero, combat_log, 8, 4)
                 else:
                     self._basic_attack(hero, combat_log)
             case 4:
@@ -966,6 +965,7 @@ class EventMinionKirgo(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
+#*** AKT 2 *** AKT 2 *** AKT 2 ***
 
 @register(act=2)
 class Minion1Act2(Enemy):
@@ -1010,7 +1010,6 @@ class Minion1Act2(Enemy):
             intend, key = '?', 4
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
-
 
 @register(act=2)
 class Minion2Act2(Enemy):
@@ -1058,7 +1057,6 @@ class Minion2Act2(Enemy):
                     intend, key = 'Atk', 4
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
-    
 
 @register(act=2)
 class Minion3Act2(Enemy):
@@ -1106,7 +1104,6 @@ class Minion3Act2(Enemy):
             intend, key = 'Atk / Mag', 2
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
-
 
 @register(act=2)
 class Minion4Act2(Enemy):
@@ -1179,7 +1176,6 @@ class Minion4Act2(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
-
 @register(act=2)
 class Minion5Act2(Enemy):
 
@@ -1229,7 +1225,6 @@ class Minion5Act2(Enemy):
             intend, key = 'Atk', 4
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
-
 
 #No Sprite
 class Minion6Act2(Enemy):
@@ -1284,12 +1279,63 @@ class Minion6Act2(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
+#*** AKT 2 *** AKT 2 *** AKT 2 ***
 
-#No Sprite
+class EventEliteKarim(Enemy):
+
+    def __init__(self):
+        super().__init__('Karim', 110, 110, 29, 50,
+                         karim,
+                         reduction=20, mental_reduction=15, 
+                         critical=8)
+
+    def _pommel_strike(self, hero, combat_log):
+        text = f'Der Schwertknauf {self.name}s schnellt'
+        combat_log.add(text, True)
+        text = f'gegen {hero.name}s Kopf!'
+        combat_log.add(text, True)
+        self.damage -= 13
+        damage_taken = self._basic_attack(hero, combat_log)
+        self.damage += 13
+        if damage_taken > 0:
+            abilities.Stun(40, 2).buff(hero)
+            text = f'{hero.name} hat die Orientierung verloren'
+            combat_log.add(text)
+
+    def enemy_ai(self, hero, key, combat_log):
+        match key:
+            case 1:
+                abilities.Accuracy(5, 6).buff(self)
+            case 2:
+                self._poison_attack(hero, combat_log, 8, 4)
+            case 3:
+                magic_number = random.choice((1, 2, 3))
+                if magic_number == 1:
+                    self._pommel_strike(hero, combat_log)
+                else:
+                    self._block(12, combat_log)
+            case 4:
+                self._basic_attack(hero, combat_log)
+
+    def enemy_intend(self, step, hero):
+        if hero.dodge > 5 and not self.accuracy:
+            intend, key = 'Buff', 1
+        elif step % 3 == 0:
+            intend, key = 'Atk+', 2
+        elif step % 3 == 1:
+            intend, key = 'Atk / Block', 3
+        elif step % 3 == 2:
+            intend, key = 'Atk', 4
+        text = self.font.render(intend, True, (0, 0, 0))
+        return text, key
+
+#*** AKT 2 *** AKT 2 *** AKT 2 ***
+
+#NO Sprite
 class Elite1Act2(Enemy):
 
     def __init__(self):
-        super().__init__('Riesen-Zyklop', 150, 150, 36, 80,
+        super().__init__('Riesen-Zyklop', 165, 165, 36, 80,
                         act2_elite_1,
                         reduction=20, dodge=12, mental_reduction=15,
                         critical=10)
@@ -1334,66 +1380,70 @@ class Elite1Act2(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
-
-class EventEliteKarim(Enemy):
+#NO Sprite
+class Elite2Act2(Enemy):
 
     def __init__(self):
-        super().__init__('Karim', 110, 110, 29, 50,
-                         karim,
-                         reduction=20, mental_reduction=15, 
-                         critical=8)
-        
-    def _poison_attack(self, hero, combat_log):
-        self.damage -= 13
-        damage_taken = self._basic_attack(hero, combat_log)
-        self.damage += 13
-        if damage_taken > 0:
-            abilities.PoisonE2H(8, 4).buff(hero)
-            text = f'{hero.name} wurde vergiftet!'
-            combat_log.add(text)
+        super().__init__('Abscheulichkeit', 305, 305, 29, 65,
+                        act2_elite_2,
+                        dodge=0,
+                        critical=6)
 
-    def _pommel_strike(self, hero, combat_log):
-        text = f'Der Schwertknauf {self.name}s schnellt'
-        combat_log.add(text, True)
-        text = f'gegen {hero.name}s Kopf!'
-        combat_log.add(text, True)
-        self.damage -= 13
-        damage_taken = self._basic_attack(hero, combat_log)
-        self.damage += 13
-        if damage_taken > 0:
-            abilities.StunE2H(40, 2).buff(hero)
-            text = f'{hero.name} hat die Orientierung verloren'
-            combat_log.add(text)
+    def _random(self, hero, combat_log):
+        magic_number = random.choice((1, 2))
+        if self.life > self.max_life * 0.8:
+            if magic_number == 1:
+                self._basic_attack(hero, combat_log)
+            else:
+                text = f'Die {self.name} verströhmt giftiges Gas'
+                combat_log.add(text, True)
+                abilities.Poison(3, 10).buff(hero)
+        elif self.life > self.max_life * 0.6:
+            if magic_number == 1:
+                self._poison_attack(hero, combat_log, 5, 5)
+            else:
+                text = f"Die Gase vernebeln {hero.name}'s Verstand"
+                combat_log.add(text, True)
+                abilities.Slow(33, 7).buff(hero)
+        elif self.life > self.max_life * 0.4:
+            if magic_number == 1:
+                self._life_steal(hero, combat_log)
+            else:
+                self._basic_attack(hero, combat_log)
+        elif self.life > self.max_life * 0.2:
+            if magic_number == 1:
+                self._heal_self(45, combat_log)
+            else:
+                self.accuracy -= 5
+                self._multi_strike(hero, combat_log)
+                self.accuracy += 5
 
     def enemy_ai(self, hero, key, combat_log):
         match key:
-            case 1:
-                abilities.AccuracyE2E(5, 6).buff(self)
             case 2:
-                self._poison_attack(hero, combat_log)
-            case 3:
-                magic_number = random.choice((1, 2, 3))
-                if magic_number == 1:
-                    self._pommel_strike(hero, combat_log)
-                else:
-                    self._block(12, combat_log)
-            case 4:
                 self._basic_attack(hero, combat_log)
+            case 4:
+                self._block(25, combat_log)
+            case 1 | 3 | 5:
+                self._random(hero, combat_log)
 
     def enemy_intend(self, step, hero):
-        if hero.dodge > 5 and not self.accuracy:
-            intend, key = 'Buff', 1
-        elif step % 3 == 0:
-            intend, key = 'Atk+', 2
-        elif step % 3 == 1:
-            intend, key = 'Atk / Block', 3
-        elif step % 3 == 2:
-            intend, key = 'Atk', 4
+        if step % 5 == 0:
+            intend, key = '?', 1
+        elif step % 5 == 1:
+            intend, key = 'Atk', 2
+        elif step % 5 == 2:
+            intend, key = '?', 3
+        elif step % 5 == 3:
+            intend, key = 'Block', 4
+        elif step % 5 == 4:
+            intend, key = '?', 5
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
+#*** AKT 2 *** AKT 2 *** AKT 2 ***
 
-@register(act=2)
+@register(act=2, rank='boss')
 class Boss1Act2(Enemy):
 
     def __init__(self):
@@ -1404,8 +1454,10 @@ class Boss1Act2(Enemy):
         self.life_last_turn = self.life
 
     def enemy_ai(self, hero, key, combat_log):
-        power_mod = self.life - self.life_last_turn
-        if power_mod > 40:
+        power_mod = self.life_last_turn - self.life
+        if power_mod < 10:
+            power_mod = 10
+        elif power_mod > 35:
             text = f"{self.name}'s Macht ist gerade gewaltig!"
             combat_log.add(text, True)
         match key:
@@ -1417,8 +1469,6 @@ class Boss1Act2(Enemy):
             case 3:
                 self._multi_strike(hero, combat_log)
             case 4:
-                if power_mod < 10:
-                    power_mod = 10
                 self._block(power_mod, combat_log)
             case 5:
                 self._stun_attack(hero, combat_log, power_mod, 3)
@@ -1452,3 +1502,4 @@ class Boss1Act2(Enemy):
                     intend, key = 'Buff', 6
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
+    
