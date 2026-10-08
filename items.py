@@ -199,7 +199,7 @@ class Item3(Consumable):#BRANDBOMBE
 
     def __init__(self):
         super().__init__("KLEINE BRANDBOMBE",
-                          20, 1, 65, '', simple_fire_bomb)
+                        20, 1, 65, '', simple_fire_bomb)
         
     def use_item(self, hero, enemy, combat_log):
         block = (1 - enemy.reduction / 100)
@@ -634,6 +634,7 @@ class MagicWand(Gear):
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 smoke_bomb = 'images/items/smoke_bomb.png'
 healing_salve = 'images/items/healing_salve.png'
+acid_bomb = 'images/items/acid_bomb.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 
 
@@ -687,7 +688,7 @@ class HealingSalve(Consumable):
         if self.charges == 0:
             self._remove(hero)
 
-@register(type='item', act=2)
+@register(type='item', act=2)#IMAGEPATH FROM ACT 1
 class HandyManaPotion(Consumable):#reused and altered for act 2
     
     def __init__(self):
@@ -717,6 +718,36 @@ class HandyManaPotion(Consumable):#reused and altered for act 2
         if self.charges == 0:
             self._remove(hero)
 
+@register(type='item', act=2)
+class AcidBomb(Consumable):
+
+    def __init__(self):
+        super().__init__('SÄUREBOMBE',
+                        30, 1, 255, '', acid_bomb)
+        
+    def use_item(self, hero, enemy, combat_log):
+        block = (1 - enemy.reduction / 100)
+        if block > 1:
+            block = 1
+        damage_taken = round(self.power*block)
+        if damage_taken < 0:
+            damage_taken = 0
+        if enemy.over_hp > 0:#over_hp strip
+            text = f"Die Bombe ätzt durch {enemy.name}'s Verteidigung"
+            combat_log.add(text)
+            enemy.over_hp -= self.power
+            if enemy.over_hp < 0:
+                enemy.over_hp = 0#over_hp strip
+        damage_taken = overhp_before_hp(enemy, damage_taken)
+        enemy.life -= damage_taken
+        text = f"{enemy.name} hat {damage_taken} Schaden erlitten"
+        combat_log.add(text)
+        if damage_taken > 0:
+            Slow(50, 5).buff(enemy)
+            Poison(6, 5).buff(enemy)
+            text = f"DIe Säure beeinträchtigt {enemy.name}"
+            combat_log.add(text)
+
 
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 shuko_claws = 'images/items/gear/shuko_claws.png'
@@ -724,12 +755,14 @@ sobi_mask = 'images/items/gear/sobi_mask.png'
 item_belt = 'images/items/gear/item_belt.png'
 magi_robe = 'images/items/gear/magi_robe.png'
 magic_haste_ring = 'images/items/gear/magic_haste_ring.png'
+cursed_artefact = 'images/items/gear/cursed_artefact.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 back_pack = 'images/items/gear/back_pack.png'
 war_bow = 'images/items/gear/war_bow.png'
 shield = 'images/items/gear/shield.png'
 mage_wand = 'images/items/gear/mage_wand.png'
 warden_plate = 'images/items/gear/waechter_panzer.png'
+ceremony_dagger = 'images/items/gear/ceremony_dagger.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 
 
@@ -821,6 +854,24 @@ class MagicHasteRing(Gear):
     def unequip(self, hero):
         hero.speed -= self.power * 7
         hero.mental_reduction -= self.power
+        hero.inventory.remove(self)
+
+@register(act=2)
+class CursedArtefact(Gear):
+
+    def __init__(self):
+        super().__init__('VERFLUCHTES ARTEFAKT',
+                        18, 420, '', cursed_artefact)
+        self.execution_10 = True
+
+    def equip(self, hero):
+        hero.inventory.append(self)
+        hero.damage += self.power
+        hero.reduction -= self.power
+
+    def unequip(self, hero):
+        hero.reduction += self.power
+        hero.damage -= self.power
         hero.inventory.remove(self)
 
 
@@ -949,3 +1000,23 @@ class WardenPlate(Gear):
     def after_combat(self, hero):
         self.initial_life = 0
         self.active = True
+
+@register(act=2)
+class CeremonyDagger(Gear):
+
+    def __init__(self):
+        super().__init__('ZEREMONIE-DOLCH',
+                        6, 560, '', ceremony_dagger)
+        self.execution_15 = True
+        
+    def equip(self, hero):
+        hero.inventory.append(self)
+        hero.damage += self.power
+        hero.critical += self.power
+        hero.magic_power += self.power
+
+    def unequip(self, hero):
+        hero.magic_power -= self.power
+        hero.critical -= self.power
+        hero.damage -= self.power
+        hero.inventory.remove(self)
