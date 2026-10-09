@@ -1,7 +1,8 @@
-import pygame
 from time import sleep
 import random
 import world, buttons_clog, combat
+
+import pygame
 
 
 act_1_pool, act_2_pool, act_3_pool = [], [], []
@@ -121,6 +122,22 @@ def display_outro(hero, raw_text, y, screen, font):
 #*** --- *** --- *** --- *** --- ***
 
 
+@register(act=3)
+@register(act=2)
+@register(act=1)
+def wandering_merchant(hero, stage, screen):
+
+    start = f'In der Ferne erblickt {hero.name}'
+    a = 'den zarten bekannten goldenen Schimmer'
+    b = 'des fahrenden Händlers!'
+    c = f'Mit Freude marschiert {hero.name} dort hin'
+
+    intro = [start, a, b, c]
+
+    construct_intro(hero, intro, screen), sleep(2)
+
+    return 'merchant'
+
 def event_0(hero, stage, screen):
     
     start = "Du kannst einen Gegenstand an dich nehmen."
@@ -159,21 +176,9 @@ def event_0(hero, stage, screen):
     return None
 
 
-register(act=3)#@ fehlt
-register(act=2)#@ fehlt
-@register(act=1)
-def wandering_merchant(hero, stage, screen):
+#*** --- *** --- *** --- *** --- ***
 
-    start = f'In der Ferne erblickt {hero.name}'
-    a = 'den zarten bekannten goldenen Schimmer'
-    b = 'des fahrenden Händlers!'
-    c = f'Mit Freude marschiert {hero.name} dort hin'
-
-    intro = [start, a, b, c]
-
-    construct_intro(hero, intro, screen), sleep(2)
-
-    return 'merchant'
+#*** --- *** --- *** --- *** --- ***
 
 
 @register(act=1)#AveragePayout 0.5
@@ -223,7 +228,6 @@ def event_1_act_1(hero, stage, screen):
                     display_outro(hero, raw_text, y, screen, font)
     return None
 
-
 @register(act=1)#AveragePayout 1
 def event_2_act_1(hero, stage, screen):
 
@@ -260,7 +264,6 @@ def event_2_act_1(hero, stage, screen):
             raw_text = f'{hero.name} geht weiter...'
             display_outro(hero, raw_text, y, screen, font)
     return None
-
 
 @register(act=1)#AveragePayout 0
 def event_3_act_1(hero, stage, screen):
@@ -329,7 +332,6 @@ def event_3_act_1(hero, stage, screen):
         raw_text = "Du ziehst von Dannen und schwörst dem Glückspiel ab."
         y = display_outro(hero, raw_text, y, screen, font)
     return None
-
 
 @register(act=1)#AveragePayout 0.5
 def event_4_act_1(hero, stage, screen):
@@ -411,7 +413,6 @@ def event_4_act_1(hero, stage, screen):
             display_outro(hero, raw_text, y, screen, font)
     return None
 
-
 @register(act=1)#AveragePayout 0.5
 def event_5_act_1(hero, stage, screen):
 
@@ -472,7 +473,6 @@ def event_5_act_1(hero, stage, screen):
             raw_text = '"Nicht jeder erkennt eine Gelegenheit..."'
             display_outro(hero, raw_text, y, screen, font)
     return None
-
 
 @register(act=1)#AveragePayout 0.5
 def event_6_act_1(hero, stage, screen):
@@ -537,7 +537,6 @@ def event_6_act_1(hero, stage, screen):
                 event_get_item(hero, item, screen)
     return None
 
-
 @register(act=1)#AveragePayout 1
 def event_7_act_1(hero, stage, screen):
 
@@ -596,7 +595,6 @@ def event_7_act_1(hero, stage, screen):
             ability = combat.Ability9()
             combat.abilities_from_events(hero, ability, screen)
     return None
-
 
 @register(act=1)#AveragePayout 1
 def event_8_act_1(hero, stage, screen):
@@ -751,7 +749,7 @@ def event_1_act_2(hero, stage, screen):
             enemy = combat.EventMinionKirgo()
             combat.main_fight(hero, enemy, screen, stage)
             if hero.life > 0:
-                reward_list = ()#fill pool with gear
+                reward_list = (world.ShukoClaws(), world.ItemBelt())
                 reward = random.choice(reward_list)
                 event_get_item(hero, reward, screen)
 
@@ -763,11 +761,10 @@ def event_1_act_2(hero, stage, screen):
             enemy = combat.EventEliteKarim()
             combat.main_fight(hero, enemy, screen, stage)
             if hero.life > 0:
-                reward_list = ()#fill pool with gear
+                reward_list = (world.WarBow(), world.Shield())
                 reward = random.choice(reward_list)
                 event_get_item(hero, reward, screen)
     return None
-
 
 @register(act=2)#AveragePayout 0
 def event_2_act_2(hero, stage, screen):
@@ -793,23 +790,24 @@ def event_2_act_2(hero, stage, screen):
         elif danger == 9:
             display_danger = 50
             
-
         choice_1 = 'Das Lager verlassen, ohne weiter zu suchen.'
         choice_2 = f'Das Lager nach Nützlichem durchsuchen.. ({display_danger}%: Gefahr)'
 
         answers = [choice_1, choice_2]
 
-        #screen.fill((255, 255, 0))
-        #world.hero_health_bar(hero, screen)
-        #world.hero_mana_bar(hero, screen)
-        #world.hero_xp
-        #combat.hero_combat_stats(hero, screen)
-        #buttons_clog.dungeon_inventory(hero, screen)
         buttons = buttons_clog.display_answers(answers, screen)
-        pygame.display.flip()
         y = 100
 
         choice = buttons_clog.display_answers_clicked(buttons)
+
+        screen.fill((255, 255, 0))
+        world.hero_health_bar(hero, screen)
+        world.hero_mana_bar(hero, screen)
+        world.hero_xp
+        combat.hero_combat_stats(hero, screen)
+        buttons_clog.dungeon_inventory(hero, screen)
+        pygame.display.flip()
+
         match choice:
             case "1":
                 hero_left = True
@@ -880,7 +878,6 @@ def event_2_act_2(hero, stage, screen):
                             event_get_item(hero, item, screen)
                             hero_left = True
     return None
-
 
 @register(act=2)#AveragePayout 1
 def event_3_act_2(hero, stage, screen):
@@ -964,13 +961,12 @@ def event_3_act_2(hero, stage, screen):
             hero.max_mana += 15
     return None
 
-
 @register(act=2)#AveragePayout -1
 def event_4_act_2(hero, stage, screen):
 
     start = 'Schützend vor der sengenden Mittagssonne'
     a = f'liegt {hero.name} am Straßenrand und ruht sich aus'
-    b = 'Plötzlich tauchen 2 Garnisonswachen auf und bauen sich auf'
+    b = 'Plötzlich tauchen 3 Garnisonswachen auf und bauen sich auf'
     c = '"Na, Jungchen was treibst du dich in diesen Nebenstraßen rum"'
     d = '"Du bist doch wohl nicht ein Dieb?"'
     e = '"Ohne magisches Erz, werden wir dich mitnehmen..."'
@@ -1122,7 +1118,6 @@ def event_4_act_2(hero, stage, screen):
 
     return None
 
-
 @register(act=2)#AveragePayout -0.5
 def event_5_act_2(hero, stage, screen):
 
@@ -1229,21 +1224,20 @@ def event_5_act_2(hero, stage, screen):
                 y = display_outro(hero, raw_text, y, screen, font)
     return None
 
-
-#AveragePayout 0.5
+@register(act=2)#AveragePayout 0.5
 def event_6_act_2(hero, stage, screen):
 
-    start = 'Zwischen den Gassen der Stadt hat'
+    start = 'In den Gassen der Stadt hat'
     a = f'sich {hero.name} ein wenig verlaufen'
-    b = 'Eine bestimmte Sackgasse, die er erreicht'
-    c = 'hat sein Interesse geweckt!'
-    d = 'Es scheint sich eine geheime Tür hinter einer'
-    e = f"Wand zu verbergen, {hero.name}'s Neugier ist geweckt"
+    b = 'Nachdem er zum wiederholten Male, vor einer'
+    c = 'Sackgasse steht, hält er inne und untersucht'
+    d = 'eine verdächtige Wand. "Das ist doch nicht eine Tür..?!"'
+    e = f"wispert {hero.name} neugierig. Die Neugier ist geweckt!"
 
     intro = [start, a, b, c, d, e]
 
     choice_1 = f'Mit einer Parole die Tür öffnen [mag. Kraft:{hero.magic_power}]'
-    choice_2 = f'Vielleicht kann ein gezielter kräftiger Tritt Zutritt verschaffen'
+    choice_2 = f'Vielleicht kann ein gezielter kräftiger Tritt Abhilfe schaffen'
 
     answers = [choice_1, choice_2]
     
@@ -1264,7 +1258,8 @@ def event_6_act_2(hero, stage, screen):
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = 'öffnet sich so gleich die Geheimtür'
                 y = display_outro(hero, raw_text, y, screen, font)
-            else:#Payout fehlt
+                world.reward_system(hero, stage, 450, screen)#REWARD
+            else:
                 raw_text = '"Simsalabim!", "3 mal scharzer Kater!"'
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = '"ARKANE * KUNST !", "Quadratisch, Praktisch, Gut"'
@@ -1282,9 +1277,10 @@ def event_6_act_2(hero, stage, screen):
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = 'Fassade! Die Tür bewegt sich tatsächlich!'
                 y = display_outro(hero, raw_text, y, screen, font)
-                raw_text = 'Ein weiterer Tritt und die Tür ist offen'
+                raw_text = 'Ein weiterer Tritt und die Tür ist offen!'
                 y = display_outro(hero, raw_text, y, screen, font)
-            else:#payout fehlt
+                world.reward_system(hero, stage, 350, screen)#REWARD
+            else:
                 raw_text = f'{hero.name} tritt, schiebt und versucht alles'
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = 'doch die vermeintliche Tür bewegt sich keine'
@@ -1294,7 +1290,7 @@ def event_6_act_2(hero, stage, screen):
                 raw_text = '"Vielleicht ist es doch nur eine normale Wand"'
                 y = display_outro(hero, raw_text, y, screen, font)
 
-        case "3":#payout fehlt
+        case "3":
             raw_text = 'Das unscheinbare Loch in der vermeintlichen Tür'
             y = display_outro(hero, raw_text, y, screen, font)
             raw_text = f"Entpuppt sich als Schlüsselloch in das {hero.name}'s"
@@ -1305,8 +1301,64 @@ def event_6_act_2(hero, stage, screen):
             y = display_outro(hero, raw_text, y, screen, font)
             raw_text = 'Tür auf und offenbart seine Reichtümer'
             y = display_outro(hero, raw_text, y, screen, font)
+            world.reward_system(hero, stage, 800, screen)#REWARD
     return None
 
+#AveragePayout 0
+def event_7_act_2(hero, stage, screen):
+
+    start = f'{hero.name} schlendert ziellos durch die'
+    a = 'Garnisonsstadt, als er spielende  und gröhlende Männer'
+    b = 'auf der Straße erblickt!'
+    c = 'Eine Kugel wird auf eine drehende Scheibe geworfen,'
+    d = 'bis die Kugel zwangsläufig auf einem der Fächer mit Zahlen'
+    e = 'stehen bleibt. "Na Fremder, Lust auf ein oder zwei Partien?"'
+    f = 'Der Spieler grinst betrügerisch mit seinen Zahnlücken'
+    g = f'{hero.name} an.  "NEUE RUNDE NEUE EINSÄTZE!!!"'
+
+    intro = [start, a, b, c, d, e, f, g]
+
+    font = pygame.font.SysFont(None, 28)
+    construct_intro(hero, intro, screen)
+
+    inital_money, hero_left = hero.xp, False
+
+    while not hero_left:
+
+        choice_1 = 'Nicht wetten und weitergehen'
+
+        answers = [choice_1]
+
+        bets = []
+        if hero.xp >= 1000:
+            choice_2 = '1000 Brocken magisches Erz setzen'
+            choice_3 = '200 Brocken magisches Erz setzen'
+            choice_4 = '50 Brocken magisches Erz setzen'
+            bets = [choice_2, choice_3, choice_4]
+        elif hero.xp >= 200:
+            choice_2 = '200 Brocken magisches Erz setzen'
+            choice_3 = '50 Brocken magisches Erz setzen'
+            bets = [choice_2, choice_3]
+        elif hero.xp >= 50:
+            choice_2 = '50 Brocken magisches Erz setzen'
+            bets = [choice_2]
+
+        for bet in bets:
+            answers.append(bet)
+
+        buttons = buttons_clog.display_answers(answers, screen)
+        y = 100
+        pygame.display.flip()#Order matters here
+        screen.fill((255, 255, 0))
+
+        choice = buttons_clog.display_answers_clicked(buttons)
+        match choice:
+            case "1":
+                if inital_money == hero.xp:
+                    raw_text = f'{hero.name} traut dem Braten nicht'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = 'und beschließt '
+                    y = display_outro(hero, raw_text, y, screen, font)
 
 def event_template(hero, stage, screen):
 
@@ -1330,3 +1382,4 @@ def event_template(hero, stage, screen):
         case "1":
             raw_text = 'Template'
             y = display_outro(hero, raw_text, y, screen, font)
+
