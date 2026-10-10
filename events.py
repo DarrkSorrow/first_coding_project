@@ -1304,7 +1304,7 @@ def event_6_act_2(hero, stage, screen):
             world.reward_system(hero, stage, 800, screen)#REWARD
     return None
 
-#AveragePayout 0
+@register(act=2)#AveragePayout 0
 def event_7_act_2(hero, stage, screen):
 
     start = f'{hero.name} schlendert ziellos durch die'
@@ -1321,7 +1321,7 @@ def event_7_act_2(hero, stage, screen):
     font = pygame.font.SysFont(None, 28)
     construct_intro(hero, intro, screen)
 
-    inital_money, hero_left = hero.xp, False
+    initial_money, hero_left = hero.xp, False
 
     while not hero_left:
 
@@ -1354,12 +1354,101 @@ def event_7_act_2(hero, stage, screen):
         choice = buttons_clog.display_answers_clicked(buttons)
         match choice:
             case "1":
-                if inital_money == hero.xp:
+                if initial_money == hero.xp:
                     raw_text = f'{hero.name} traut dem Braten nicht'
                     y = display_outro(hero, raw_text, y, screen, font)
-                    raw_text = 'und beschließt '
+                    raw_text = 'und beschließt seine Brocken zu behalten'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = 'und geht seines Weges'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                
+                elif initial_money > hero.xp + 600:
+                    raw_text = f'{hero.name} ärgert sich ungemein'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = 'über seinen Verlust und schaut erboßt umher'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = '"Hey, Jungchen schau mich nicht so böse an"'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = '"Gewonnen ist gewonnen" entgegnet einer'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = 'der Spieler und sackt vergnügt seine Gewinne ein'
                     y = display_outro(hero, raw_text, y, screen, font)
 
+                elif initial_money < hero.xp + 600:
+                    raw_text = f'{hero.name} ist höchst Vergnügt und'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = 'sackt seine zahlreichen Erzbrocken in die'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = f'vielen Taschen die {hero.name} besitzt'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = 'Die Fremden schauen bitter und zerknirscht drein'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = 'wagen jedeoch keinen Protest, nicht zu Letzt'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = f'weil {hero.name} bewaffnet und gefährlich aussieht'
+                    y = display_outro(hero, raw_text, y, screen, font)
+
+                elif initial_money > hero.xp:
+                    raw_text = f'{hero.name} hat {initial_money-hero.xp} verloren'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = f'es ist noch kein herber Verlust aber {hero.name}'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = 'riskiert nicht noch mehr seine Erzbrocken'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = 'und zieht, dem Glückspiel abschwörend, davon'
+                    y = display_outro(hero, raw_text, y, screen, font)
+
+                elif initial_money > hero.xp:
+                    raw_text = f'{hero.name} hat {hero.xp-initial_money} gewonnen'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = f'es ist zwar kein Vermögen, aber {hero.name}'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                    raw_text = 'freut sich auch über die kleine Dinge im Leben'
+                    y = display_outro(hero, raw_text, y, screen, font)
+                bet = None
+                hero_left = True
+                
+            case "2":
+                if hero.xp >= 1000:
+                    bet = 1000
+                elif hero.xp >= 200:
+                    bet = 200
+                elif hero.xp >= 50:
+                    bet = 50
+
+            case "3":
+                if hero.xp >= 200:
+                    bet = 200
+                elif hero.xp >= 50:
+                    bet = 50
+
+            case "4":
+                bet = 50
+
+        if bet != None:
+            raw_text = f'{hero.name} hat sein Erz gesetzt!'
+            y = display_outro(hero, raw_text, y, screen, font)
+            raw_text = 'Die Kugel tanzt über die Scheibe'
+            y = display_outro(hero, raw_text, y, screen, font)
+            raw_text = 'und bleibt langsam auf der Scheibe liegen...'
+            y = display_outro(hero, raw_text, y, screen, font)
+            magic_number = random.choice((1, 2))
+            if magic_number == 1:
+                hero.xp += bet
+                raw_text = 'Triumph!'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'Der Rausch des Glückspiels beseelt {hero.name}'
+                y = display_outro(hero, raw_text, y, screen, font)
+            else:
+                hero.xp -= bet
+                raw_text = 'verdammte Axt!'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'{hero.name} überlegt ob er noch eine Partie'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = 'spielen sollte, um seine Verluste wieder gut zu machen..'
+                y = display_outro(hero, raw_text, y, screen, font)
+    return None
+                
 def event_template(hero, stage, screen):
 
     start = ''
