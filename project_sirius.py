@@ -1,7 +1,9 @@
-import sys, pygame
+import sys
 from collections import deque
 from random import randint
 import world, combat, events, buttons_clog
+
+import pygame
 
 
 class GameState:
@@ -22,7 +24,7 @@ class Hero:
         self.game_state = GameState()
 
         self.name = name
-        self.life, self.max_life = 60, 100
+        self.life, self.max_life = 100, 100
         self.reduction, self.dodge = 0, 0 #Percent
         self.mental_reduction = 0 #percent
         self.damage = 15
@@ -30,10 +32,10 @@ class Hero:
         self.critical = 0
         self.magic_power = 0
         self.accuracy = 0
-        self.mana, self.max_mana = 0, 100
-        self.xp = 300
+        self.mana, self.max_mana = 50, 100
+        self.xp = 0
 
-        self.max_inventory, self.max_abilities = 5, 2
+        self.max_inventory, self.max_abilities = 4, 2
         self.inventory, self.abilities = [], []
         self.pocket_size, self.pockets = 0, []
         self.over_hp = 0
@@ -176,7 +178,11 @@ class Hero:
 class Adventurer(Hero):
     def __init__(self):
         super().__init__("ZERTUS")
-        self.mana = int(self.max_life / 2)
+        self.mana = int(self.max_mana / 2)
+        self.life = 80
+        self.max_inventory = 5
+        self.xp = 500
+        self.damage = 15
 
 
 def draw_map(position, dungeon, screen):
@@ -248,13 +254,31 @@ while hero.life > 0:
     hero.inventory = sort_inventory(hero)
 
 
+    #*** HIDDEN-RANDOM ***
+    if dungeon[position[0]][position[1]].random == True:
+        magic_number =randint(0, 100)
+        match magic_number:
+            case magic_number if magic_number in (0, 40):
+                dungeon[position[0]][position[1]] = world.EmptyRoom()
+            case magic_number if magic_number in (41, 60):
+                dungeon[position[0]][position[1]].fight = True
+            case magic_number if magic_number in (61, 80):
+                dungeon[position[0]][position[1]].event = True
+            case magic_number if magic_number in (81, 100):
+                dungeon[position[0]][position[1]] = world.EmptyRoom()
+                pass#will contain traps in act=3
+    #*** HIDDEN-RANDOM ***
+
+
     #*** EVENTS ***
     if dungeon[position[0]][position[1]].event == True:
         ambush = events.start_event(hero, stage, screen)
         if not ambush and hero.life > 0:
             dungeon[position[0]][position[1]] = world.EmptyRoom()
-        elif ambush:
+        elif ambush == True:#== True does make a difference
             dungeon[position[0]][position[1]].fight = True
+        elif ambush == 'merchant':
+            dungeon[position[0]][position[1]].merchant = True
     #*** EVENTS ***        
 
 
@@ -274,15 +298,15 @@ while hero.life > 0:
 
 
     #*** MERCHANT ***
-    elif dungeon[position[0]][position[1]].merchant == True:
-        pass
+    if dungeon[position[0]][position[1]].merchant == True:
+        world.wandering_merchant(hero, stage, screen)
         dungeon[position[0]][position[1]] = world.EmptyRoom()
     #*** MERCHANT ***
 
 
     #*** NORMAL FIGHT ***
     if dungeon[position[0]][position[1]].fight == True:
-# this random if is needed
+    #this random if is needed
         
         #*** SURPRISE ELITE ***
         if hero.game_state.enemy_counter <= 1:
