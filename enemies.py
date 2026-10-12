@@ -114,18 +114,25 @@ class Enemy:
         self.over_hp = 0
         self.buffs = []
 
-        self.image = pygame.image.load(
-            image_path).convert_alpha()
-        self.image =pygame.transform.scale(self.image, (300, 300))
-        self.rect = self.image.get_rect()
-        self.rect.center = (650, 250)
+        if image_path != None:
+            self.image = pygame.image.load(
+                image_path).convert_alpha()
+            self.image =pygame.transform.scale(self.image, (300, 300))
+            self.rect = self.image.get_rect()
+            self.rect.center = (650, 250)
+        else:
+            self.image = None
+            self.rect = None
         
         self.font = pygame.font.SysFont(None, 40)
 
 
     def blitme(self, screen):
         """Draw enemy sprite at middle position"""
-        screen.blit(self.image, self.rect)
+        if self.image != None:
+            screen.blit(self.image, self.rect)
+        else:
+            pass
 
 
     def _overhp_over_hp(self, hero, hp_loss):    
@@ -173,7 +180,6 @@ class Enemy:
             combat_log.add(text, True)
             return hp_loss
 
-
     def _basic_magic(self, hero, combat_log):
         magic_number = random.randint(0, 150)
         if magic_number < hero.dodge:
@@ -195,7 +201,6 @@ class Enemy:
             combat_log.add(text, True)
             return hp_loss
 
-
     def _mana_burn(self, hero, combat_log):
         magic_number = random.randint(0, 150)
         if magic_number < hero.dodge:
@@ -215,12 +220,10 @@ class Enemy:
             text = f"{hero.name} verliert {mana_loss} ODEM!"
             combat_log.add(text, True)
 
-
     def _block(self, power, combat_log):
         self.over_hp += power
         text = f"{self.name} + {power} Schild"
         combat_log.add(text, True)
-
 
     def _heal_self(self, power, combat_log):
         self.life += power
@@ -229,7 +232,6 @@ class Enemy:
         text = f"{self.name} heilt sich +{power}HP."
         combat_log.add(text, True)
 
-
     def _life_steal(self, hero, combat_log):
         text = f'Es dürstet {self.name} nach Blut!'
         combat_log.add(text, True)
@@ -237,32 +239,29 @@ class Enemy:
         if damage_taken > 0:
             self._heal_self(damage_taken, combat_log)
 
-
     def _stun_attack(self, hero, combat_log, chance, duration):
         text = f'{self.name} holt aus und zielt auf {hero.name}s Kopf'
         combat_log.add(text, True)
         debuff = round(self.damage / 4)
         self.damage -= debuff#75 percent power
-        damage_taken = self._basic_attack
+        damage_taken = self._basic_attack(hero, combat_log)
         self.damage += debuff
         if damage_taken > 0:
             abilities.Stun(chance, duration).buff(hero)
             text = f'{hero.name} wurde ordentlich erwischt!'
             combat_log.add(text)
 
-
     def _stun_magic(self, hero, combat_log, chance, duration):
         text = f'{self.name} bereitet einen mentalen Angriff vor'
         combat_log.add(text, True)
         debuff = round(self.magic_power / 2)
         self.magic_power -= debuff# 50 percent power
-        damage_taken = self._basic_magic
+        damage_taken = self._basic_magic(hero, combat_log)
         self.magic_power += debuff
         if damage_taken > 0:
             abilities.Stun(chance, duration).buff(hero)
             text = f'Der Verstand von {hero.name} ist beeinträchtigt'
             combat_log.add(text)
-
 
     def _multi_strike(self, hero, combat_log, number_strikes=2):
         text = f'{self.name} setzt zu einer Angriffskette an!'
@@ -281,7 +280,6 @@ class Enemy:
         combat_log.add(text)
         return hits
 
-
     def _poison_attack(self, hero, combat_log, power, duration):
         """Enemy attacks with 70% force, poison effect by damage > 0"""
         malus = round(self.damage * 0.3)
@@ -292,6 +290,24 @@ class Enemy:
             abilities.Poison(power, duration).buff(hero)
             text = f'{hero.name} wurde vergiftet!'
             combat_log.add(text)
+
+    def _fire_seal(self, hero, combat_log, power, duration):
+        text = f'{self.name} beschwört ein Feuersiegel'
+        combat_log.add(text, True)
+        text = f'auf {hero.name}s Haut'
+        combat_log.add(text, True)
+        abilities.FireSeal(power, duration).buff(hero)
+
+    def _dissappear(self, hero, combat_log):
+        text = f'{self.name} spricht die Phrasen'
+        combat_log.add(text, True)
+        text = 'einer uralten antiken Sprache'
+        combat_log.add(text, True)
+        text = f'{hero.name} versucht {self.name} zu erschlagen'
+        combat_log.add(text)
+        text = f'jedoch hat {self.name} sich aufgelöst'
+        combat_log.add(text)
+        return 'escape'
 
 #General Enemy Moves ** General Enemy Moves
 
@@ -874,9 +890,7 @@ class Boss1(Enemy):
                 text = f"{self.name} erwacht!"
                 combat_log.add(text, True)
             case 2:
-                text = f"Die Kreatur beschwört ein Feuersiegel auf {hero.name}'s Haut."
-                combat_log.add(text, True)
-                abilities.FireSealE2H(5, 4).buff(hero)
+                self._fire_seal(hero, combat_log, 5, 4)
             case 3:
                 text = f"{self.name} holt zum Schlag aus!"
                 combat_log.add(text, True)
@@ -948,7 +962,7 @@ class EventMinionKirgo(Enemy):
                     text = f'{self.name}s Agilität erhöht sich'
                     combat_log.add(text, True)
                 else:
-                    abilities.Harden().buff(hero, combat_log)
+                    abilities.Harden(20, 4).buff(self)
                     text = f'{self.name}s Verteidigung erhöht sich'
                     combat_log.add(text, True)
 
@@ -1226,12 +1240,12 @@ class Minion5Act2(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
-#No Sprite
+@register(act=2)#NoSprite
 class Minion6Act2(Enemy):
 
     def __init__(self):
-        super().__init__('Kultist', 63, 63, 10, 75,
-                        act2_minion_5,
+        super().__init__('Kultist', 62, 62, 10, 75,
+                        None,
                         reduction=0, dodge=10, mental_reduction=30,
                         magic_power=26, critical=20)
         
@@ -1246,18 +1260,14 @@ class Minion6Act2(Enemy):
             combat_log.add(text, True)
             abilities.MinusDodge(10, 3).buff(hero)
         else:
-            text = f'{self.name} beschwört ein Feuersiegel'
-            combat_log.add(text, True)
-            text = f'auf {hero.name}s Haut'
-            combat_log.add(text, True)
-            abilities.FireSealE2H(5, 4).buff(hero)
+            self._fire_seal(hero, combat_log, 5, 4)
 
     def enemy_ai(self, hero, key, combat_log):
         match key:
             case 1:
-                 self._stun_magic(self, hero, combat_log, 33, )
+                 self._stun_magic(hero, combat_log, 33, 3)
             case 2:
-                self._life_steal(hero, combat_log)
+                self._fire_seal(hero, combat_log, 5, 4)
             case 3:
                 magic_number = random.choice((1, 2))
                 if magic_number == 1:
@@ -1269,11 +1279,11 @@ class Minion6Act2(Enemy):
 
     def enemy_intend(self, step, hero):
         if step % 4 == 0:
-            intend, key = 'Debuff+', 1
+            intend, key = 'Mag+', 1
         elif step % 4 == 1:
-            intend, key = 'Atk', 2
+            intend, key = 'Debuff+', 2
         elif step % 4 == 2:
-            intend, key = 'Mag / Atk+', 3
+            intend, key = 'Mag / Atk', 3
         elif step % 4 == 3:
             intend, key = '?', 4
         text = self.font.render(intend, True, (0, 0, 0))
@@ -1331,12 +1341,12 @@ class EventEliteKarim(Enemy):
 
 #*** AKT 2 *** AKT 2 *** AKT 2 ***
 
-#NO Sprite
+@register(rank='elite', act=2)#NO Sprite
 class Elite1Act2(Enemy):
 
     def __init__(self):
         super().__init__('Riesen-Zyklop', 165, 165, 36, 80,
-                        act2_elite_1,
+                        None,
                         reduction=20, dodge=12, mental_reduction=15,
                         critical=10)
 
@@ -1380,12 +1390,12 @@ class Elite1Act2(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
-#NO Sprite
+@register(rank='elite', act=2)#NO Sprite
 class Elite2Act2(Enemy):
 
     def __init__(self):
         super().__init__('Abscheulichkeit', 305, 305, 29, 65,
-                        act2_elite_2,
+                        None,
                         dodge=0,
                         critical=6)
 
@@ -1441,9 +1451,24 @@ class Elite2Act2(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
+class Elite3Act2(Enemy):
+
+    def __init__(self):
+        pass
+
+    def enemy_ai(self, hero, key, combat_log):
+        special = None
+        return special
+
+    def enemy_intend(self, step, hero):
+        if step % 5 == 0:
+            intend, key = '?', 1
+        text = self.font.render(intend, True, (0, 0, 0))
+        return text, key
+
 #*** AKT 2 *** AKT 2 *** AKT 2 ***
 
-@register(act=2, rank='boss')
+@register(rank='boss', act=2)
 class Boss1Act2(Enemy):
 
     def __init__(self):
