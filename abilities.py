@@ -29,7 +29,7 @@ def random_abilities(hero, stage):
     match stage:
         case 0 | 1 | 2 | 3:
             spells = spells_act_1
-        case 3 | 5 | 6:
+        case 4 | 5 | 6:
             spells = spells_act_2
         case 7 | 8 | 9:
             spells = spells_act_3
@@ -346,7 +346,7 @@ class Ability0(Ability):#STARTFÄHIGKEIT
             combat_log.add(text)
 
             hero.reduction += self.power * 3 #UNDO
-            EmpoweredH2H(self.power, 4).buff(hero)
+            Empowered(self.power, 4).buff(hero)
             enemy_mental_dodge(hero, self.power, enemy, combat_log)
 
             self._cost_and_cooldown(hero, self.cost)
@@ -358,7 +358,6 @@ class Ability0(Ability):#STARTFÄHIGKEIT
         
     def undo_ability(self, hero, enemy):
         hero.reduction -= self.power * 3
-
 
 @register()
 class Ability1(Ability):#SCHWERER HIEB
@@ -382,7 +381,6 @@ class Ability1(Ability):#SCHWERER HIEB
             text = "Deine Beine verkrampfen."
             combat_log.add(text)
             return False
-
 
 @register()
 class Ability2(Ability):# VERKRÜPPELNDER HIEB
@@ -416,7 +414,6 @@ class Ability2(Ability):# VERKRÜPPELNDER HIEB
             combat_log.add(text)
             return False
 
-
 @register()
 class Ability3(Ability):# PRÄZISER STICH
         
@@ -449,7 +446,6 @@ class Ability3(Ability):# PRÄZISER STICH
                 combat_log.add(text)
                 return False
 
-
 @register()
 class Ability4(Ability):# FEUERBALL
 
@@ -475,7 +471,6 @@ class Ability4(Ability):# FEUERBALL
             text = "Das Feuer zehrt noch an deiner Seele."
             combat_log.add(text)
             return False
-
 
 @register()
 class Ability5(Ability): #MAGISCHER HIEB
@@ -503,7 +498,6 @@ class Ability5(Ability): #MAGISCHER HIEB
             text = f"{hero.name}'s Kräfte versagen."
             combat_log.add(text)
             return False
-
 
 @register()
 class Ability6(Ability): #MORDHAU
@@ -533,7 +527,6 @@ class Ability6(Ability): #MORDHAU
             combat_log.add(text)
             return False
 
-
 @register()
 class Ability7(Ability): #KLEINER GIFTPFEIL
 
@@ -553,7 +546,7 @@ class Ability7(Ability): #KLEINER GIFTPFEIL
                 damage_taken = enemy_block_dodge(hero, enemy, combat_log)
                 hero.damage += self.power
                 if damage_taken > 0:
-                    PoisonH2E(10, 4).buff(enemy)
+                    Poison(10, 4).buff(enemy)
                     text = f"{enemy.name} wurde vergiftet."
                     combat_log.add(text)
                     return True
@@ -569,7 +562,6 @@ class Ability7(Ability): #KLEINER GIFTPFEIL
             text = f"{hero.name} konnte noch kein Gift auftragen."
             combat_log.add(text)
             return False
-
 
 @register()
 class Ability8(Ability): #SCHILD-HALTUNG
@@ -602,7 +594,6 @@ class Ability8(Ability): #SCHILD-HALTUNG
     def undo_ability(self, hero, enemy):
         hero.reduction -= self.power
 
-
 @register()
 class Ability9(Ability): #HEILUNG
 
@@ -634,7 +625,6 @@ class Ability9(Ability): #HEILUNG
             
     def undo_ability(self, hero, enemy):
         hero.dodge -= self.power / 8
-
 
 @register()
 class Ability10(Ability):#FROSTPFEIL
@@ -678,6 +668,7 @@ sword_dance = 'images/abilities/sword_dance.png'
 winter_fist = 'images/abilities/winter_fist.png'
 arcane_art = 'images/abilities/arcane_art.png'
 smite = 'images/abilities/smite.png'
+righteous_fury = 'images/abilities/righteous_fury.png'
 #IMAGES LOADED, EVERY ABILITY INSTANCE POITNS TO THESE
 
 
@@ -699,7 +690,7 @@ class Ability11(Ability):#BLITZSCHLAG
             if damage_taken > 0:
                 text = f"{enemy.name} wurde geschockt."
                 combat_log.add(text)
-                ShockH2E(12, 3).buff(enemy)
+                Shock(12, 3).buff(enemy)
 
             self._cost_and_cooldown(hero, self.cost)
             return True
@@ -707,7 +698,6 @@ class Ability11(Ability):#BLITZSCHLAG
             text = f'{hero.name} konzentriert sich doch nichts passiert.'
             combat_log.add(text)
             return False
-
 
 @register(act=2)
 class Ability12(Ability):#DOPPELSCHLAG
@@ -734,7 +724,6 @@ class Ability12(Ability):#DOPPELSCHLAG
             combat_log.add(text)
             return False
         
-
 @register(act=2)
 class Ability13(Ability):#SCHWERTTANZ
 
@@ -754,7 +743,7 @@ class Ability13(Ability):#SCHWERTTANZ
                 magic_number = random.randint(0, 3)
                 AgileH2H(self.power - magic_number,
                          3 + magic_number).buff(hero)
-                EmpoweredH2H(self.power + magic_number,
+                Empowered(self.power + magic_number,
                          5 - magic_number).buff(hero)
                 
                 self._cost_and_cooldown(hero, self.cost, cooldown=5)
@@ -770,7 +759,6 @@ class Ability13(Ability):#SCHWERTTANZ
         
     def undo_ability(self, hero, enemy):
         hero.dodge -= self.power
-
 
 @register(act=2)
 class Ability14(Ability):#WINTERFAUST
@@ -811,7 +799,6 @@ class Ability14(Ability):#WINTERFAUST
             combat_log.add(text)
             return False
         
-
 @register(act=2)
 class Ability15(Ability):#ARKANE KUNST
 
@@ -845,7 +832,6 @@ class Ability15(Ability):#ARKANE KUNST
 
     def undo_ability(self, hero, enemy):
         hero.mental_reduction -= round(self.power / 2)
-
 
 @register(act=2)
 class Ability16(Ability):#ZERSCHMETTERN
@@ -881,3 +867,49 @@ class Ability16(Ability):#ZERSCHMETTERN
             text = f"{hero.name} hat sich eine Sehne gezerrt."
             combat_log.add(text)
             return False
+
+@register(act=2)
+class Ability17(Ability):#GERECHTER ZORN
+
+    def __init__(self):
+        super().__init__('gerechter Zorn', 30, 45, 900,
+                         righteous_fury)
+
+    def use_ability(self, hero, enemy, combat_log):
+        if self.cooldown == 0:
+            if hero.mana >= self.cost:
+                text = f'{hero.name} kanalisiert seinen Zorn'
+                combat_log.add(text)
+                text = 'und Naturgewalten treiben Ihn nun an'
+                combat_log.add(text)
+
+                self._cost_and_cooldown(hero, self.cost, cooldown=5)
+
+                #UNDO
+                hero.reduction += self.power
+                hero.mental_reduction += self.power
+                #UNDO
+
+                hero.life += self.power
+                if hero.life > hero.max_life:
+                    hero.life = hero.max_life
+                hero.over_hp += self.power
+                Empowered(15, 2).buff(hero)
+                Deadly(10, 5).buff(hero)
+                return True            
+            else:
+                text = f'{hero.name} gibt einen Kampfschrei von sich'
+                combat_log.add(text)
+                text = f'{enemy.name} zeigt sich sichtlich unbeeindruckt'
+                combat_log.add(text)
+                return False
+        else:
+            text = f'{hero.name} ist noch voller Adrenalin'
+            combat_log.add(text)
+            text = 'sein Zorn kann nicht gesteigert werden'
+            combat_log.add(text)
+            return False
+
+    def undo_ability(self, hero, enemy):
+        hero.reduction -= self.power
+        hero.mental_reduction -= self.power
