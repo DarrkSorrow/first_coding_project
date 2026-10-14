@@ -18,7 +18,7 @@ def combat_start_screen(enemy, screen):
 
 def combat_inputs(hero, enemy, screen, step):
 
-    key = enemy_sprite(hero, enemy, screen, step)
+    key = enemy_visuals(hero, enemy, screen, step)
     action = buttons_clog.combat_buttons(screen)
     
     return action, key
@@ -82,13 +82,13 @@ def hero_combat_stats(hero, screen):
     y = 500
 
     stats = [
-        f"DMG: {hero.damage}",
-        f"SPEED: {hero.speed}",
-        f"DODGE: {hero.dodge}",
-        f"ARMOR: {hero.reduction}",
-        f"MENTAL: {hero.mental_reduction}",
-        f'CRIT: {hero.critical}',
-        f'ACC: {hero.accuracy}',
+        f"DMG: {int(max(hero.damage, 0))}",
+        f"SPEED: {int(max(hero.speed, 0))}",
+        f"DODGE: {int(max(hero.dodge, 0))}",
+        f"ARMOR: {int(max(hero.reduction, 0))}",
+        f"MENTAL: {int(max(hero.mental_reduction, 0))}",
+        f'CRIT: {int(max(hero.critical, 0))}',
+        f'ACC: {int(max(hero.accuracy, 0))}',
         f"enemies in row: {hero.game_state.enemy_counter}",
         f"event in row: {hero.game_state.events_in_row}",
     ]
@@ -115,10 +115,10 @@ def show_buffs(hero, screen):
         x += 80
 
 
-def enemy_sprite(hero, enemy, screen, step):#Images
+def enemy_visuals(hero, enemy, screen, step):
     """Enemy-Sprites and enemy-intent icon"""
-    enemy.blitme(screen)#Enemysprite
-    text, key = enemy.enemy_intend(step, hero)#ENemyintent
+    enemy.blitme(screen)
+    text, key = enemy.enemy_intend(step, hero)
     screen.blit(text, (710, 150))
     return key
 
@@ -150,13 +150,13 @@ def enemy_combat_stats(enemy, screen):
     y = 120
 
     stats = [
-        f"DMG: {enemy.damage}",
-        f"SPEED: {enemy.speed}",
-        f"DODGE: {enemy.dodge}",
-        f"ARMOR: {enemy.reduction}",
-        f"MENTAL: {enemy.mental_reduction}",
-        f'CRIT: {enemy.critical}',
-        f'ACC: {enemy.accuracy}'
+        f"DMG: {int(max(enemy.damage, 0))}",
+        f"SPEED: {int(max(enemy.speed, 0))}",
+        f"DODGE: {int(max(enemy.dodge, 0))}",
+        f"ARMOR: {int(max(enemy.reduction, 0))}",
+        f"MENTAL: {int(max(enemy.mental_reduction, 0))}",
+        f'CRIT: {int(max(enemy.critical, 0))}',
+        f'ACC: {int(max(enemy.accuracy, 0))}'
     ]
 
     for stat in stats:
