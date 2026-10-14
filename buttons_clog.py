@@ -51,13 +51,18 @@ class Button:
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
         self.key = key
+        self.cursor = False
         self.image = None
 
 
     def draw(self, screen, font):
 
+        button_color = (100, 100, 100)
+        if self.cursor:
+            button_color = (70, 70, 70)
+
         pygame.draw.rect(
-            screen, (100, 100, 100), self.rect)
+            screen, button_color, self.rect)
 
         pygame.draw.rect(
             screen, (255, 255, 255), self.rect, 2)
@@ -86,7 +91,6 @@ class Button:
                 screen.blit(text_surface, text_rect)
 
     def clicked(self, mouse_position):
-
         return self.rect.collidepoint(mouse_position)
 
 
@@ -142,30 +146,25 @@ def bond_fire_buttons(hero):
 
 
 def merchant_buttons(hero, screen):
-
-    abilities_displayed(hero, screen)
     
-    i = len(hero.inventory) + len(hero.pockets)
     consumable_1 = Button(750, 700,
-                    120, 70, '', i + 1)
+                    120, 70, '', 'con1')
     consumable_2 = Button(900, 700, 
-                    120, 70, '', i + 2)
+                    120, 70, '', 'con2')
     consumable_3 = Button(1050, 700,
-                    120, 70, '', i + 3)
+                    120, 70, '', 'con3')
     gear_1 = Button(900, 600,
-                    120, 70, '', i + 4)
+                    120, 70, '', 'gear1')
     gear_2 = Button(1050, 600,
-                    120, 70, '', i + 5)
+                    120, 70, '', 'gear2')
     spell = Button(1000, 500,
-                   180, 70, '', i + 6)
+                   180, 70, '', 'spell')
     shop_exit = Button(1050, 30,
-                    120, 70, '', i + 7)
+                    120, 70, '', 'exit')
     shop_offering = [consumable_1, consumable_2, consumable_3,
                      gear_1, gear_2, spell, shop_exit]
 
-    hero_inventory = dungeon_inventory(hero, screen)
-
-    return shop_offering, hero_inventory
+    return shop_offering
 
 
 def yes_no_button(screen, font):
@@ -203,17 +202,18 @@ def display_answers(answers, screen):
 
     buttons = [button_1, button_2, button_3, button_4]
 
-    while len(buttons) != len(answers):
-        del buttons[-1]
+    if answers != None:
+        while len(buttons) != len(answers):
+            del buttons[-1]
 
-    i = 0
-    for button in buttons:
-        answer = answers[i]
-        button.text = answer
-        button.draw(screen, font)
-        i += 1
-    
-    return buttons
+        i = 0
+        for button in buttons:
+            answer = answers[i]
+            button.text = answer
+            button.draw(screen, font)
+            i += 1
+
+        return buttons
 
 
 def buttons_right_bottom_corn():
@@ -264,12 +264,7 @@ def choose_ability(hero, action, screen):
         if spell.cool_down > 0:
             button.text += f"COOLD.({str(spell.cool_down)})"
 
-    for button in buttons:
-        button.draw(screen, font)
-
-    pygame.display.flip()
-
-    action = display_answers_clicked(buttons)
+    action = display_answers_clicked(buttons, screen, font)
     return action
 
 
@@ -305,20 +300,17 @@ def item_in_combat(hero, enemy, screen):
         if item.active:
             buttons[i].text = item.name
             buttons[i].key = i
-            buttons[i].draw(screen, font)
             i += 1
 
     for x, item in enumerate(hero.pockets):
         buttons[i].text = item.name
         buttons[i].key = hero.max_inventory + x
-        buttons[i].draw(screen, font)
         i += 1
 
     while len(buttons) != i:
         del buttons[-1]
 
-    pygame.display.flip()
-    item = display_answers_clicked(buttons)
+    item = display_answers_clicked(buttons, screen, font)
     return int(item)
 
 
@@ -350,11 +342,7 @@ def combat_buttons(screen):
     while len(buttons) != 4:#4 general buttons,
         del buttons[-1]     #they dont change at all
 
-    for button in buttons:
-        button.draw(screen, font)
-    pygame.display.flip()
-
-    action = display_answers_clicked(buttons)
+    action = display_answers_clicked(buttons, screen, font)
     return action
 
 
@@ -439,13 +427,47 @@ def dungeon_buttons_clicked(hero, buttons, screen, event):
                 item.use_item(hero, None, None)
 
 
-def display_answers_clicked(buttons):
+def display_answers_clicked(buttons, screen, font):
     """returns button.key if pressed"""
+    buttons[0].cursor = True
     choice = " "
     while choice == " ":
+
+        for button in buttons:
+            button.draw(screen, font)
+        pygame.display.flip()
+
         for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                for button in buttons:
+            for button in buttons:
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
                     if button.clicked(event.pos):
                         choice = button.key
+
+                if event.type == pygame.KEYDOWN:
+                    if button.cursor:
+                        match event.key:
+
+                            case pygame.K_UP:
+                                if button.key == '2' or button.key == '3':
+                                    button.cursor = False
+                                    buttons[int(button.key)-2].cursor = True
+
+                            case pygame.K_DOWN:
+                                if button.key == '0' or button.key == '1':
+                                    button.cursor = False
+                                    buttons[int(button.key)+2].cursor = True
+
+                            case pygame.K_LEFT:
+                                if button.key == '1' or button.key == '3':
+                                    button.cursor = False
+                                    buttons[int(button.key)-1].cursor = True
+
+                            case pygame.K_RIGHT:
+                                if button.key == '0' or button.key == '2':
+                                    button.cursor = False
+                                    buttons[int(button.key)+1].cursor = True
+
+                            case pygame.K_RETURN:
+                                choice = button.key
     return choice
