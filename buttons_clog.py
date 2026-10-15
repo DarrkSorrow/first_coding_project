@@ -299,12 +299,12 @@ def item_in_combat(hero, enemy, screen):
     for item in hero.inventory:
         if item.active:
             buttons[i].text = item.name
-            buttons[i].key = i
+            buttons[i].key = str(i)#str() is crucial here
             i += 1
 
     for x, item in enumerate(hero.pockets):
         buttons[i].text = item.name
-        buttons[i].key = hero.max_inventory + x
+        buttons[i].key = str(hero.max_inventory + x)#aswell
         i += 1
 
     while len(buttons) != i:
@@ -314,7 +314,7 @@ def item_in_combat(hero, enemy, screen):
     return int(item)
 
 
-def choose_item(hero, screen):
+def choose_item(hero, screen):####
 #from event
     buttons, font = buttons_right_bottom_corn()
     
@@ -430,6 +430,8 @@ def dungeon_buttons_clicked(hero, buttons, screen, event):
 def display_answers_clicked(buttons, screen, font):
     """returns button.key if pressed"""
     buttons[0].cursor = True
+    merchant_button_keys = ['con1', 'con2', 'con3',
+                             'gear1', 'gear2', 'spell', 'exit']
     choice = " "
     while choice == " ":
 
@@ -446,27 +448,54 @@ def display_answers_clicked(buttons, screen, font):
 
                 if event.type == pygame.KEYDOWN:
                     if button.cursor:
+                        button.cursor = False
                         match event.key:
 
                             case pygame.K_UP:
                                 if button.key == '2' or button.key == '3':
-                                    button.cursor = False
-                                    buttons[int(button.key)-2].cursor = True
+                                    try:
+                                        buttons[int(button.key)-2].cursor = True
+                                    except IndexError:
+                                        buttons[int(button.key)-1].cursor = True
+                                elif button.key == 'c':
+                                    buttons[0].cursor = True
+                                elif button.key == 'd':
+                                    buttons[1].cursor = True
+                                else:
+                                    button.cursor = True
 
                             case pygame.K_DOWN:
                                 if button.key == '0' or button.key == '1':
-                                    button.cursor = False
-                                    buttons[int(button.key)+2].cursor = True
+                                    try:
+                                        buttons[int(button.key)+2].cursor = True
+                                    except IndexError:
+                                        buttons[int(button.key)+1].cursor = True
+                                elif button.key == 'a':
+                                    buttons[2].cursor = True
+                                elif button.key == 'b':
+                                    buttons[3].cursor = True
+                                else:
+                                    button.cursor = True
 
                             case pygame.K_LEFT:
                                 if button.key == '1' or button.key == '3':
-                                    button.cursor = False
                                     buttons[int(button.key)-1].cursor = True
+                                elif button.key == 'b':
+                                    buttons[0].cursor = True
+                                elif button.key == 'd':
+                                    buttons[2].cursor = True
+                                else:
+                                    button.cursor = True
 
                             case pygame.K_RIGHT:
                                 if button.key == '0' or button.key == '2':
-                                    button.cursor = False
                                     buttons[int(button.key)+1].cursor = True
+                                elif button.key == 'a':
+                                    buttons[1].cursor = True
+                                elif button.key == 'c':
+                                    buttons[3].cursor = True
+                                else:
+                                    button.cursor = True
 
                             case pygame.K_RETURN:
                                 choice = button.key
