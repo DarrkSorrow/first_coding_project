@@ -1,9 +1,11 @@
-import pygame, random
+import random
 from time import sleep
 from world_rooms import *
 from items import *
 import abilities, buttons_clog
 from combat_interface import hero_health_bar, hero_mana_bar
+
+import pygame
 
 
 def generate_world(stage):
@@ -47,16 +49,11 @@ def bond_fire(hero, stage, screen):
     font = pygame.font.SysFont(None, 24)
     hero_health_bar(hero, screen)
     hero_mana_bar(hero, screen)
-    hero_xp(hero, screen), pygame.display.flip()
+    hero_xp(hero, screen)
 
     buttons = buttons_clog.bond_fire_buttons(hero)
 
-    for button in buttons:
-        button.draw(screen, font)
-
-    pygame.display.flip()
-
-    action = buttons_clog.display_answers_clicked(buttons)
+    action = buttons_clog.display_answers_clicked(buttons, screen, font)
     match action:
         
         case "1":
@@ -77,8 +74,8 @@ def bond_fire(hero, stage, screen):
 
 def wandering_merchant(hero, stage, screen):
     """hero can buy items and abilities"""
-    hero_left = False#if true the merchant dissapears
-    font = pygame.font.SysFont(None, 12)
+    hero_left = False
+    font = pygame.font.SysFont(None, 13)
 
     merchant_offer = []
     while len(merchant_offer) < 6:
@@ -98,7 +95,7 @@ def wandering_merchant(hero, stage, screen):
             spell = random.choice(spells)
             merchant_offer.append(spell())
 
-    merchant_buttons = buttons_clog.merchant_buttons(hero, screen)
+    merchant_buttons = buttons_clog.merchant_buttons()
 
     for i, button in enumerate(merchant_buttons):
         if i < 6:
@@ -116,32 +113,29 @@ def wandering_merchant(hero, stage, screen):
         hero_items = buttons_clog.dungeon_inventory(hero, screen)
         buttons_clog.abilities_displayed(hero, screen)
         buttons = hero_items + merchant_buttons
-
-        for button in buttons:
-            button.draw(screen, font)
-        pygame.display.flip()
         
-        choice = buttons_clog.display_answers_clicked(buttons)
+        choice = buttons_clog.display_answers_clicked(buttons, screen, font)
         match choice:
 
             #SELL-ITEMS *** SELL-ITEMS *** SELL-ITEMS
             case i if i in '0123456789':
                 i = int(i)
-                if hero.inventory[i].gear:
-                    hero.xp += round(hero.inventory[i].xp * 0.65)
-                    hero.inventory[i].unequip(hero)
+                whole_inventory = hero.inventory + hero.pockets
+                if whole_inventory[i].gear:
+                    hero.xp += round(whole_inventory[i].xp * 0.65)
+                    whole_inventory[i].unequip(hero)
                 else:
                     try:
-                        if hero.inventory[i].dungeon:
-                            hero.inventory[i].use_item(hero, None, None)
+                        if whole_inventory[i].dungeon:
+                            whole_inventory[i].use_item(hero, None, None)
                         else:#just some pennies
-                            hero.xp += round(hero.inventory[i].xp * 0.1)
-                            hero.inventory[i]._remove(hero)
+                            hero.xp += round(whole_inventory[i].xp * 0.1)
+                            whole_inventory[i]._remove(hero)
                     except ValueError:
-                        if hero.pockets[i].dungeon:
-                            hero.pockets[i].use_item(hero, None, None)
+                        if whole_inventory[i].dungeon:
+                            whole_inventory[i].use_item(hero, None, None)
                         else:#health and mana potions consumed
-                            hero.pockets[i]._remove(hero)
+                            whole_inventory[i]._remove(hero)
             #SELL-ITEMS *** SELL-ITEMS *** SELL-ITEMS
 
             #CONSUMABLES *** CONSUMABLES *** CONSUMABLES
@@ -244,7 +238,7 @@ def reward(hero, enemy, stage, screen):
                     reward_system(hero, stage, points, screen)
                 case 3:
                     pass#hero won
-        
+
 
 def boss_reward(hero, screen):
 
@@ -252,26 +246,21 @@ def boss_reward(hero, screen):
     screen.fill((150, 50, 50)), pygame.display.flip()
     buttons = buttons_clog.boss_reward_and_buttons(hero, screen)
 
-    for button in buttons:
-        button.draw(screen, font)
-
-    pygame.display.flip()
-
-    choice = buttons_clog.display_answers_clicked(buttons)
+    choice = buttons_clog.display_answers_clicked(buttons, screen, font)
     match choice:
 
-        case '1':
+        case '0':
             hero.max_life += 100
             hero.reduction += 10
 
-        case '2':
+        case '1':
             hero.max_mana += 100
             hero.mental_reduction += 10
 
-        case '3':
+        case '2':
             hero.max_inventory += 1
             
-        case '4':
+        case '3':
             hero.max_abilities += 1
             
     hero.life += round(hero.max_life / 2)
@@ -333,17 +322,17 @@ def max_inventory(hero, item, screen, font, y):
 
     buttons = buttons_clog.yes_no_button(screen, font)
 
-    answer = buttons_clog.display_answers_clicked(buttons)
+    answer = buttons_clog.display_answers_clicked(buttons, screen, font)
     pygame.draw.rect(                               #drawn to cover up
         screen, (50, 50, 50), (300, 500, 400, 300)) #old buttons
     pygame.display.flip()
 
     match answer:
         
-        case '1':
+        case '0':
             y = release_item(hero, item, screen, font, y)
 
-        case '2':
+        case '1':
             if item.gear:
                 cashback = item.xp * 0.85
             else:
@@ -365,12 +354,16 @@ def release_item(hero, item, screen, font, y):
     text = "Welchen Gegenstand auflösen?"
     y = buttons_clog.display_text(text, y, screen, font)
 
-    choice = buttons_clog.display_answers_clicked(buttons)
+    if reward.gear:#if item demands normal inventory space
+        while len(buttons) != len(hero.inventory):
+            del buttons[-1]
+
+    choice = buttons_clog.display_answers_clicked(buttons, screen, font)
     choice = int(choice)
 
     try:
         item = hero.inventory[choice]
-    except ValueError:
+    except IndexError:
         item = hero.pockets[choice - hero.max_inventory]
 
     if item.gear:
@@ -410,8 +403,8 @@ def hero_xp(hero, screen):
 
 
 def arm_hero(hero):#only called during the beginning
-
-    items = (ShortSword(), RitualDagger(), ElvenBoots())
+    items = (Item1(), Item1(), Item1(), Item1(), Item1())
+    #items = (ShortSword(), RitualDagger(), ElvenBoots())
 
     try:
         for item in items:
@@ -424,3 +417,4 @@ def arm_hero(hero):#only called during the beginning
             items.equip(hero)
         else:
             items._append(hero)
+
