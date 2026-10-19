@@ -103,16 +103,16 @@ def boss_reward_and_buttons(hero, screen):
     y = display_text(text, y, screen, font)
 
     life_reward = Button(150, 350,
-        250, 100, '+100 Max-Hp, +10 Res', "1")
+        250, 100, '+100 Max-Hp, +10 Res', "0")
     
     mana_reward = Button(750, 350,
-        250, 100, "+100 Max-Odem, +10 MentalRes.", "2")
+        250, 100, "+100 Max-Odem, +10 MentalRes.", "1")
     
     extra_item_slot = Button(150, 600,
-        250, 100, "+1 Inventarplatz", "3")
+        250, 100, "+1 Inventarplatz", "2")
 
     extra_ability_slot = Button(750, 600,
-        250, 100, "+1 Fähigkeitensockel", "4")
+        250, 100, "+1 Fähigkeitensockel", "3")
 
     buttons = [life_reward, mana_reward, extra_item_slot,
                extra_ability_slot]
@@ -170,17 +170,13 @@ def merchant_buttons():
 def yes_no_button(screen, font):
 #from abilities, world uses it too now
     yes = Button(300, 500, 
-        100, 100, "JA", "1")
+        100, 100, "JA", "0")
     
     no = Button(500, 500,
-        100, 100, "NEIN", "2")
+        100, 100, "NEIN", "1")
     
     buttons = [yes, no]
 
-    for button in buttons:
-        button.draw(screen, font)
-
-    pygame.display.flip()
     return buttons
 
 
@@ -275,14 +271,12 @@ def item_buttons(hero, screen):
     i = 0
     for item in hero.inventory:
         buttons[i].text = item.name
-        buttons[i].key = i
-        buttons[i].draw(screen, font)
+        buttons[i].key = str(i)
         i += 1
 
     for x, item in enumerate(hero.pockets):
         buttons[i].text = item.name
-        buttons[i].key = hero.max_inventory + x
-        buttons[i].draw(screen, font)
+        buttons[i].key = str(hero.max_inventory + x)
         i += 1
     
     while len(buttons) != len(hero.inventory) + len(hero.pockets):
@@ -452,101 +446,76 @@ def display_answers_clicked(buttons, screen, font):
                         choice = button.key
 
                 if event.type == pygame.KEYDOWN:
-                    if buttons[-1].key == merchant_keys[-1]:
-                        buttons = [button for button in buttons 
-                                    if button.key in merchant_keys]
-                        button.cursor = False
-                        buttons[0].cursor = True
                     if button.cursor:
-                        choice = cursor(choice, button, buttons, event, merchant_keys)
+                        choice = cursor(choice,button,buttons,event,merchant_keys) 
+                        break
     return choice
 
 
 def cursor(choice, button, buttons, event, merchant_keys):
 
+    even = ['0', '2', '4', '6', '8']
+    uneven = ['1', '3', '5', '7', '9']
+
     button.cursor = False
     match event.key:
         
         case pygame.K_UP:
-            if button.key == '2' or button.key == '3':
-                try:
-                    buttons[int(button.key)-2].cursor = True
-                except IndexError:
-                    buttons[int(button.key)-1].cursor = True
+            if button.key in (even[1:] + uneven[1:]):
+                buttons[int(button.key)-2].cursor = True
             elif button.key == 'c':
                 buttons[0].cursor = True
             elif button.key == 'd':
                 buttons[1].cursor = True
-            elif button.key in merchant_keys:
-                if button.key != merchant_keys[-1]:
-                    try:
-                        buttons[int(button.key)+2].cursor = True
-                    except IndexError:
-                        buttons[int(button.key)+1].cursor = True
+            elif button.key in merchant_keys[:-2]:#UP
+                i = merchant_keys.index(button.key)
+                buttons[-7 + i + 2].cursor = True
             else:
                 button.cursor = True
 
         case pygame.K_DOWN:
-            if button.key == '0' or button.key == '1':
-                try:
-                    buttons[int(button.key)+2].cursor = True
-                except IndexError:
-                    buttons[int(button.key)+1].cursor = True
-            elif button.key == 'a':
-                try:
-                    buttons[2].cursor = True
-                except IndexError:
-                    button.cursor = True
-            elif button.key == 'b':
-                try:
-                    buttons[3].cursor = True
-                except IndexError:
-                    button.cursor = True
-            elif button.key in merchant_keys:
-                if button.key != merchant_keys[0]:
-                    try:
-                        buttons[int(button.key)-2].cursor = True
-                    except IndexError:
-                        buttons[int(button.key)-1].cursor = True
+            if button.key in (even+uneven) and (int(button.key)+2 < len(buttons)):
+                buttons[int(button.key)+2].cursor = True
+            elif len(buttons) >= 3 and button.key == 'a':
+                buttons[2].cursor = True
+            elif len(buttons) == 4 and button.key == 'b':
+                buttons[3].cursor = True
+            elif button.key in merchant_keys[-5:]:#DOWN
+                i = merchant_keys.index(button.key)
+                buttons[-7 + i - 2].cursor = True
             else:
                 button.cursor = True
 
         case pygame.K_LEFT:
-            if button.key == '1' or button.key == '3':
+            if button.key in uneven:
                 buttons[int(button.key)-1].cursor = True
             elif button.key == 'b':
                 buttons[0].cursor = True
             elif button.key == 'd':
                 buttons[2].cursor = True
-            elif button.key in merchant_keys:
-                if button.key != merchant_keys[-1]:
-                    buttons[int(button.key)+1].cursor = True
+            elif button.key in merchant_keys[:-6]:#LEFT
+                i = merchant_keys.index(button.key)
+                buttons[-7 + i + 1].cursor = True
             else:
                 button.cursor = True
 
         case pygame.K_RIGHT:
-            if button.key == '0' or button.key == '2':
-                try:
-                    buttons[int(button.key)+1].cursor = True
-                except IndexError:
-                    button.cursor = True
-            elif button.key == 'a':
-                try:
-                    buttons[1].cursor = True
-                except IndexError:
-                    button.cursor = True
-            elif button.key == 'c':
-                try:
-                    buttons[3].cursor = True
-                except IndexError:
-                    button.cursor = True
-            elif button.key in merchant_keys:
-                if button.key != merchant_keys[0]:
-                    buttons[int(button.key)-1].cursor = True
+            if button.key in even and (int(button.key)+1 < len(buttons)):
+                buttons[int(button.key)+1].cursor = True
+            elif len(buttons) >= 2 and button.key == 'a':
+                buttons[1].cursor = True
+            elif len(buttons) == 4 and button.key == 'c':
+                buttons[3].cursor = True
+            elif button.key in merchant_keys[1:]:#RIGHT
+                i = merchant_keys.index(button.key)
+                buttons[-7 + i - 1].cursor = True
             else:
                 button.cursor = True
 
         case pygame.K_RETURN:
             choice = button.key
+
+        case _:
+            button.cursor = True
 
     return choice
