@@ -35,13 +35,14 @@ def main_fight(hero, enemy, screen, stage):
 
     while enemy.life > 0 and hero.life > 0 and action != 'escape':
 
-        screen.fill((150,100,0)), combat_log.draw()
-        cooldown_and_passive_trigger(hero, screen, combat_log)
-        combat_interface(hero, enemy, screen)
+        screen.fill((150,100,0))
+        cooldown_and_passive_trigger(hero, combat_log)
+        hero_interface(hero, screen)
+        enemy_interface(enemy, screen)
+        combat_log.draw()
 
         action, key = combat_inputs(hero, enemy, screen, step)
-        action = pre_hero_turn(
-            hero, action, combat_log, screen, font)
+        action = pre_hero_turn(hero, action, combat_log, screen)
         attack_order = []
         attack_order = who_first(hero, enemy, attack_order,
                                   key, action, combat_log, screen)
@@ -50,24 +51,24 @@ def main_fight(hero, enemy, screen, stage):
         action_1 = attack_order[0]()
         if action_1 != None:
             action = action_1
-        #screen.fill((150,100,0)), combat_log.draw()
-        #combat_interface(hero, enemy, screen), enemy.blitme(screen)
-        pygame.display.flip()
+        screen.fill((150,100,0)), combat_log.draw()
+        hero_interface(hero, screen), enemy.blitme(screen)
+        enemy_interface(enemy, screen), pygame.display.flip()
         # *** FIRST MOVE ***
 
+        # *** SECONDE MOVE ***
         if not action == 'escape':
-            # *** SECONDE MOVE ***
             if hero.life > 0 and enemy.life > 0:
                 action_2 = attack_order[1]()
                 if action_2 != None:
                     action = action_2
-            #  screen.fill((150,100,0)), combat_log.draw()
-            #   combat_interface(hero, enemy, screen), enemy.blitme(screen)
-            pygame.display.flip()
-            # *** SECONDE MOVE ***
+        screen.fill((150,100,0)), combat_log.draw()
+        hero_interface(hero, screen), enemy.blitme(screen)
+        enemy_interface(enemy, screen), pygame.display.flip()
+        # *** SECONDE MOVE ***
         
-        debuff_hero_enemy(hero, enemy, combat_log, screen)
-        undo(hero, enemy, action, combat_log, screen)
+        debuff_hero_enemy(hero, enemy)
+        undo(hero, enemy, action)
         step += 1
 
     hero_alive = after_combat(hero, enemy, combat_log)
@@ -79,17 +80,17 @@ def main_fight(hero, enemy, screen, stage):
     return True
 
 
-def cooldown_and_passive_trigger(hero, screen, combat_log):
+def cooldown_and_passive_trigger(hero, combat_log):
 
     for spell in hero.abilities:#cooldown -1
         spell.reduce_cool_down()
         
     for item in hero.inventory:# triggers items with
         if item.passive_effekt:# passive_effekt 
-            item.trigger_passive(hero)
+            item.trigger_passive(hero, combat_log)
 
 
-def pre_hero_turn(hero, action, combat_log, screen, font):
+def pre_hero_turn(hero, action, combat_log, screen):
     
     match action:
         case "0":  #Angriff
@@ -116,25 +117,31 @@ def pre_hero_turn(hero, action, combat_log, screen, font):
 
 
 def who_first(hero, enemy, attack_order, key, action, combat_log, screen):
-    
+
     total_speed = hero.speed + enemy.speed
+
     if total_speed < 1:
         magic_number = 1
     else:
         magic_number = randint(0, int(total_speed))
-    
-    if magic_number in range(round(hero.speed) + 1):
+
+    if hero.speed > enemy.speed * 2:
+        magic_number /= 2
+    elif enemy.speed > hero.speed * 2:
+        magic_number *= 2
+
+    if round(magic_number) in range(round(hero.speed) + 1):
         attack_order.append(partial(hero_turn, hero, enemy, action, combat_log, screen))
         attack_order.append(partial(enemy_turn, hero, enemy, key, combat_log))
         text = f"{hero.name} ist schneller!"
         combat_log.add(text), sleep(0.5)
-    
+
     else:
         attack_order.append(partial(enemy_turn, hero, enemy, key, combat_log))
         attack_order.append(partial(hero_turn, hero, enemy, action, combat_log, screen))
         text = f"{enemy.name} ist schneller!"
         combat_log.add(text, True), sleep(0.5)
-    
+
     return attack_order
 
 
@@ -145,8 +152,8 @@ def enemy_turn(hero, enemy, key, combat_log):
             text = f'{enemy.name} ist BENOMMEN und kann nichts tun.'
             combat_log.add(text, True)
         else:
-            enemy.enemy_ai(hero, key, combat_log)
-    return None
+            enemy_action = enemy.enemy_ai(hero, key, combat_log)
+    return enemy_action
 
 
 def hero_turn(hero, enemy, action, combat_log, screen):
@@ -158,7 +165,15 @@ def hero_turn(hero, enemy, action, combat_log, screen):
     match action:
 
         case "0":
-            enemy_block_dodge(hero, enemy, combat_log)
+            magic_attack = False
+            for item in hero.inventory:
+                if item.gear and item.magic_attack:
+                    magic_attack = True
+            if magic_attack:
+                enemy_mental_dodge(hero, hero.magic_power,
+                                 enemy, combat_log)
+            else:
+                enemy_block_dodge(hero, enemy, combat_log)
 
         case "1":
             hero.defend(combat_log)
@@ -205,7 +220,7 @@ def hero_turn(hero, enemy, action, combat_log, screen):
     return action
 
 
-def undo(hero, enemy, action, combat_log, screen):
+def undo(hero, enemy, action):
     
     match action:
         case "0":
@@ -224,7 +239,7 @@ def undo(hero, enemy, action, combat_log, screen):
             hero.undo_instant_item()
 
 
-def debuff_hero_enemy(hero, enemy, combat_log, screen):
+def debuff_hero_enemy(hero, enemy):
 
     if hero.over_hp > 0:
         hero.decay_over_hp()
@@ -280,4 +295,8 @@ def after_combat(hero, enemy, combat_log):
 
 #NOT USED IN COMBAT.PY
 def train_hero(hero):#only called during the beginning
-    hero.abilities.append(Ability0())
+    #hero.abilities.append(Ability5())
+    #hero.abilities.append(Ability0())
+    hero.abilities.append(Ability7())
+    hero.abilities.append(Ability8())
+
