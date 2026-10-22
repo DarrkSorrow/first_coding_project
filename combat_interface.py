@@ -24,18 +24,37 @@ def combat_inputs(hero, enemy, screen, step):
     return action, key
 
 
-def combat_interface(hero, enemy, screen):
+def dummy_buttons(screen):
+
+    buttons, font = buttons_clog.buttons_right_bottom_corn()
+    
+    while len(buttons) != 4:#
+        del buttons[-1]
+
+    for button in buttons:
+        button.draw(screen, font)
+
+
+def hero_interface(hero, screen):
 
     hero_health_bar(hero, screen)
     hero_mana_bar(hero, screen)
     buttons_clog.dungeon_inventory(hero, screen)
     buttons_clog.abilities_displayed(hero, screen)
     hero_combat_stats(hero, screen)
+    hero_xp(hero, screen)
     show_buffs(hero, screen)
-    
+
+    pygame.display.flip()
+
+
+def enemy_interface(enemy, screen):
+
     enemy_health_bar(enemy, screen)
     enemy_combat_stats(enemy, screen)
     show_enemy_buffs(enemy, screen)
+
+    dummy_buttons(screen)#it doesnt belong here
 
     pygame.display.flip()
 
@@ -43,7 +62,7 @@ def combat_interface(hero, enemy, screen):
 def hero_health_bar(hero, screen):
 
     font = pygame.font.SysFont(None, 22)
-    stat_hp = f"HP: {hero.life} / {hero.max_life}"
+    stat_hp = f"HP: {int(max(hero.life, 0))} / {hero.max_life}"
     text_image = font.render(stat_hp, True, (0, 0, 0))
 
     width, height = 300, 25
@@ -74,6 +93,14 @@ def hero_mana_bar(hero, screen):
     pygame.draw.rect(screen, (40, 55, 255),
                     (30, 755, current_width, height))
     screen.blit(text_image, (50, 760))
+
+
+def hero_xp(hero, screen):
+
+    font = pygame.font.SysFont(None, 32)
+    text = f"{hero.name}: {hero.xp}XP"
+    textrend = font.render(text, True, (255, 255, 255))
+    screen.blit(textrend, (20, 50))
 
 
 def hero_combat_stats(hero, screen):
