@@ -8,7 +8,7 @@ import buttons_clog
 spells_act_1, spells_act_2, spells_act_3 = [], [], []
 
 def register(act=1):
-
+    """puts abilities in correct pool"""
     def decorate(ability):
 
         if act == 1:
@@ -24,7 +24,7 @@ def register(act=1):
 
 
 def random_abilities(hero, stage):
-
+    """prepares abilities as learnable candidates"""
     spells = []
     match stage:
         case 0 | 1 | 2 | 3:
@@ -62,7 +62,8 @@ def random_abilities(hero, stage):
 
 
 def learn_ability(hero, screen, stage):
-    
+    """pulls random spell, if hero has enough xp"""
+    """hero gets the choice to learn it"""
     font = pygame.font.SysFont(None, 28)
     screen.fill((50, 50, 50)), pygame.display.flip()
 
@@ -79,14 +80,14 @@ def learn_ability(hero, screen, stage):
             else:
                 text = f"Willst du {instance.name} lernen?"
                 y = buttons_clog.display_text(text, y, screen, font)
-                buttons = buttons_clog.yes_no_button(screen, font)
-                answer = buttons_clog.display_answers_clicked(buttons)
+                buttons = buttons_clog.yes_no_button()
+                answer = buttons_clog.display_answers_clicked(buttons, screen)
 
-                if answer == "1":
+                if answer == "0":
                     if len(hero.abilities) == hero.max_abilities:
                         forget_ability(hero, screen)
 
-                elif answer == "2":
+                elif answer == "1":
                     text = f"{hero.name} verwirft {instance.name}"
                     y = buttons_clog.display_text(text, y, screen, font)
                     hero.game_state.last_refused_abilities.append(spell) #hero.game_state
@@ -99,7 +100,7 @@ def learn_ability(hero, screen, stage):
 
 
 def forget_ability(hero, screen):
-
+    """Hero can forget ability to make room for new one"""
     font = pygame.font.SysFont(None, 28)
     screen.fill((50, 50, 50))
     y = 100
@@ -109,15 +110,15 @@ def forget_ability(hero, screen):
     y = buttons_clog.display_text(text, y, screen, font)
     text = "Eine Fähigkeit vergessen?"
     y = buttons_clog.display_text(text, y, screen, font)
-    buttons = buttons_clog.yes_no_button(screen, font)
+    buttons = buttons_clog.yes_no_button()
     pygame.display.flip()
-    choice = buttons_clog.display_answers_clicked(buttons)
+    choice = buttons_clog.display_answers_clicked(buttons, screen)
     screen.fill((50, 50, 50)), pygame.display.flip()
     
     ability_forgotten = True
     match choice:
 
-        case '1':
+        case '0':
             choice = buttons_clog.choose_ability(hero, " ", screen)   
             match choice:
                 
@@ -136,13 +137,13 @@ def forget_ability(hero, screen):
                 case "d":
                     hero.game_state.forgotten_abilities.append(hero.abilities[3])
                     del hero.abilities[3]                  
-        case '2':
+        case '1':
             ability_forgotten = False
     return ability_forgotten
     
 
 def abilities_from_events(hero, ability, screen):
-
+    """hero learns abilities gotten in events"""
     font = pygame.font.SysFont(None, 28)
     screen.fill((50, 50, 50)), pygame.display.flip()
     spell_learned = False
@@ -163,7 +164,7 @@ def abilities_from_events(hero, ability, screen):
 
 
 def enemy_block_dodge(hero, enemy, combat_log):
-#Verteidigungsmöglichkeit der Gegner + crit
+    """hero trys to inflict normal damage"""
     magic_number = random.randint(0, 100)
     magic_number += hero.accuracy
     if magic_number < enemy.dodge:
@@ -244,7 +245,7 @@ def hero_critical_hit(hero, combat_log):
 
 
 def enemy_mental_dodge(hero, ability, enemy, combat_log):
-
+    """hero trys to inflict spell-dmg with an ability"""
     magic_number = random.randint(0, 150)
     if magic_number < enemy.dodge:
         text = f"{enemy.name} konnte dem ZAUBER ausweichen!!!"
@@ -416,7 +417,7 @@ class Ability2(Ability):# VERKRÜPPELNDER HIEB
 
 @register()
 class Ability3(Ability):# PRÄZISER STICH
-        
+
         def __init__(self):
             super().__init__("PRÄZISER STICH", 9, 17, 250,
                             precise_hit)
@@ -669,6 +670,7 @@ winter_fist = 'images/abilities/winter_fist.png'
 arcane_art = 'images/abilities/arcane_art.png'
 smite = 'images/abilities/smite.png'
 righteous_fury = 'images/abilities/righteous_fury.png'
+blood_letting = 'images/abilities/blood_letting.png'
 #IMAGES LOADED, EVERY ABILITY INSTANCE POITNS TO THESE
 
 
@@ -740,8 +742,9 @@ class Ability13(Ability):#SCHWERTTANZ
                 combat_log.add(text)
 
                 hero.dodge += self.power#UNDO
+                
                 magic_number = random.randint(0, 3)
-                AgileH2H(self.power - magic_number,
+                Agile(self.power - magic_number,
                          3 + magic_number).buff(hero)
                 Empowered(self.power + magic_number,
                          5 - magic_number).buff(hero)
@@ -798,7 +801,7 @@ class Ability14(Ability):#WINTERFAUST
             text = 'Die Finger sind noch zu vereist.'
             combat_log.add(text)
             return False
-        
+
 @register(act=2)
 class Ability15(Ability):#ARKANE KUNST
 
@@ -815,7 +818,7 @@ class Ability15(Ability):#ARKANE KUNST
                 self._cost_and_cooldown(hero, self.cost, cooldown=3)
 
                 AbilityPower(self.power, 5).buff(hero)
-                ClarityH2H(7, 5).buff(hero)
+                Clarity(7, 5).buff(hero)
                 hero.over_hp += round(self.power / 2)
                 hero.mental_reduction += round(self.power / 2)#UNDO
                 return True
@@ -839,7 +842,7 @@ class Ability16(Ability):#ZERSCHMETTERN
     def __init__(self):
         super().__init__('Zerschmettern', 5, 17, 500,
                         smite)
-        
+
     def use_ability(self, hero, enemy, combat_log):
         if hero.mana >= self.cost:
             text = f'Mit gewaltiger Wucht schwingt {hero.name}'
@@ -880,7 +883,7 @@ class Ability17(Ability):#GERECHTER ZORN
             if hero.mana >= self.cost:
                 text = f'{hero.name} kanalisiert seinen Zorn'
                 combat_log.add(text)
-                text = 'und Naturgewalten treiben Ihn nun an'
+                text = 'Naturgewalten treiben Ihn nun an'
                 combat_log.add(text)
 
                 self._cost_and_cooldown(hero, self.cost, cooldown=5)
@@ -906,10 +909,57 @@ class Ability17(Ability):#GERECHTER ZORN
         else:
             text = f'{hero.name} ist noch voller Adrenalin'
             combat_log.add(text)
-            text = 'sein Zorn kann nicht gesteigert werden'
+            text = 'der Zorn kann nicht gesteigert werden'
             combat_log.add(text)
             return False
 
     def undo_ability(self, hero, enemy):
         hero.reduction -= self.power
         hero.mental_reduction -= self.power
+
+@register(act=2)
+class Ability18(Ability):#ADERLASS
+
+    def __init__(self):
+        super().__init__('Aderlass', 8, 27, 1050,
+                         blood_letting)
+        
+    def use_ability(self, hero, enemy, combat_log):
+        if self.cooldown == 0:
+            if hero.mana >= self.cost:
+                text = f'{hero.name} greift, mit Blutdurst'
+                combat_log.add(text)
+                text = 'in seinen Augen an'
+                combat_log.add(text)
+
+                self._cost_and_cooldown(hero, self.cost, cooldown=3)
+
+                hero.critical += round(self.power / 2)#UNDO
+
+                hero.damage += self.power
+                damage_taken = enemy_block_dodge(hero, enemy, combat_log)
+                hero.damage -= self.power
+                if damage_taken > 0:
+                    text = f'Die Wunden von {enemy.name} wecken'
+                    combat_log.add(text)
+                    text = f'animalische Instinkte in {hero.name}'
+                    combat_log.add(text)
+                    hero.life += round(damage_taken / 2)
+                    if hero.life > hero.max_life:
+                        hero.life = hero.max_life
+                    return True
+                else:
+                    text = 'Der Angriff schlug fehl!'
+                    combat_log.add(text)
+                    return False
+            else:
+                text = f'{hero.name} fehlt es an Energie!'
+                combat_log.add(text)
+                return False
+        else:
+            text = f"{hero.name}'s Blutrausch lässt Ihn nicht klar denken"
+            combat_log.add(text)
+            return False
+
+    def undo_ability(self, hero, enemy):
+        hero.critical -= round(self.power / 2)
