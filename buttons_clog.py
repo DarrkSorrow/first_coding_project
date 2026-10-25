@@ -167,7 +167,7 @@ def merchant_buttons():
     return shop_offering
 
 
-def yes_no_button(screen, font):
+def yes_no_button():
 #from abilities, world uses it too now
     yes = Button(300, 500, 
         100, 100, "JA", "0")
@@ -180,21 +180,19 @@ def yes_no_button(screen, font):
     return buttons
 
 
-def display_answers(answers, screen):
+def display_answers(answers):
 #From event
-    font = pygame.font.SysFont(None, 24)
-
     button_1 = Button(200, 500,
-    900, 50, " ", "1")
+    900, 50, " ", 1)
 
     button_2 = Button(200, 550,
-    900, 50, " ", "2")
+    900, 50, " ", 2)
 
     button_3 = Button(200, 600,
-    900, 50, " ", "3")
+    900, 50, " ", 3)
 
     button_4 = Button(200, 650,
-    900, 50, " ", "4")
+    900, 50, " ", 4)
 
     buttons = [button_1, button_2, button_3, button_4]
 
@@ -206,7 +204,6 @@ def display_answers(answers, screen):
         for button in buttons:
             answer = answers[i]
             button.text = answer
-            button.draw(screen, font)
             i += 1
 
         return buttons
@@ -260,7 +257,7 @@ def choose_ability(hero, action, screen):
         if spell.cool_down > 0:
             button.text += f"COOLD.({str(spell.cool_down)})"
 
-    action = display_answers_clicked(buttons, screen, font)
+    action = display_answers_clicked(buttons, screen)
     return action
 
 
@@ -298,13 +295,13 @@ def item_in_combat(hero, enemy, screen):
 
     for x, item in enumerate(hero.pockets):
         buttons[i].text = item.name
-        buttons[i].key = str(hero.max_inventory + x)#aswell
+        buttons[i].key = str(i)#aswell
         i += 1
 
     while len(buttons) != i:
         del buttons[-1]
 
-    item = display_answers_clicked(buttons, screen, font)
+    item = display_answers_clicked(buttons, screen)
     return int(item)
 
 
@@ -336,7 +333,7 @@ def combat_buttons(screen):
     while len(buttons) != 4:#4 general buttons,
         del buttons[-1]     #they dont change at all
 
-    action = display_answers_clicked(buttons, screen, font)
+    action = display_answers_clicked(buttons, screen)
     return action
 
 
@@ -404,7 +401,7 @@ def abilities_displayed(hero, screen):
                 screen.blit(text, (x+25, y+20))#centers cooldown-number 
 
         x += 65
-    
+
 
 def dungeon_buttons_clicked(hero, buttons, screen, event):
 
@@ -421,16 +418,17 @@ def dungeon_buttons_clicked(hero, buttons, screen, event):
                 item.use_item(hero, None, None)
 
 
-def display_answers_clicked(buttons, screen, font):
+def display_answers_clicked(buttons, screen):
     """returns button.key if pressed"""
     merchant_keys = ['con1', 'con2', 'con3', 'gear1', 'gear2',
                      'spell', 'exit']
     
-    if buttons[-1].key == merchant_keys[-1]:
-        buttons[-7].cursor = True
+    if buttons[0].key == merchant_keys[0]:
+        buttons[0].cursor = True
     else:
         buttons[0].cursor = True
 
+    font = pygame.font.SysFont(None, 20)
     choice = " "
     while choice == " ":
 
@@ -444,6 +442,8 @@ def display_answers_clicked(buttons, screen, font):
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if button.clicked(event.pos):
                         choice = button.key
+                        for button in buttons:
+                            button.cursor = False
 
                 if event.type == pygame.KEYDOWN:
                     if button.cursor:
@@ -467,9 +467,11 @@ def cursor(choice, button, buttons, event, merchant_keys):
                 buttons[0].cursor = True
             elif button.key == 'd':
                 buttons[1].cursor = True
-            elif button.key in merchant_keys[:-2]:#UP
+            elif button.key in merchant_keys[:5]:#UP
                 i = merchant_keys.index(button.key)
-                buttons[-7 + i + 2].cursor = True
+                buttons[i + 2].cursor = True
+            elif button.key in range(5) and button.key != 1:
+                buttons[button.key - 2].cursor = True
             else:
                 button.cursor = True
 
@@ -480,9 +482,11 @@ def cursor(choice, button, buttons, event, merchant_keys):
                 buttons[2].cursor = True
             elif len(buttons) == 4 and button.key == 'b':
                 buttons[3].cursor = True
-            elif button.key in merchant_keys[-5:]:#DOWN
+            elif button.key in merchant_keys[2:]:#DOWN
                 i = merchant_keys.index(button.key)
-                buttons[-7 + i - 2].cursor = True
+                buttons[i - 2].cursor = True
+            elif button.key in range(5) and button.key < len(buttons):
+                buttons[button.key].cursor = True
             else:
                 button.cursor = True
 
@@ -493,9 +497,9 @@ def cursor(choice, button, buttons, event, merchant_keys):
                 buttons[0].cursor = True
             elif button.key == 'd':
                 buttons[2].cursor = True
-            elif button.key in merchant_keys[:-6]:#LEFT
+            elif button.key in merchant_keys[:5]:#LEFT
                 i = merchant_keys.index(button.key)
-                buttons[-7 + i + 1].cursor = True
+                buttons[i + 1].cursor = True
             else:
                 button.cursor = True
 
@@ -508,7 +512,7 @@ def cursor(choice, button, buttons, event, merchant_keys):
                 buttons[3].cursor = True
             elif button.key in merchant_keys[1:]:#RIGHT
                 i = merchant_keys.index(button.key)
-                buttons[-7 + i - 1].cursor = True
+                buttons[i - 1].cursor = True
             else:
                 button.cursor = True
 
