@@ -711,7 +711,7 @@ def event_1_act_2(hero, stage, screen):
 
     intro = [start, a, b, c, d]
 
-    choice_1 = 'Du lehnst ab und versuchst zügig dich wieder zu entfernen.'
+    choice_1 = 'Du lehnst ab und versuchst dich zügig zu entfernen.'
     choice_2 = 'Du akzeptierst den Kampf und machst dich bereit!'
     choice_3 = 'Du forderst seinen größeren stärkeren Kollegen heraus.[Elite] '
 
@@ -741,7 +741,7 @@ def event_1_act_2(hero, stage, screen):
             raw_text = 'Dein Herausforderer macht sich bereit.'
             y = display_outro(hero, raw_text, y, screen, font)
             enemy = combat.EventMinionKirgo()
-            combat.main_fight(hero, enemy, screen, stage)
+            sleep(1), combat.main_fight(hero, enemy, screen, stage)
             if hero.life > 0:
                 reward_list = (world.ShukoClaws(), world.ItemBelt())
                 reward = random.choice(reward_list)
@@ -753,7 +753,7 @@ def event_1_act_2(hero, stage, screen):
             raw_text = 'Mach dich auf Schmerzen gefasst...'
             y = display_outro(hero, raw_text, y, screen, font)
             enemy = combat.EventEliteKarim()
-            combat.main_fight(hero, enemy, screen, stage)
+            sleep(1), combat.main_fight(hero, enemy, screen, stage)
             if hero.life > 0:
                 reward_list = (world.WarBow(), world.Shield())
                 reward = random.choice(reward_list)
@@ -773,7 +773,6 @@ def event_2_act_2(hero, stage, screen):
 
     font = pygame.font.SysFont(None, 28)
     construct_intro(hero, intro, screen)
-    screen.fill((255, 255, 0))
 
     danger, enemy_arrived, hero_left = 1, False, False
 
@@ -797,11 +796,7 @@ def event_2_act_2(hero, stage, screen):
         choice = buttons_clog.display_answers_clicked(buttons, screen)
 
         screen.fill((255, 255, 0))
-        world.hero_health_bar(hero, screen)
-        world.hero_mana_bar(hero, screen)
-        world.hero_xp
-        combat.hero_combat_stats(hero, screen)
-        buttons_clog.dungeon_inventory(hero, screen)
+        combat.hero_interface(hero, screen)
         pygame.display.flip()
 
         match choice:
@@ -933,29 +928,30 @@ def event_3_act_2(hero, stage, screen):
         answers.append(choice_3)
 
     font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
-
     choice = buttons_clog.display_answers_clicked(buttons, screen)
+    screen.fill((255, 255, 0))
+
     match choice:
         case 1:
+            hero.max_life += 7
             raw_text = 'Ich segne deine Gesundheit, möge sie'
             y = display_outro(hero, raw_text, y, screen, font)
             raw_text = 'allen Widrigkeiten des Lebens widerstehen'
             y = display_outro(hero, raw_text, y, screen, font)
-            hero.max_life += 7
 
         case 2:
+            hero.critical += 2
             raw_text = 'Ich segne deinen Mut, möge dieser'
             y = display_outro(hero, raw_text, y, screen, font)
             raw_text = 'im Angesicht des Bösen dich nicht verlassen'
             y = display_outro(hero, raw_text, y, screen, font)
-            hero.critical += 2
 
         case 3:
+            hero.max_mana += 15
             raw_text = 'Ich segne deinen Geist, möge er'
             y = display_outro(hero, raw_text, y, screen, font)
             raw_text = 'dir ein Licht in den schwersten Stunden sein'
             y = display_outro(hero, raw_text, y, screen, font)
-            hero.max_mana += 15
     return None
 
 @register(act=2)#AveragePayout -1
@@ -1234,8 +1230,8 @@ def event_6_act_2(hero, stage, screen):
     a = f'sich {hero.name} ein wenig verlaufen'
     b = 'Nachdem er zum wiederholten Male, vor einer'
     c = 'Sackgasse steht, hält er inne und untersucht'
-    d = 'eine verdächtige Wand. "Das ist doch nicht eine Tür..?!"'
-    e = f"wispert {hero.name} neugierig. Die Neugier ist geweckt!"
+    d = 'eine verdächtige Wand. "Das ist doch nicht eine .. Tür..?!"'
+    e = f"wispert {hero.name} neugierig. Der Entdeckergeist ist geweckt!"
 
     intro = [start, a, b, c, d, e]
 
@@ -1273,7 +1269,7 @@ def event_6_act_2(hero, stage, screen):
 
         case 2:
             magic_number = random.randint(50, 300)
-            impact = round(hero.damage * hero.critical)
+            impact = round(hero.damage * (hero.critical + 1))
             if magic_number < impact:
                 raw_text = f'{hero.name} verlagert sein Gewicht nach hinten'
                 y = display_outro(hero, raw_text, y, screen, font)
@@ -1283,7 +1279,9 @@ def event_6_act_2(hero, stage, screen):
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = 'Ein weiterer Tritt und die Tür ist offen!'
                 y = display_outro(hero, raw_text, y, screen, font)
-                world.reward_system(hero, stage, 350, screen)#REWARD
+                screen.fill((50, 50, 50)), combat.hero_interface(hero, screen)
+                pygame.display.flip()#REWARD
+                world.reward_system(hero, stage, 350, screen)
             else:
                 raw_text = f'{hero.name} tritt, schiebt und versucht alles'
                 y = display_outro(hero, raw_text, y, screen, font)
@@ -1305,6 +1303,8 @@ def event_6_act_2(hero, stage, screen):
             y = display_outro(hero, raw_text, y, screen, font)
             raw_text = 'Tür auf und offenbart seine Reichtümer'
             y = display_outro(hero, raw_text, y, screen, font)
+            screen.fill((50, 50, 50)), combat.hero_interface(hero, screen)
+            pygame.display.flip()#REWARD
             world.reward_system(hero, stage, 800, screen)#REWARD
     return None
 
@@ -1324,7 +1324,6 @@ def event_7_act_2(hero, stage, screen):
 
     font = pygame.font.SysFont(None, 28)
     construct_intro(hero, intro, screen)
-    screen.fill((255, 255, 0))
 
     initial_money, hero_left = hero.xp, False
 
@@ -1353,10 +1352,10 @@ def event_7_act_2(hero, stage, screen):
 
         buttons = buttons_clog.display_answers(answers)
         y = 100
+        screen.fill((255, 255, 0))
         combat.hero_interface(hero, screen)
         pygame.display.flip()#Order matters here
         choice = buttons_clog.display_answers_clicked(buttons, screen)
-        screen.fill((255, 255, 0))
 
         match choice:
             case 1:
@@ -1455,6 +1454,60 @@ def event_7_act_2(hero, stage, screen):
                 y = display_outro(hero, raw_text, y, screen, font)
     return None
 
+@register(act=2)#AveragePayout -1
+def event_8_act_2(hero, stage, screen):
+
+    start = f'{hero.name} schlendert versunken in Gedanken umher'
+    a = f'als mehrere Garnisonswachen {hero.name} unverhofft anherrschen'
+    b = f'"Warenkontrolle! Alles deklarieren!", {hero.name} schafft es nicht'
+    c = 'mehr umzudrehen und muss sowieso in diese Richtung. Mit düstere Miene'
+    d = f'überlegt {hero.name} welchen Gegenstand er den Wachen überlassen soll'
+
+    intro = [start, a, b, c, d]
+    answers, inventory_keys = [], []
+
+    i, j = 0, 0
+    for item in hero.inventory:
+        if j == 4:
+            break 
+        elif item.gear:
+            offer = f'{item.name}'
+            answers.append(offer)
+            j += 1
+            inventory_keys.append(i)
+        i += 1
+
+    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
+
+    choice = buttons_clog.display_answers_clicked(buttons, screen)
+    y = 100
+    screen.fill((255, 255, 0))
+    combat.hero_interface(hero, screen)
+    pygame.display.flip()
+    match choice:
+        case 1:
+            hero.inventory[inventory_keys[0]].unequip(hero)
+        case 2:
+            hero.inventory[inventory_keys[1]].unequip(hero)
+        case 3:
+            hero.inventory[inventory_keys[2]].unequip(hero)
+        case 4:
+            hero.inventory[inventory_keys[3]].unequip(hero)
+
+    raw_text = '"Alles klar, passieren!", der Zöllner knallt mit'
+    y = display_outro(hero, raw_text, y, screen, font)
+    raw_text = f"einem dicken Stempel auf {hero.name}'s Passierschein"
+    y = display_outro(hero, raw_text, y, screen, font)
+    raw_text = f'{hero.name} nimmt seinen Passierschein und geht mit'
+    y = display_outro(hero, raw_text, y, screen, font)
+    raw_text = 'versteinerter, zorniger Miene und geballter Faust in der Tasche,'
+    y = display_outro(hero, raw_text, y, screen, font)
+    raw_text = 'an den Garnisonswachen und der Zollstube, vorbei.'
+    y = display_outro(hero, raw_text, y, screen, font)
+
+    return None 
+
+
 def event_template(hero, stage, screen):
 
     start = ''
@@ -1472,7 +1525,7 @@ def event_template(hero, stage, screen):
 
     font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
 
-    choice = buttons_clog.display_answers_clicked(buttons)
+    choice = buttons_clog.display_answers_clicked(buttons, screen)
     match choice:
         case 1:
             raw_text = 'Template'
