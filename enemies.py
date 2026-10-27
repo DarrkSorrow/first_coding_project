@@ -113,6 +113,7 @@ class Enemy:
         self.accuracy = accuracy
         self.over_hp = 0
         self.buffs = []
+        self.boss = False
 
         if image_path != None:
             self.image = pygame.image.load(
@@ -883,6 +884,7 @@ class Boss1(Enemy):
                         boss_1,
                         reduction=10, dodge=10, mental_reduction=10,
                         magic_power=6)
+        self.boss = True
         
     def enemy_ai(self, hero, key, combat_log):
         match key:
@@ -927,8 +929,10 @@ act2_minion_3 = 'images/dschinn.png'
 act2_minion_4 = 'images/attentaeter.png'
 act2_minion_5 = 'images/magischer_zauberbrecher.png'
 act2_minion_6 = ''
+act2_minion_7 = ''
 act2_elite_1 = ''
 act2_elite_2 = ''
+act2_elite_3 = ''
 karim = 'images/karim.png'
 act2_boss_1 = 'images/master_earth_bender.png'
 #IMAGES LOADED, EVERY ENEMY INSTANCE POINTS TO THESE
@@ -1125,9 +1129,9 @@ class Minion4Act2(Enemy):
     def __init__(self):
         super().__init__('Attentäter', 60, 60, 24, 100,
                         act2_minion_4,
-                        reduction=10, dodge=15 ,mental_reduction=10,
-                        magic_power=24, critical=10)
-        self.bomb_prepared = True
+                        reduction=5, dodge=15 ,mental_reduction=5,
+                        magic_power=23, critical=10)
+        self.bomb_prepared = random.choice((True, False))
         self.projectiles = 2
 
     def _bomb(self, hero, combat_log):
@@ -1159,7 +1163,7 @@ class Minion4Act2(Enemy):
             case 1:
                 text = f'f{self.name} der Attentäter starrt dich an.'
                 combat_log.add(text, True)
-                abilities.Accuracy(5, 3).buff(self)
+                abilities.Accuracy(5, 4).buff(self)
                 self._block(round(self.magic_power / 2), combat_log)
             case 2:
                 self._block(self.magic_power, combat_log)
@@ -1244,7 +1248,7 @@ class Minion5Act2(Enemy):
 class Minion6Act2(Enemy):
 
     def __init__(self):
-        super().__init__('Kultist', 62, 62, 10, 75,
+        super().__init__('Kultist', 58, 58, 10, 75,
                         None,
                         reduction=0, dodge=10, mental_reduction=30,
                         magic_power=26, critical=20)
@@ -1289,12 +1293,69 @@ class Minion6Act2(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
+@register(act=2)
+class Minion7Act2(Enemy):
+
+    def __init__(self):
+        super().__init__('Garnisons-Soldat', 90, 90, 20, 60,
+                        None,
+                        reduction=40, dodge=10, mental_reduction=10,
+                        critical=8)
+
+    def soldier_discipline(self, combat_log):
+        abilities.Harden(50, 1).buff(self)
+        abilities.Deadly(35, 2).buff(self)
+        abilities.Accuracy(10, 3).buff(self)
+        text = f'{self.name} ist ein disziplinierter Kämpfer'
+        combat_log.add(text, True)
+        text = 'und nimmt eine stabile Haltung ein'
+        combat_log.add(text, True)
+
+    def enemy_ai(self, hero, key, combat_log):
+        match key:
+            case 1:
+                self._stun_attack(hero, combat_log, 40, 4)
+            case 2:
+                self._basic_attack(hero, combat_log)
+            case 3:
+                self._multi_strike(hero, combat_log, 3)
+            case 4:
+                self._block(round((self.max_life-self.life)/2), combat_log)
+            case 5:
+                self.soldier_discipline(combat_log)
+            case 6:
+                abilities.Weak(10, 3).buff(hero)
+                text = f'{self.name} nutzt unfaire Tricks im Kampf'
+                combat_log.add(text, True)
+                text = f"{hero.name}'s Kampffähigkeit wurde geschmälert"
+                combat_log.add(text, True)
+
+    def enemy_intend(self, step, hero):
+        magic_number = random.randint(0, 20)
+        if step % 3 == 0:
+            if magic_number < 5:
+                intend, key = 'Atk+', 1
+            else:
+                intend, key = 'Atk', 2
+        elif step % 3 == 1:
+            if magic_number < 5 and hero.life * 3 < hero.max_life:
+                intend, key = 'Atk+', 3
+            else:
+                intend, key = 'Block', 4
+        elif step % 3 == 2:
+            if magic_number < 9 and self.life < hero.life:
+                intend, key = 'Buff+', 5
+            else:
+                intend, key = 'Debuff', 6
+        text = self.font.render(intend, True, (0, 0, 0))
+        return text, key
+
 #*** AKT 2 *** AKT 2 *** AKT 2 ***
 
 class EventEliteKarim(Enemy):
 
     def __init__(self):
-        super().__init__('Karim', 110, 110, 29, 50,
+        super().__init__('Karim', 115, 115, 29, 56,
                          karim,
                          reduction=20, mental_reduction=15, 
                          critical=8)
@@ -1394,7 +1455,7 @@ class Elite1Act2(Enemy):
 class Elite2Act2(Enemy):
 
     def __init__(self):
-        super().__init__('Abscheulichkeit', 305, 305, 29, 65,
+        super().__init__('Abscheulichkeit', 290, 290, 28, 57,
                         None,
                         dodge=0,
                         critical=6)
@@ -1422,7 +1483,7 @@ class Elite2Act2(Enemy):
                 self._basic_attack(hero, combat_log)
         elif self.life > self.max_life * 0.2:
             if magic_number == 1:
-                self._heal_self(45, combat_log)
+                self._heal_self(40, combat_log)
             else:
                 self.accuracy -= 5
                 self._multi_strike(hero, combat_log)
@@ -1476,6 +1537,7 @@ class Boss1Act2(Enemy):
                         act2_boss_1,
                         reduction=20, dodge=12, mental_reduction=15,
                         critical=10, magic_power=20)
+        self.boss = True
         self.life_last_turn = self.life
 
     def enemy_ai(self, hero, key, combat_log):
