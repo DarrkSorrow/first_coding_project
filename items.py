@@ -328,7 +328,7 @@ class Item7(Consumable):#GUTE ODEM-ESSENZ
             combat_log.add(text)
             text = f"+{self.power} ODEM"
             combat_log.add(text)
-            ClarityH2H(16, 3).buff(hero)
+            Clarity(16, 3).buff(hero)
         self.charges -= 1
         if self.charges == 0:
             self._remove(hero)
@@ -652,11 +652,17 @@ class SmokeBomb(Consumable):
         combat_log.add(text)
         text = f'{hero.name} eine Rauchbombe'
         combat_log.add(text)
-        text = f'{hero.name} konnte erfolgreich entkommen'
-        combat_log.add(text)
+        if not enemy.boss:
+            text = f'{hero.name} konnte erfolgreich entkommen'
+            combat_log.add(text)
+        else:
+            text = f'{hero.name} konnte {enemy.name} nicht entkommen'
+            combat_log.add(text, True)
         self.charges -= 1
         if self.charges == 0:
             self._remove(hero)
+        if enemy.boss == True:
+            return ' '
         return 'escape'
 
 @register(type='item', act=2)
@@ -712,7 +718,7 @@ class HandyManaPotion(Consumable):#reused and altered for act 2
             combat_log.add(text)
             text = f"+{self.power} ODEM"
             combat_log.add(text)
-            ClarityH2H(16, 3).buff(hero)
+            Clarity(16, 3).buff(hero)
         self.charges -= 1
         self.update_symbol()
         if self.charges == 0:
@@ -747,6 +753,9 @@ class AcidBomb(Consumable):
             Poison(6, 5).buff(enemy)
             text = f"DIe Säure beeinträchtigt {enemy.name}"
             combat_log.add(text)
+        self.charges -= 1
+        if self.charges == 0:
+            self._remove(hero)
 
 
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
@@ -861,16 +870,18 @@ class CursedArtefact(Gear):
 
     def __init__(self):
         super().__init__('VERFLUCHTES ARTEFAKT',
-                        18, 420, '', cursed_artefact)
+                        12, 420, '', cursed_artefact)
         self.execution_10 = True
 
     def equip(self, hero):
         hero.inventory.append(self)
         hero.damage += self.power
+        hero.speed += self.power * 2
         hero.reduction -= self.power
 
     def unequip(self, hero):
         hero.reduction += self.power
+        hero.speed -= self.power * 2
         hero.damage -= self.power
         hero.inventory.remove(self)
 
@@ -1020,3 +1031,44 @@ class CeremonyDagger(Gear):
         hero.critical -= self.power
         hero.damage -= self.power
         hero.inventory.remove(self)
+
+
+#IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
+act1_reward = 'images/items/act1_reward.png'
+#IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
+
+#BOSSREWARD
+class TalismasOfTheRighteous(Consumable):
+
+    def __init__(self):
+        super().__init__('Talisman der Aufrichtigen',
+                        80, 1, 0, '', act1_reward)
+        self.dungeon = True
+        self.passive_effekt = True
+
+    def use_item(self, hero, enemy, combat_log):
+        hero.life += self.power
+        if hero.life >= hero.max_life:
+            hero.life = hero.max_life
+        self.charges -= 1
+        if self.charges == 0:
+            self._remove(hero)
+        if combat_log != None:#For usage in dungeon
+            text = "Du nimmst einen kräftigen Schluck"
+            combat_log.add(text)
+            text = f"+{self.power} HP"
+            combat_log.add(text)
+
+    def trigger_passive(self, hero, combat_log):
+        hero.life += self.charges
+        if hero.life > hero.max_life:
+            hero.life = hero.max_life
+
+    def _remove(self, hero):
+        try:
+            hero.pockets.remove(self)
+        except ValueError:
+            hero.inventory.remove(self)
+        if self.charges > 0:
+            hero.xp += 200
+
