@@ -67,7 +67,10 @@ def learn_ability(hero, screen, stage):
     font = pygame.font.SysFont(None, 28)
     screen.fill((50, 50, 50)), pygame.display.flip()
 
-    canditates = random_abilities(hero, stage)
+    if random.choice(range(10)) < 7:
+        canditates = random_abilities(hero, stage)
+    else:
+        canditates = ()
     
     if len(canditates) != 0:
         spell = random.choice(canditates)
@@ -318,7 +321,7 @@ class Ability:
 
     def undo_ability(self, hero, enemy):
         pass
-        
+
 
 #IMAGES LOADED, EVERY ABILITY INSTANCE POITNS TO THESE
 starting_ability = 'images/abilities/starting_ability.png'
@@ -671,6 +674,7 @@ arcane_art = 'images/abilities/arcane_art.png'
 smite = 'images/abilities/smite.png'
 righteous_fury = 'images/abilities/righteous_fury.png'
 blood_letting = 'images/abilities/blood_letting.png'
+master_combination = 'images/abilities/master_combination.png'
 #IMAGES LOADED, EVERY ABILITY INSTANCE POITNS TO THESE
 
 
@@ -771,7 +775,7 @@ class Ability14(Ability):#WINTERFAUST
                         winter_fist)
         
     def use_ability(self, hero, enemy, combat_log):
-        if self.cooldown == 0:
+        if self.cool_down == 0:
             if hero.mana >= self.cost:
                 text = f"{hero.name} beschwört den tiefsten Winter"
                 combat_log.add(text)
@@ -810,7 +814,7 @@ class Ability15(Ability):#ARKANE KUNST
                          arcane_art)
         
     def use_ability(self, hero, enemy, combat_log):
-        if self.cooldown == 0:
+        if self.cool_down == 0:
             if hero.mana >= self.cost:
                 text = f'{hero.name} erhöht seine magische Macht'
                 combat_log.add(text)
@@ -879,7 +883,7 @@ class Ability17(Ability):#GERECHTER ZORN
                          righteous_fury)
 
     def use_ability(self, hero, enemy, combat_log):
-        if self.cooldown == 0:
+        if self.cool_down == 0:
             if hero.mana >= self.cost:
                 text = f'{hero.name} kanalisiert seinen Zorn'
                 combat_log.add(text)
@@ -925,7 +929,7 @@ class Ability18(Ability):#ADERLASS
                          blood_letting)
         
     def use_ability(self, hero, enemy, combat_log):
-        if self.cooldown == 0:
+        if self.cool_down == 0:
             if hero.mana >= self.cost:
                 text = f'{hero.name} greift, mit Blutdurst'
                 combat_log.add(text)
@@ -963,3 +967,52 @@ class Ability18(Ability):#ADERLASS
 
     def undo_ability(self, hero, enemy):
         hero.critical -= round(self.power / 2)
+
+@register(act=2)
+class Ability19(Ability):
+
+    def __init__(self):
+        super().__init__('Meisterkombination', 10, 20, 1200,
+                         master_combination)
+        
+    def use_ability(self, hero, enemy, combat_log):
+        if self.cooldown == 0:
+            if hero.mana >= self.cost:
+                text = f'{hero.name} wirkt einen Machtstoß!'
+                combat_log.add(text)
+                impact = enemy_mental_dodge(hero, self.power, enemy,combat_log)
+
+                self._cost_and_cooldown(hero, self.cost, cooldown=4)
+
+                if impact > 0:
+                    text = f'Gekonnt schwingt {hero.name} seine Waffe'
+                    combat_log.add(text)
+                    hero.damage += self.power
+                    dmg = enemy_block_dodge(hero, enemy, combat_log)
+                    hero.damage -= self.power
+
+                    if dmg > 0:
+                        text = f'Die Kombination erschüttert {enemy.name}'
+                        combat_log.add(text)
+                        ArmorShredd(6, 4).buff(enemy)
+                        Weak(10, 5).buff(enemy)
+                        Shock(10, 5).buff(enemy)
+                        return True
+                    else:
+                        text = f'{enemy.name} ist dem Schlimmsten entgangen'
+                        combat_log.add(text)
+                        return True
+                else:
+                    text = f'{enemy.name} konnte der Druckwelle standhalten!'
+                    combat_log.add(text)
+                    return False
+            else:
+                text = f"{hero.name}'s Macht reicht nicht aus"
+                combat_log.add(text)
+                return False
+        else:
+            text = f'{hero.name} möchte die Technik nicht übertreiben'
+            combat_log.add(text)
+            text = 'damit sie auch weiterhin beeindruckend bleibt'
+            combat_log.add(text)
+            return False
