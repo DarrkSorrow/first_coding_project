@@ -758,6 +758,10 @@ class AcidBomb(Consumable):
             self._remove(hero)
 
 
+class NicePotion(Consumable):
+    #Potion for elite and boss killing
+    pass
+
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 shuko_claws = 'images/items/gear/shuko_claws.png'
 sobi_mask = 'images/items/gear/sobi_mask.png'
@@ -772,6 +776,7 @@ shield = 'images/items/gear/shield.png'
 mage_wand = 'images/items/gear/mage_wand.png'
 warden_plate = 'images/items/gear/waechter_panzer.png'
 ceremony_dagger = 'images/items/gear/ceremony_dagger.png'
+champion_sword = ''
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 
 
@@ -841,10 +846,10 @@ class MagiRobe(Gear):
     def equip(self, hero):
         hero.inventory.append(self)
         hero.magic_power += self.power
-        hero.mana += self.power * 4
+        hero.max_mana += self.power * 3
 
     def unequip(self, hero):
-        hero.mana -= self.power * 4
+        hero.max_mana -= self.power * 3
         hero.magic_power -= self.power
         hero.inventory.remove(self)
 
@@ -885,6 +890,10 @@ class CursedArtefact(Gear):
         hero.damage -= self.power
         hero.inventory.remove(self)
 
+
+class Buckler(Gear):
+#+ defense + attack
+    pass
 
 #^^^ UNDER 450 XP | obtainable from normal enemies ^^^
         
@@ -1032,6 +1041,30 @@ class CeremonyDagger(Gear):
         hero.damage -= self.power
         hero.inventory.remove(self)
 
+
+class ChampionSword(Gear):
+    #heavy boost for normal attacks with minor malus
+    def __init__(self):
+        super().__init__('SCHWERT DES CHAMPION',
+                        16, 600, '', champion_sword)
+
+    def equip(self, hero):
+        hero.inventory.append(self)
+        hero.damage += self.power
+        hero.critical += self.power / 2
+        hero.accuracy += self.power / 4
+        hero.mental_reduction -= self.power / 2
+        hero.max_mana -= self.power
+        if hero.mana > hero.max_mana:
+            hero.mana = hero.max_mana
+
+    def unequip(self, hero):
+        hero.max_mana += self.power
+        hero.mental_reduction += self.power / 2
+        hero.accuracy -= self.power / 4
+        hero.critical -= self.power / 2
+        hero.damage -= self.power
+        hero.inventory.remove(self)
 
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 act1_reward = 'images/items/act1_reward.png'
