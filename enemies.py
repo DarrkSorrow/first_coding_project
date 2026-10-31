@@ -271,7 +271,7 @@ class Enemy:
         while hits < number_strikes:
             damage_taken = self._basic_attack(hero, combat_log)
             if damage_taken > 0:
-                i += 1
+                hits += 1
             else:
                 break
         if hits > 0:
@@ -1515,15 +1515,47 @@ class Elite2Act2(Enemy):
 class Elite3Act2(Enemy):
 
     def __init__(self):
-        pass
+        super().__init__('Erfahrener Magier', 145, 145, 10, 70,
+                        None,
+                        reduction=15, mental_reduction=35,
+                        magic_power=30)
 
     def enemy_ai(self, hero, key, combat_log):
-        special = None
-        return special
+        match key:
+            case 1:
+                pass
+            case 2:
+                pass
+            case 3:
+                self._basic_magic(hero, combat_log)
+            case 4:
+                pass
+            case 5:
+                pass
+            case 6:
+                special = self._dissappear(hero, combat_log)
+                return special
 
     def enemy_intend(self, step, hero):
-        if step % 5 == 0:
-            intend, key = '?', 1
+        if step == 0:
+            intend, key = 'Buff+', 1
+        elif step == 1:
+            intend, key = 'Block+', 2
+        elif self.life > 100:
+            if step % 2 == 0:
+                intend, key = 'Mag', 3
+            else:
+                intend, key = 'Buff', 4
+        elif self.life  > 50:
+            if step % 2 == 0:
+                intend, key = 'Mag', 3
+            else:
+                intend, key = 'Block', 2
+        else:
+            if random.choice((1, 2)) == 1:
+                intend, key = 'Heal', 5
+            else:
+                intend, key = 'Escape', 6
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
