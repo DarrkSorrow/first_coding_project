@@ -635,6 +635,7 @@ class MagicWand(Gear):
 smoke_bomb = 'images/items/smoke_bomb.png'
 healing_salve = 'images/items/healing_salve.png'
 acid_bomb = 'images/items/acid_bomb.png'
+metallic_potion = 'images/items/metallic_potion.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 
 
@@ -684,7 +685,7 @@ class HealingSalve(Consumable):
         if hero.life >= hero.max_life:
             hero.life = hero.max_life
         if combat_log != None:
-            RegenerationH2H(11, 10).buff(hero)
+            Regeneration(10, 8).buff(hero)
             text = "Du Salbe legt sich über die Haut"
             combat_log.add(text)
             text = "wie Honig über einen Apfel"
@@ -757,10 +758,23 @@ class AcidBomb(Consumable):
         if self.charges == 0:
             self._remove(hero)
 
+@register(type='item', act=2)
+class MetallicPotion(Consumable):
 
-class NicePotion(Consumable):
-    #Potion for elite and boss killing
-    pass
+    def __init__(self):
+        super().__init__("Metall-Trank",
+                        8, 1, 320, "", metallic_potion)
+
+    def use_item(self, hero, enemy, combat_log): 
+        text = f'{hero.name} öffnet die Flasche und ein'
+        combat_log.add(text)
+        text = 'stark beißender Geruch kommt Ihm entgegen'
+        combat_log.add(text)
+        IronMan(self.power, self.power).buff(hero)
+        self.charges -= 1
+        if self.charges == 0:
+            self._remove(hero)
+
 
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 shuko_claws = 'images/items/gear/shuko_claws.png'
@@ -769,6 +783,7 @@ item_belt = 'images/items/gear/item_belt.png'
 magi_robe = 'images/items/gear/magi_robe.png'
 magic_haste_ring = 'images/items/gear/magic_haste_ring.png'
 cursed_artefact = 'images/items/gear/cursed_artefact.png'
+buckler = 'images/items/gear/buckler.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 back_pack = 'images/items/gear/back_pack.png'
 war_bow = 'images/items/gear/war_bow.png'
@@ -776,7 +791,7 @@ shield = 'images/items/gear/shield.png'
 mage_wand = 'images/items/gear/mage_wand.png'
 warden_plate = 'images/items/gear/waechter_panzer.png'
 ceremony_dagger = 'images/items/gear/ceremony_dagger.png'
-champion_sword = ''
+champion_sword = 'images/items/gear/champion_sword.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 
 
@@ -890,10 +905,40 @@ class CursedArtefact(Gear):
         hero.damage -= self.power
         hero.inventory.remove(self)
 
-
+@register(act=2)
 class Buckler(Gear):
-#+ defense + attack
-    pass
+
+    def __init__(self):
+        super().__init__('Bewährter Buckler',
+                         5, 440, '', buckler)
+        self.extra_dodge = self.power
+        self.extra_mana = self.power
+        self.active = True
+
+    def equip(self, hero):
+        hero.inventory.append(self)
+        hero.reduction += self.power
+
+    def unequip(self, hero):
+        hero.reduction -= self.power
+        hero.inventory.remove(self)
+
+    def use_item(self, hero, enemy, combat_log):
+        if hero.mana >= self.power * 2 and hero.over_hp >= self.power:
+            text = f'{hero.name} ändert seine Taktik und nutzt'
+            combat_log.add(text)
+            text = 'den Schild für offensive Manöver'
+            combat_log.add(text)
+            hero.mana -= self.power * 2
+            power_up = round(hero.over_hp / 2)
+            hero.over_hp = 0
+
+            Empowered(power_up, self.power).buff(hero)
+            Agile(power_up, self.power).buff(hero)
+        else:
+            text = f'Es fehlt {hero.name} an Energie'
+            combat_log.add(text)
+
 
 #^^^ UNDER 450 XP | obtainable from normal enemies ^^^
         
@@ -1041,7 +1086,7 @@ class CeremonyDagger(Gear):
         hero.damage -= self.power
         hero.inventory.remove(self)
 
-
+#IMage needed
 class ChampionSword(Gear):
     #heavy boost for normal attacks with minor malus
     def __init__(self):
@@ -1066,9 +1111,11 @@ class ChampionSword(Gear):
         hero.damage -= self.power
         hero.inventory.remove(self)
 
+
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
 act1_reward = 'images/items/act1_reward.png'
 #IMAGES LOADED, EVERY ITEM INSTANCE POITNS TO THESE
+
 
 #BOSSREWARD
 class TalismasOfTheRighteous(Consumable):
