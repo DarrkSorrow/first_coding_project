@@ -465,7 +465,7 @@ class Minion2(Enemy):
         self.damage -= 6
         self._basic_attack(hero, combat_log)
         self.damage += 6
-        abilities.WeakE2H(5, 2).buff(hero)
+        abilities.Weak(5, 2).buff(hero)
 
     def enemy_ai(self, hero, key, combat_log):
         if self.counter == 2:
@@ -730,7 +730,7 @@ class Elite1(Enemy):
     def _war_cry(self, hero, combat_log):#ENEMY-MOVE
         text = f"{self.name} brüllt dich zornig an!"
         combat_log.add(text, True)
-        abilities.WeakE2H(7, 3).buff(hero)
+        abilities.Weak(7, 3).buff(hero)
 
     def enemy_ai(self, hero, key, combat_log):
         if self.life < self.max_life * 0.35 and not self.nerfed:
@@ -928,11 +928,11 @@ act2_minion_2 = 'images/waechter_golem.png'
 act2_minion_3 = 'images/dschinn.png'
 act2_minion_4 = 'images/attentaeter.png'
 act2_minion_5 = 'images/magischer_zauberbrecher.png'
-act2_minion_6 = ''
-act2_minion_7 = ''
-act2_elite_1 = ''
-act2_elite_2 = ''
-act2_elite_3 = ''
+act2_minion_6 = 'images/kultist.png'
+act2_minion_7 = 'images/garnison_soldat.png'
+act2_elite_1 = 'images/riesen_zyklop.png'
+act2_elite_2 = 'images/abom.png'
+act2_elite_3 = 'images/blue_wizard.png'
 karim = 'images/karim.png'
 act2_boss_1 = 'images/master_earth_bender.png'
 #IMAGES LOADED, EVERY ENEMY INSTANCE POINTS TO THESE
@@ -962,7 +962,7 @@ class EventMinionKirgo(Enemy):
             case 4:
                 magic_number = random.choice((1, 2))
                 if magic_number == 1:
-                    abilities.HasteE2E(40, 4).buff(self)
+                    abilities.Haste(40, 4).buff(self)
                     text = f'{self.name}s Agilität erhöht sich'
                     combat_log.add(text, True)
                 else:
@@ -1244,12 +1244,12 @@ class Minion5Act2(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
-@register(act=2)#NoSprite
+@register(act=2)
 class Minion6Act2(Enemy):
 
     def __init__(self):
         super().__init__('Kultist', 58, 58, 10, 75,
-                        None,
+                        act2_minion_6,
                         reduction=0, dodge=10, mental_reduction=30,
                         magic_power=26, critical=20)
         
@@ -1298,8 +1298,8 @@ class Minion7Act2(Enemy):
 
     def __init__(self):
         super().__init__('Garnisons-Soldat', 90, 90, 20, 60,
-                        None,
-                        reduction=40, dodge=10, mental_reduction=10,
+                        act2_minion_7,
+                        reduction=38, dodge=10, mental_reduction=10,
                         critical=8)
 
     def soldier_discipline(self, combat_log):
@@ -1320,7 +1320,7 @@ class Minion7Act2(Enemy):
             case 3:
                 self._multi_strike(hero, combat_log, 3)
             case 4:
-                self._block(round((self.max_life-self.life)/2), combat_log)
+                self._block(round((self.max_life-self.life)/3), combat_log)
             case 5:
                 self.soldier_discipline(combat_log)
             case 6:
@@ -1402,12 +1402,12 @@ class EventEliteKarim(Enemy):
 
 #*** AKT 2 *** AKT 2 *** AKT 2 ***
 
-@register(rank='elite', act=2)#NO Sprite
+@register(rank='elite', act=2)
 class Elite1Act2(Enemy):
 
     def __init__(self):
         super().__init__('Riesen-Zyklop', 165, 165, 36, 80,
-                        None,
+                        act2_elite_1,
                         reduction=20, dodge=12, mental_reduction=15,
                         critical=10)
 
@@ -1451,12 +1451,12 @@ class Elite1Act2(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
-@register(rank='elite', act=2)#NO Sprite
+@register(rank='elite', act=2)
 class Elite2Act2(Enemy):
 
     def __init__(self):
         super().__init__('Abscheulichkeit', 290, 290, 28, 57,
-                        None,
+                        act2_elite_2,
                         dodge=0,
                         critical=6)
 
@@ -1512,27 +1512,43 @@ class Elite2Act2(Enemy):
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
+@register(rank='elite', act=2)
 class Elite3Act2(Enemy):
 
     def __init__(self):
         super().__init__('Erfahrener Magier', 145, 145, 10, 70,
-                        None,
+                        act2_elite_3,
                         reduction=15, mental_reduction=35,
-                        magic_power=30)
+                        magic_power=25)
+        self.power_block = True
 
     def enemy_ai(self, hero, key, combat_log):
         match key:
             case 1:
-                pass
+                text = '"Deine Reise endet nun hier"'
+                combat_log.add(text, True)
+                text = f'{self.name} bereitet sich auf den Kampf vor'
+                combat_log.add(text, True)
+                abilities.AbilityPower(15, 5).buff(self)
             case 2:
-                pass
+                if self.power_block:
+                    self._block(self.magic_power * 2, combat_log)
+                    self.power_block = False
+                else:
+                    self._block(self.magic_power, combat_log)
             case 3:
                 self._basic_magic(hero, combat_log)
             case 4:
-                pass
+                text = '"Es ist noch nicht vorbei.."'
+                combat_log.add(text, True)
+                abilities.AbilityPower(15, 4).buff(self)
             case 5:
-                pass
+                self._heal_self(self.magic_power, combat_log)
             case 6:
+                text = f'"{hero.name}, wir werden uns wieder sehen!"'
+                combat_log.add(text, True)
+                text = "Die Augen des Magier beginnen zu leuchten"
+                combat_log.add(text, True)
                 special = self._dissappear(hero, combat_log)
                 return special
 
@@ -1546,7 +1562,7 @@ class Elite3Act2(Enemy):
                 intend, key = 'Mag', 3
             else:
                 intend, key = 'Buff', 4
-        elif self.life  > 50:
+        elif self.life > 50:
             if step % 2 == 0:
                 intend, key = 'Mag', 3
             else:
@@ -1621,4 +1637,8 @@ class Boss1Act2(Enemy):
                     intend, key = 'Buff', 6
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
+
+
+#IMAGES LOADED, EVERY ENEMY INSTANCE POINTS TO THESE
     
+#IMAGES LOADED, EVERY ENEMY INSTANCE POINTS TO THESE
