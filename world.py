@@ -9,11 +9,10 @@ import pygame
 
 
 def generate_world(stage):
-    dungeon = dungeon_by_stage(stage)
-    return dungeon
+    return dungeon_by_stage(stage)
         
         
-def movement(hero, dungeon, position, event):
+def movement(dungeon, position, event):
 
     match event.key:
         
@@ -53,16 +52,16 @@ def bond_fire(hero, stage, screen):
     action = buttons_clog.display_answers_clicked(buttons, screen)
     match action:
         
-        case "1":
+        case "0":
             healing = round(hero.max_life / 2)
             hero.life += healing
             if hero.life > hero.max_life:
                 hero.life = hero.max_life
         
-        case "2":
+        case "1":
             hero.mana = hero.max_mana
         
-        case "3":
+        case "2":
             hero.xp += round(hero.xp / 2)
 
     screen.fill((20, 255, 20))
@@ -78,12 +77,17 @@ def wandering_merchant(hero, stage, screen):
     #prepares store items
         if len(merchant_offer) < 3:
             item = random_item(stage)
-            if item not in merchant_offer:
+            if len(merchant_offer) == 0:
                 merchant_offer.append(item)
+            elif item.name != merchant_offer[0].name:
+                if item.name != merchant_offer[-1].name:
+                    merchant_offer.append(item)
 
         elif len(merchant_offer) < 5:
             item = random_gear(stage)
-            if item not in merchant_offer:
+            if len(merchant_offer) == 3:
+                merchant_offer.append(item)
+            elif item.name != merchant_offer[-1].name:
                 merchant_offer.append(item)
 
         elif len(merchant_offer) < 6:
@@ -96,6 +100,13 @@ def wandering_merchant(hero, stage, screen):
     for i, button in enumerate(buttons):
         if i < 6:
             buttons[i].text = merchant_offer[i].name
+            if i < 3:
+                price = round(merchant_offer[i].xp * 1.2)
+            elif i < 5:
+                price = round(merchant_offer[i].xp * 1.25)
+            else:
+                price = round(merchant_offer[i].xp * 1.5)
+            buttons[i].text += f'\n {price}: ODEM'
         else:
             buttons[-1].text = 'EXIT'
 
@@ -160,19 +171,19 @@ def merchant_loop(hero, screen, merchant_offer, merchant_buttons, hero_left):
             else:
                 i = 4
             has_space = len(hero.inventory)<hero.max_inventory
-            if has_space and merchant_offer[i].xp*1.5 <= hero.xp:
-                hero.xp -= round(merchant_offer[i].xp * 1.5)
+            if has_space and merchant_offer[i].xp*1.25 <= hero.xp:
+                hero.xp -= round(merchant_offer[i].xp * 1.25)
                 merchant_offer[i].equip(hero)
         #GEAR *** GEAR *** GEAR
 
         #ABILITY *** ABILITY *** ABILITY
         case 'spell':
             learned = False
-            if hero.xp >= merchant_offer[5].xp * 2:
+            if hero.xp >= merchant_offer[5].xp * 1.5:
                 ability = merchant_offer[5]
                 learned = abilities.abilities_from_events(hero, ability, screen)
             if learned:
-                hero.xp -= merchant_offer[5].xp * 2
+                hero.xp -= round(merchant_offer[5].xp * 1.5)
         #ABILITY *** ABILITY *** ABILITY
 
         case 'exit':
@@ -207,7 +218,7 @@ def reward(hero, enemy, stage, screen):
                     points += random.randint(0, 100)
                     reward_system(hero, stage, points, screen)    
                 case 3:
-                    boss_reward(hero, screen)
+                    boss_reward(hero, stage, screen)
 
         #Akt 2 *** Akt 2 *** Akt 2
         case 4 | 5 | 6:
@@ -221,7 +232,7 @@ def reward(hero, enemy, stage, screen):
                     points += random.randint(0, 300)
                     reward_system(hero, stage, points, screen)
                 case 3:
-                    boss_reward(hero, screen)
+                    boss_reward(hero, stage, screen)
 
         #Akt 3 *** Akt 3 *** Akt 3
         case 7 | 8 | 9:
@@ -238,7 +249,7 @@ def reward(hero, enemy, stage, screen):
                     pass#hero won
 
 
-def boss_reward(hero, screen):
+def boss_reward(hero, stage, screen):
 
     screen.fill((150, 50, 50)), pygame.display.flip()
     buttons = buttons_clog.boss_reward_and_buttons(hero, screen)
@@ -267,6 +278,12 @@ def boss_reward(hero, screen):
     hero.mana += round(hero.max_mana / 3)
     if hero.mana >= hero.max_mana:
         hero.mana = hero.max_mana
+
+    font = pygame.font.SysFont(None, 28)
+    if stage == 3:
+        get_item(hero, TalismasOfTheRighteous(), screen, font, 100)
+    elif stage == 6:
+        pass
 
 
 def reward_system(hero, stage, points, screen):
@@ -392,8 +409,9 @@ def release_item(hero, item, screen, font, y):
 
 
 def arm_hero(hero):#only called during the beginning
-    #items = (Item1(), Item1(), Item1(), Item1(), Item1())
-    items = (ShortSword(), RitualDagger(), ElvenBoots())
+    #items = (WarBow(), ItemBelt(), SobiMask(), ShortSword(), Item1())
+    items = (ShortSword(), RitualDagger(), ElvenBoots(),
+             TalismasOfTheRighteous())#arbitrary loot after first boss
 
     try:
         for item in items:
