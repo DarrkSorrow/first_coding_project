@@ -233,12 +233,8 @@ while hero.life > 0:
 
     screen.fill((40, 20, 20))
     draw_map(position, dungeon, screen)
-    combat.hero_health_bar(hero, screen)
-    combat.hero_mana_bar(hero, screen)
-    combat.hero_combat_stats(hero, screen)
-    world.hero_xp(hero, screen)
+    combat.hero_interface(hero, screen)
     buttons = buttons_clog.dungeon_inventory(hero, screen)
-    buttons_clog.abilities_displayed(hero, screen)
     
     for event in pygame.event.get():
 
@@ -246,13 +242,12 @@ while hero.life > 0:
             sys.exit()
 
         elif event.type == pygame.KEYDOWN:
-            position = world.movement(hero, dungeon, position, event)
+            position = world.movement(dungeon, position, event)
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             buttons_clog.dungeon_buttons_clicked(hero, buttons, screen, event)
         
     hero.inventory = sort_inventory(hero)
-
 
     #*** HIDDEN-RANDOM ***
     if dungeon[position[0]][position[1]].random == True:
@@ -269,7 +264,6 @@ while hero.life > 0:
                 pass#will contain traps in act=3
     #*** HIDDEN-RANDOM ***
 
-
     #*** EVENTS ***
     if dungeon[position[0]][position[1]].event == True:
         ambush = events.start_event(hero, stage, screen)
@@ -281,13 +275,11 @@ while hero.life > 0:
             dungeon[position[0]][position[1]].merchant = True
     #*** EVENTS ***        
 
-
     #*** BONDFIRE ***
     elif dungeon[position[0]][position[1]].rest == True:
         world.bond_fire(hero, stage, screen)
         dungeon[position[0]][position[1]] = world.EmptyRoom()
     #*** BONDFIRE ***
-
 
     #*** TELEPORT ***
     elif dungeon[position[0]][position[1]].warp == True:
@@ -296,13 +288,11 @@ while hero.life > 0:
         dungeon = world.generate_world(stage)
     #*** TELEPORT ***
 
-
     #*** MERCHANT ***
     if dungeon[position[0]][position[1]].merchant == True:
         world.wandering_merchant(hero, stage, screen)
         dungeon[position[0]][position[1]] = world.EmptyRoom()
     #*** MERCHANT ***
-
 
     #*** NORMAL FIGHT ***
     if dungeon[position[0]][position[1]].fight == True:
@@ -315,20 +305,20 @@ while hero.life > 0:
         elif hero.game_state.enemy_counter == 2:
             magic_number = randint(0, 10)
             if magic_number <= 1: # Small chance
-                combat.start_elite(hero, stage, screen)
-                if hero.life > 0:
+                enemy_defeated = combat.start_elite(hero, stage, screen)
+                if hero.life > 0 and enemy_defeated:
                     enemy = 2 # elite Gegner
                     world.reward(hero, enemy, stage, screen)
-                    dungeon[position[0]][position[1]] = world.EmptyRoom()
-
+                dungeon[position[0]][position[1]] = world.EmptyRoom()
+#i see the repeating code there
         elif hero.game_state.enemy_counter >= 3:
             magic_number = randint(0, 10)
             if magic_number <= 5: # Big chance
-                combat.start_elite(hero, stage, screen)
-                if hero.life > 0:
+                enemy_defeated = combat.start_elite(hero, stage, screen)
+                if hero.life > 0 and enemy_defeated:
                     enemy = 2 # elite Gegner
                     world.reward(hero, enemy, stage, screen)
-                    dungeon[position[0]][position[1]] = world.EmptyRoom()
+                dungeon[position[0]][position[1]] = world.EmptyRoom()
         #*** SURPRISE ELITE ***
 
         if dungeon[position[0]][position[1]].fight == True:
@@ -340,7 +330,6 @@ while hero.life > 0:
             dungeon[position[0]][position[1]] = world.EmptyRoom()
     #*** NORMAL FIGHT ***
 
-
     #*** ELITE FIGHT ***
     elif dungeon[position[0]][position[1]].elite == True:
         enemy_defeated = combat.start_elite(hero, stage, screen)
@@ -349,7 +338,6 @@ while hero.life > 0:
             world.reward(hero, enemy, stage, screen)
         dungeon[position[0]][position[1]] = world.EmptyRoom()
     #*** ELITE FIGHT ***
-
 
     #*** BOSS FIGHT ***
     elif dungeon[position[0]][position[1]].boss == True:
@@ -362,6 +350,6 @@ while hero.life > 0:
             dungeon = world.generate_world(stage)
     #*** BOSS FIGHT ***
 
-
     clock.tick(30)
+    #HI_d89cf752-cf12-43e1-9eeb-a5ea7abc3b0a
     pygame.display.flip()
