@@ -37,56 +37,6 @@ class BerserkH2H(Buff):#Berserker
         hero.buffs.remove(self)
 
 
-class ClarityH2H(Buff):#Klarheit
-
-    def __init__(self, power, duration):
-        super().__init__('klarheit', power, duration)
-        self.active = True
-
-    def buff(self, hero):
-        hero.buffs.append(self)
-
-    def debuff(self, hero):
-        hero.buffs.remove(self)
-
-    def effekt(self, hero):
-        hero.mana += self.power
-        if hero.mana > hero.max_mana:
-            hero.mana = hero.max_mana
-
-
-class RegenerationH2H(Buff):#Heilung
-
-    def __init__(self, power, duration):
-        super().__init__('heilung', power, duration)
-        self.active = True
-
-    def buff(self, hero):
-        hero.buffs.append(self)
-
-    def debuff(self, hero):
-        hero.buffs.remove(self)
-
-    def effekt(self, hero):
-        hero.life += self.power
-        if hero.life > hero.max_life:
-            hero.life = hero.max_life
-
-
-class AgileH2H(Buff):
-
-    def __init__(self, power, duration):
-        super().__init__("agil", power, duration)
-
-    def buff(self, hero):
-        hero.buffs.append(self)
-        hero.dodge += self.power
-
-    def debuff(self, hero):
-        hero.dodge -= self.power
-        hero.buffs.remove(self)
-
-
 # *** HERO --> ENEMY ***
 
 
@@ -139,20 +89,6 @@ class AdrenalinE2E(Buff):#Adrenalin
         enemy.buffs.remove(self)
 
 
-class HasteE2E(Buff):
-
-    def __init__(self, power, duration):
-        super().__init__('Hast', power, duration)
-
-    def buff(self, enemy):
-        enemy.buffs.append(self)
-        enemy.speed += self.power
-
-    def debuff(self, enemy):
-        enemy.speed -= self.power
-        enemy.buffs.remove(self)
-
-
 class FullDefenseE2E(Buff):
 
     def __init__(self, power, duration):
@@ -169,29 +105,106 @@ class FullDefenseE2E(Buff):
         enemy.buffs.remove(self)
 
 
-# *** ENEMY --> HERO ***
+#*** --- *** --- *** --- *** --- ***
 
 
-class WeakE2H(Buff):
+class Haste(Buff):
+
+    def __init__(self, power, duration):
+        super().__init__('Hast', power, duration)
+
+    def buff(self, subject):
+        subject.buffs.append(self)
+        subject.speed += self.power
+
+    def debuff(self, subject):
+        subject.speed -= self.power
+        subject.buffs.remove(self)
+
+
+class IronMan(Buff):
+
+    def __init__(self, power, duration):
+        super().__init__('metall', power, duration)
+        self.active = True
+
+    def buff(self, subject):
+        subject.buffs.append(self)
+
+    def debuff(self, subject):
+        subject.buffs.remove(self)
+
+    def effekt(self, subject):
+        subject.over_hp += self.power
+
+
+class Regeneration(Buff):
+
+    def __init__(self, power, duration):
+        super().__init__('heilung', power, duration)
+        self.active = True
+
+    def buff(self, subject):
+        subject.buffs.append(self)
+
+    def debuff(self, subject):
+        subject.buffs.remove(self)
+
+    def effekt(self, subject):
+        subject.life += self.power
+        if subject.life > subject.max_life:
+            subject.life = subject.max_life
+
+
+class Weak(Buff):
 
     def __init__(self, power, duration):
         super().__init__("schwäche", power, duration)
 
+    def buff(self, subject):
+        subject.buffs.append(self)
+        subject.damage -= self.power
+        subject.speed -= self.power
+
+    def debuff(self, subject):
+        subject.speed += self.power
+        subject.damage += self.power
+        subject.buffs.remove(self)
+
+
+class Clarity(Buff):#Klarheit
+
+    def __init__(self, power, duration):
+        super().__init__('klarheit', power, duration)
+        self.active = True
+
     def buff(self, hero):
         hero.buffs.append(self)
-        hero.damage -= self.power
-        hero.speed -= self.power
 
     def debuff(self, hero):
-        hero.speed += self.power
-        hero.damage += self.power
         hero.buffs.remove(self)
 
+    def effekt(self, hero):
+        hero.mana += self.power
+        if hero.mana > hero.max_mana:
+            hero.mana = hero.max_mana
 
-#*** --- *** --- *** --- *** --- ***
+
+class Agile(Buff):
+
+    def __init__(self, power, duration):
+        super().__init__("agil", power, duration)
+
+    def buff(self, subject):
+        subject.buffs.append(self)
+        subject.dodge += self.power
+
+    def debuff(self, subject):
+        subject.dodge -= self.power
+        subject.buffs.remove(self)
 
 
-class Shock(Buff):#Shock
+class Shock(Buff):
 
     def __init__(self, power, duration):
         super().__init__('zermürbt', power, duration)
@@ -254,7 +267,7 @@ class Poison(Buff):
 class Accuracy(Buff):
 
     def __init__(self, power, duration):
-        super().__init__("", power, duration)
+        super().__init__("präz.", power, duration)
 
     def buff(self, subject):
         subject.buffs.append(self)
@@ -377,6 +390,20 @@ class Frost(Buff):
     def debuff(self, subject):
         subject.reduction += self.power
         subject.speed += self.power * 4
+        subject.buffs.remove(self)
+
+
+class ArmorShredd(Buff):#
+
+    def __init__(self, power, duration):
+        super().__init__("Durchdringung", power, duration)
+
+    def buff(self, subject):
+        subject.buffs.append(self)
+        subject.reduction -= self.power 
+
+    def debuff(self, subject):
+        subject.reduction += self.power
         subject.buffs.remove(self)
 
 
