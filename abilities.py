@@ -143,7 +143,7 @@ def forget_ability(hero, screen):
         case '1':
             ability_forgotten = False
     return ability_forgotten
-    
+
 
 def abilities_from_events(hero, ability, screen):
     """hero learns abilities gotten in events"""
@@ -675,6 +675,7 @@ smite = 'images/abilities/smite.png'
 righteous_fury = 'images/abilities/righteous_fury.png'
 blood_letting = 'images/abilities/blood_letting.png'
 master_combination = 'images/abilities/master_combination.png'
+fire_seal = 'images/abilities/fire_seal.png'
 #IMAGES LOADED, EVERY ABILITY INSTANCE POITNS TO THESE
 
 
@@ -682,7 +683,7 @@ master_combination = 'images/abilities/master_combination.png'
 class Ability11(Ability):#BLITZSCHLAG
     
     def __init__(self):
-        super().__init__('Blitzschlag', 30, 30, 750,
+        super().__init__('Blitzschlag', 30, 24, 750,
                          thunder)
         
     def use_ability(self, hero, enemy, combat_log):
@@ -709,7 +710,7 @@ class Ability11(Ability):#BLITZSCHLAG
 class Ability12(Ability):#DOPPELSCHLAG
 
     def __init__(self):
-        super().__init__('Doppelschlag', 1, 15, 750,
+        super().__init__('Doppelschlag', 3, 15, 760,
                         double_strike)
         
     def use_ability(self, hero, enemy, combat_log):
@@ -717,24 +718,24 @@ class Ability12(Ability):#DOPPELSCHLAG
             text = f'Gekonnt schwingt {hero.name} seine Waffe.'
             combat_log.add(text)
 
+            self._cost_and_cooldown(hero, self.cost)
+
             hero.damage += self.power
             damage_taken = enemy_block_dodge(hero, enemy, combat_log)
             if damage_taken > 0:
                 enemy_block_dodge(hero, enemy, combat_log)
             hero.damage -= self.power
-
-            self._cost_and_cooldown(hero, self.cost)
             return True
         else:
             text = "Versuche es erstmal mit EINEM Schlag."
             combat_log.add(text)
             return False
-        
+
 @register(act=2)
 class Ability13(Ability):#SCHWERTTANZ
 
     def __init__(self):
-        super().__init__('Schwerttanz', 7, 33, 800,
+        super().__init__('Schwerttanz', 7, 30, 800,
                         sword_dance)
         
     def use_ability(self, hero, enemy, combat_log):
@@ -821,10 +822,11 @@ class Ability15(Ability):#ARKANE KUNST
 
                 self._cost_and_cooldown(hero, self.cost, cooldown=3)
 
+                hero.mental_reduction += round(self.power / 2)#UNDO
+
                 AbilityPower(self.power, 5).buff(hero)
                 Clarity(7, 5).buff(hero)
                 hero.over_hp += round(self.power / 2)
-                hero.mental_reduction += round(self.power / 2)#UNDO
                 return True
             else:
                 text = f'{hero.name} wurde nicht erhöht'
@@ -844,7 +846,7 @@ class Ability15(Ability):#ARKANE KUNST
 class Ability16(Ability):#ZERSCHMETTERN
 
     def __init__(self):
-        super().__init__('Zerschmettern', 5, 17, 500,
+        super().__init__('Zerschmettern', 5, 16, 650,
                         smite)
 
     def use_ability(self, hero, enemy, combat_log):
@@ -864,7 +866,7 @@ class Ability16(Ability):#ZERSCHMETTERN
                 combat_log.add(text)
                 text = 'Der Treffer hat gesessen!'
                 combat_log.add(text)
-                Stun(30, 2).buff(enemy)
+                Stun(40, 2).buff(enemy)
                 return True
             else:
                 text = 'Es fehlt maßgeblich die Gewalt'
@@ -901,7 +903,7 @@ class Ability17(Ability):#GERECHTER ZORN
                 if hero.life > hero.max_life:
                     hero.life = hero.max_life
                 hero.over_hp += self.power
-                Empowered(15, 2).buff(hero)
+                Empowered(13, 3).buff(hero)
                 Deadly(10, 5).buff(hero)
                 return True            
             else:
@@ -925,7 +927,7 @@ class Ability17(Ability):#GERECHTER ZORN
 class Ability18(Ability):#ADERLASS
 
     def __init__(self):
-        super().__init__('Aderlass', 8, 27, 1050,
+        super().__init__('Aderlass', 10, 25, 1050,
                          blood_letting)
         
     def use_ability(self, hero, enemy, combat_log):
@@ -938,7 +940,7 @@ class Ability18(Ability):#ADERLASS
 
                 self._cost_and_cooldown(hero, self.cost, cooldown=3)
 
-                hero.critical += round(self.power / 2)#UNDO
+                hero.critical += round(self.power)#UNDO
 
                 hero.damage += self.power
                 damage_taken = enemy_block_dodge(hero, enemy, combat_log)
@@ -966,10 +968,10 @@ class Ability18(Ability):#ADERLASS
             return False
 
     def undo_ability(self, hero, enemy):
-        hero.critical -= round(self.power / 2)
+        hero.critical -= round(self.power)
 
 @register(act=2)
-class Ability19(Ability):
+class Ability19(Ability):#MEISTERKOMBINATION
 
     def __init__(self):
         super().__init__('Meisterkombination', 10, 20, 1200,
@@ -994,8 +996,8 @@ class Ability19(Ability):
                     if dmg > 0:
                         text = f'Die Kombination erschüttert {enemy.name}'
                         combat_log.add(text)
-                        ArmorShredd(6, 4).buff(enemy)
-                        Weak(10, 5).buff(enemy)
+                        ArmorShredd(10, 5).buff(enemy)
+                        Weak(6, 54).buff(enemy)
                         Shock(10, 5).buff(enemy)
                         return True
                     else:
@@ -1014,5 +1016,43 @@ class Ability19(Ability):
             text = f'{hero.name} möchte die Technik nicht übertreiben'
             combat_log.add(text)
             text = 'damit sie auch weiterhin beeindruckend bleibt'
+            combat_log.add(text)
+            return False
+
+register(act=2)
+class Ability20(Ability):
+
+    def __init__(self):
+        super().__init__('Feuersiegel', 10, 23, 1000,
+                         fire_seal)
+        
+    def use_ability(self, hero, enemy, combat_log):
+        if self.cooldown == 0:
+            if hero.mana >= self.cost:
+                text = f'{hero.name} zeichnet ein brennendes'
+                combat_log.add(text)
+                text = f'Feuersiegel auf {enemy.name}'
+                combat_log.add(text)
+
+                self._cost_and_cooldown(hero, self.cost, cooldown=2)
+
+                dmg = enemy_mental_dodge(hero, self.power, enemy, combat_log)
+                if dmg > 4:
+                    text = 'Das Siegel brennt sich tief ein'
+                    combat_log.add(text)
+                    FireSeal(dmg, 6).buff(enemy)
+                    return True
+                else:
+                    text = 'Das Feuersiegel verglimmt schnell'
+                    combat_log.add(text)
+                    text = 'und verursacht keinen weiteren Schaden'
+                    combat_log.add(text)
+                    return False
+            else:
+                text = 'Die magische Energie reicht nicht aus'
+                combat_log.add(text)
+                return False
+        else:
+            text = 'Die Fähigkeit muss abkühlen'
             combat_log.add(text)
             return False
