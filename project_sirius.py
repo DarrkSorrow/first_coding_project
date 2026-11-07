@@ -1,20 +1,19 @@
 import sys
+from dataclasses import dataclass, field
 from collections import deque
 from random import randint
 import world, combat, events, buttons_clog
-
 import pygame
 
 
-class GameState:
-
-    def __init__(self):
-        self.enemy_counter = 0
-        self.last_enemy = None
-        self.events_in_row = 0
-        self.last_events = deque(maxlen=3)
-        self.forgotten_abilities = []
-        self.last_refused_abilities = deque(maxlen=3)
+@dataclass(slots=True)#Fancy new class definition
+class GameState: #just for education purposes
+    enemy_counter: int = 0
+    last_enemy: object = None
+    events_in_row: int = 0
+    last_events: deque = field(default_factory=lambda: deque(maxlen=3))
+    forgotten_abilities: list = field(default_factory=list)
+    last_refused_abilities: deque = field(default_factory=lambda: deque(maxlen=3))
 
 
 class Hero:
@@ -176,13 +175,15 @@ class Hero:
 
 
 class Adventurer(Hero):
+
     def __init__(self):
         super().__init__("ZERTUS")
+        self.max_mana = 200
+        self.mental_resistance = 10
         self.mana = int(self.max_mana / 2)
-        self.life = 80
-        self.max_inventory = 5
-        self.xp = 500
-        self.damage = 15
+        self.life = 60
+        self.max_inventory = 4
+        self.xp = 450
 
 
 def draw_map(position, dungeon, screen):
@@ -296,36 +297,23 @@ while hero.life > 0:
 
     #*** NORMAL FIGHT ***
     if dungeon[position[0]][position[1]].fight == True:
-    #this random if is needed
         
-        #*** SURPRISE ELITE ***
-        if hero.game_state.enemy_counter <= 1:
-            pass
+            #*** SURPRISE ELITE ***
+        magic_number = randint(hero.game_state.enemy_counter, 10)
+        magic_number += hero.game_state.enemy_counter
+        if magic_number >= 12:
+            enemy_defeated = combat.start_elite(hero, stage, screen)
+            if hero.life > 0 and enemy_defeated:
+                enemy = 2 # elite enemies
+                world.reward(hero, enemy, stage, screen)
+            dungeon[position[0]][position[1]] = world.EmptyRoom()
+            #*** SURPRISE ELITE ***
 
-        elif hero.game_state.enemy_counter == 2:
-            magic_number = randint(0, 10)
-            if magic_number <= 1: # Small chance
-                enemy_defeated = combat.start_elite(hero, stage, screen)
-                if hero.life > 0 and enemy_defeated:
-                    enemy = 2 # elite Gegner
-                    world.reward(hero, enemy, stage, screen)
-                dungeon[position[0]][position[1]] = world.EmptyRoom()
-#i see the repeating code there
-        elif hero.game_state.enemy_counter >= 3:
-            magic_number = randint(0, 10)
-            if magic_number <= 5: # Big chance
-                enemy_defeated = combat.start_elite(hero, stage, screen)
-                if hero.life > 0 and enemy_defeated:
-                    enemy = 2 # elite Gegner
-                    world.reward(hero, enemy, stage, screen)
-                dungeon[position[0]][position[1]] = world.EmptyRoom()
-        #*** SURPRISE ELITE ***
-
-        if dungeon[position[0]][position[1]].fight == True:
+        elif dungeon[position[0]][position[1]].fight == True:
             if hero.life > 0:
                 enemy_defeated = combat.start_fight(hero, stage, screen)
             if hero.life > 0 and enemy_defeated:
-                enemy = 1 # normaler Gegner
+                enemy = 1 # normal enemies
                 world.reward(hero, enemy, stage, screen)
             dungeon[position[0]][position[1]] = world.EmptyRoom()
     #*** NORMAL FIGHT ***
