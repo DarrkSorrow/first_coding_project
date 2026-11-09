@@ -43,19 +43,15 @@ def start_event(hero, stage, screen):
         case 7 | 8:
             events = act_3_pool
 
-    magic_number = random.randint(1, 10)
-    #b2b events, increases ambushChance
-    magic_number += hero.game_state.events_in_row * 2
-    if magic_number >= 10:
+    magic_number = random.randint(hero.game_state.events_in_row, 10)
+    magic_number += hero.game_state.events_in_row
+    if magic_number >= 11:
         return True
     else:
         event = random.choice(events)
-        #no b2b same events
         while event in hero.game_state.last_events:
             event = random.choice(events)
-        #saves last 3 events to not be repeated
         hero.game_state.last_events.append(event)
-        #increases eventStreak
         hero.game_state.events_in_row += 1
         hero.game_state.enemy_counter = 0 # reset
         merchant = event(hero, stage, screen)
@@ -806,8 +802,7 @@ def event_2_act_2(hero, stage, screen):
                 y = display_outro(hero, raw_text, y, screen, font)
             
             case 2:
-                magic_number = random.randint(danger, 10)
-                if magic_number == 10:
+                if random.randint(danger, 10) == 10:
                     raw_text = 'Es sind deutliche SCHRITTE zu hören!'
                     y = display_outro(hero, raw_text, y, screen, font)
                     raw_text = f'{hero.name} macht sich bereit,'
@@ -820,31 +815,26 @@ def event_2_act_2(hero, stage, screen):
                 else:
                     match danger:
                         case 1:
-                            magic_number ==random.choice((1, 2))
-                            if magic_number == 1:
+                            if random.choice((1, 2)) == 1:
                                 xp_gain = random.randint(60, 90)
                                 hero.xp += xp_gain
                                 raw_text = f'{hero.name} findet in Säcken einige Erzbrocken'
                                 y = display_outro(hero, raw_text, y, screen, font)
                                 raw_text = f'+{xp_gain} Erz'
-                                raw_text = f'{hero.name} zieht weiter und hofft auf das Beste'
                                 y = display_outro(hero, raw_text, y, screen, font)
-                                hero_left = True
                             else:
                                 raw_text = f'Auf den ersten Blick kann {hero.name} nichts entdecken'
                                 y = display_outro(hero, raw_text, y, screen, font)
-                                danger = 5
+                            danger = 5
                         
                         case 5:
-                            magic_number ==random.choice((1, 2))
-                            if magic_number == 1:
-                                raw_text = 'Ein netter Gegenstand, für den es sich gelohnt hat'
+                            if random.choice((1, 2)) == 1:
+                                raw_text = 'Ein netter Gegenstand, für den es sich'
                                 y = display_outro(hero, raw_text, y, screen, font)
-                                raw_text = f'zu suchen .{hero.name} zieht jetzt lieber weiter.'
+                                raw_text = 'gelohnt hat zu suchen'
                                 y = display_outro(hero, raw_text, y, screen, font)
                                 item = world.random_item(stage)
                                 event_get_item(hero, item, screen)
-                                hero_left = True
                             else:
                                 raw_text = 'Auch nach einer kurzen effektiven Suche'
                                 y = display_outro(hero, raw_text, y, screen, font)
@@ -852,7 +842,7 @@ def event_2_act_2(hero, stage, screen):
                                 y = display_outro(hero, raw_text, y, screen, font)
                                 raw_text = 'Nervosität macht sich breit..'
                                 y = display_outro(hero, raw_text, y, screen, font)
-                                danger = 9
+                            danger = 9
 
                         case 9:
                             raw_text = 'Es scheint sich niemand sonst für das Lager zu interessieren..'
@@ -915,12 +905,12 @@ def event_3_act_2(hero, stage, screen):
 
     intro = [start, a,]
 
-    choice_1 = 'Seegen des Landarbeiter[+7 Max Leben]'
+    choice_1 = 'Seegen des Landarbeiters[+7 Max Leben]'
 
     answers = [choice_1]
 
-    if hero.speed >= 100:
-        choice_2 = 'Seegen des Krieger[+2 Crit. Chance]'
+    if hero.speed >= 70:
+        choice_2 = 'Seegen des Kriegers[+2 Crit. Chance]'
         answers.append(choice_2)
     
     if hero.mental_reduction >= 10:
@@ -1004,7 +994,7 @@ def event_4_act_2(hero, stage, screen):
             elif hero.xp >= 130:
                 raw_text = '"Das ist aber eine mickrige Summe, oder ?!"'
                 y = display_outro(hero, raw_text, y, screen, font)
-                raw_text = '"Ja klein und mickrig" pflichtet ihm sein Kollege zu'
+                raw_text = '"Ja klein und mickrig" pflichtet ihm sein Kollege bei'
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = 'Einer der Wachen schlägt dir in den Bauch'
                 y = display_outro(hero, raw_text, y, screen, font)
@@ -1012,10 +1002,8 @@ def event_4_act_2(hero, stage, screen):
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = f'Einige Zeit liegt {hero.name} noch auf dem Boden'
                 y = display_outro(hero, raw_text, y, screen, font)
-                damage = round(hero.life * 0.1)
+                damage = round(hero.life * 0.2)
                 hero.life -= damage
-                if hero.life <= 0:
-                    hero.life = 1
                 hero.xp = 0
 
             else:
@@ -1032,7 +1020,7 @@ def event_4_act_2(hero, stage, screen):
             y = display_outro(hero, raw_text, y, screen, font)
             magic_number = random.randint(0, 200)
             magic_number += hero.speed
-            if magic_number > 150:
+            if magic_number > 155:
                 raw_text = f'Geschwindt wie der Wind entkommt {hero.name}'
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = f'{hero.name} kann nichtmal die Rufe der Wachen noch hören.'
@@ -1047,8 +1035,8 @@ def event_4_act_2(hero, stage, screen):
         case 3:
             magic_number = random.randint(0, 100)
             magic_number += hero.damage
-            magic_number += hero.critical * 2
-            if magic_number > 55:
+            magic_number += hero.critical * 3
+            if magic_number > 60:
                 raw_text = f'{hero.name} weitet seinen Mantel und offenbart'
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = 'seine Sammlung an Waffen und Granaten an seinem Gürtel'
@@ -1074,7 +1062,7 @@ def event_4_act_2(hero, stage, screen):
             if hero.magic_power > 0 or (hero.mental_resistance >= 10 and hero.mana >= 50):
                 raw_text = f'Mittels Suggestion erklärt {hero.name} den Wachen'
                 y = display_outro(hero, raw_text, y, screen, font)
-                raw_text = 'dass Sie weiter gehen und Ihn in Ruhe lassen'
+                raw_text = 'dass Sie weiter gehen und Ihn in Ruhe lassen sollen'
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = '"Du bist schwer in Ordnung und definitv kein Dieb"'
                 y = display_outro(hero, raw_text, y, screen, font)
@@ -1125,12 +1113,13 @@ def event_5_act_2(hero, stage, screen):
     c = 'vor einiger Zeit ein Marktplatz gewesen sein muss'
     d = f'Als {hero.name} sich der Versammlung nähert'
     e = 'bemerken und umstellen die Kultisten Ihn'
+    f = '"Du möchtest der Bruderschaft etwas spenden"'
 
-    intro = [start, a, b, c, d, e]
+    intro = [start, a, b, c, d, e, f]
 
-    choice_1 = 'In den Gesang einstimmen und untertauchen'
-    choice_2 = 'Dem Druck standhalten [mind 30 mentale Resistenz]'
-    choice_3 = 'Selber mental Druck auf die Kultisten ausüben'
+    choice_1 = 'In den Gesang einstimmen und untertauchen [50% Chance]'
+    choice_2 = 'Dem Druck standhalten [mind 25 mentale Resistenz]'
+    choice_3 = 'Selber mental Druck auf die Kultisten ausüben [?]'
 
     answers = [choice_1, choice_2, choice_3]
 
@@ -1140,8 +1129,7 @@ def event_5_act_2(hero, stage, screen):
 
     match choice:
         case 1:
-            magic_number = random.choice((1, 2))
-            if magic_number == 1:
+            if random.choice((1, 2)) == 1:
                 raw_text = 'Die Kultisten scheinen wieder von dir abzulassen'
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = f'Nach einiger Zeit entfernt sich {hero.name}'
@@ -1155,16 +1143,12 @@ def event_5_act_2(hero, stage, screen):
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = f'{hero.name} wagt es nicht sich zu protestieren'
                 y = display_outro(hero, raw_text, y, screen, font)
-                cult_donation = 300
-                hero.xp -= cult_donation
+                hero.xp -= 400
                 if hero.xp < 0:
-                    cult_donation += hero.xp
                     hero.xp = 0
-                raw_text = f'-{cult_donation} magisches Erz'
-                y = display_outro(hero, raw_text, y, screen, font)
 
         case 2:
-            if hero.mental_resistance >= 30:
+            if hero.mental_resistance >= 25:
                 raw_text = f'{hero.name} wehrst die mentalen Angriffe stoisch ab'
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = 'Die Kultisten schauen abwechselnd verblüfft'
@@ -1182,23 +1166,17 @@ def event_5_act_2(hero, stage, screen):
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = 'wie Diebe ein fremdes Haus'
                 y = display_outro(hero, raw_text, y, screen, font)
-                xp_loss, mana_loss = 200, 100
-                hero.xp -= xp_loss
-                hero.mana -= mana_loss
+                hero.xp -= 400
                 if hero.xp < 0:
                     hero.xp = 0
-                if hero.mana < 0:
-                    hero.aman = 0
                 raw_text = f'"Erbärmlich Fremder", die Kultisten wende sich ab'
-                y = display_outro(hero, raw_text, y, screen, font)
-                raw_text = f'-{xp_loss} Erfahrung  -{mana_loss} Odem'
                 y = display_outro(hero, raw_text, y, screen, font)
 
         case 3:
-            magic_number = random.randint(50, 140)
-            magic_number -= hero.magic_power
-            if magic_number <= hero.mana:
-                hero.mana += 70
+            magic_number = random.randint(hero.magic_power, 100)
+            magic_number += hero.magic_power
+            if magic_number >= 50:
+                hero.mana += round(hero.max_mana * 0.5)
                 if hero.mana > hero.max_mana:
                     hero.mana = hero.max_mana
                 raw_text = f'{hero.name} kann seiner seits massiven'
@@ -1210,7 +1188,10 @@ def event_5_act_2(hero, stage, screen):
                 raw_text = 'genug Platz und meiden seinen Blickkontakt'
                 y = display_outro(hero, raw_text, y, screen, font)
             else:
-                hero.mana -= 80
+                hero.xp -= 400
+                if hero.xp < 0:
+                    hero.mana += hero.xp
+                    hero.xp = 0
                 if hero.mana < 0:
                     hero.mana = 0
                 raw_text = 'Deine psychologischen Angriffe zeitigen keinerlei'
@@ -1235,7 +1216,7 @@ def event_6_act_2(hero, stage, screen):
 
     intro = [start, a, b, c, d, e]
 
-    choice_1 = f'Mit einer Parole die Tür öffnen [mag. Kraft:{hero.magic_power}]'
+    choice_1 = f'Mit einer Parole Tür öffnen [{hero.name} Magie:{hero.magic_power}]'
     choice_2 = f'Vielleicht kann ein gezielter kräftiger Tritt Abhilfe schaffen'
 
     answers = [choice_1, choice_2]
@@ -1252,13 +1233,14 @@ def event_6_act_2(hero, stage, screen):
 
     match choice:
         case 1:
-            magic_number = random.randint(1, 50)
-            if magic_number < hero.magic_power: 
+            if random.randint(1, 50) < hero.magic_power: 
                 raw_text = f'"Melon!" just als {hero.name} diese Worte ausspricht'
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = 'öffnet sich so gleich die Geheimtür'
                 y = display_outro(hero, raw_text, y, screen, font)
-                world.reward_system(hero, stage, 450, screen)#REWARD
+                screen.fill((50, 50, 50)), combat.hero_interface(hero, screen)
+                pygame.display.flip()#REWARD
+                world.reward_system(hero, stage, 400, screen)#REWARD
             else:
                 raw_text = '"Simsalabim!", "3 mal scharzer Kater!"'
                 y = display_outro(hero, raw_text, y, screen, font)
@@ -1268,9 +1250,7 @@ def event_6_act_2(hero, stage, screen):
                 y = display_outro(hero, raw_text, y, screen, font)
 
         case 2:
-            magic_number = random.randint(50, 300)
-            impact = round(hero.damage * (hero.critical + 1))
-            if magic_number < impact:
+            if random.randint(50, 300) < round(hero.damage * (hero.critical + 1)):
                 raw_text = f'{hero.name} verlagert sein Gewicht nach hinten'
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = 'und tritt mit voller Härte gegen die fragwürdige'
@@ -1281,7 +1261,7 @@ def event_6_act_2(hero, stage, screen):
                 y = display_outro(hero, raw_text, y, screen, font)
                 screen.fill((50, 50, 50)), combat.hero_interface(hero, screen)
                 pygame.display.flip()#REWARD
-                world.reward_system(hero, stage, 350, screen)
+                world.reward_system(hero, stage, 400, screen)
             else:
                 raw_text = f'{hero.name} tritt, schiebt und versucht alles'
                 y = display_outro(hero, raw_text, y, screen, font)
@@ -1334,8 +1314,8 @@ def event_7_act_2(hero, stage, screen):
         answers = [choice_1]
 
         bets = []
-        if hero.xp >= 1000:
-            choice_2 = '1000 Brocken magisches Erz setzen'
+        if hero.xp >= 800:
+            choice_2 = '800 Brocken magisches Erz setzen'
             choice_3 = '200 Brocken magisches Erz setzen'
             choice_4 = '50 Brocken magisches Erz setzen'
             bets = [choice_2, choice_3, choice_4]
@@ -1367,7 +1347,7 @@ def event_7_act_2(hero, stage, screen):
                     raw_text = 'und geht seines Weges'
                     y = display_outro(hero, raw_text, y, screen, font)
                 
-                elif initial_money > hero.xp + 600:
+                elif initial_money > hero.xp + 500:
                     raw_text = f'{hero.name} ärgert sich ungemein'
                     y = display_outro(hero, raw_text, y, screen, font)
                     raw_text = 'über seinen Verlust und schaut erboßt umher'
@@ -1379,7 +1359,7 @@ def event_7_act_2(hero, stage, screen):
                     raw_text = 'der Spieler und sackt vergnügt seine Gewinne ein'
                     y = display_outro(hero, raw_text, y, screen, font)
 
-                elif initial_money + 600 < hero.xp:
+                elif initial_money + 500 < hero.xp:
                     raw_text = f'{hero.name} ist höchst Vergnügt und'
                     y = display_outro(hero, raw_text, y, screen, font)
                     raw_text = 'sackt seine zahlreichen Erzbrocken in die'
@@ -1414,15 +1394,15 @@ def event_7_act_2(hero, stage, screen):
                 hero_left = True
                 
             case 2:
-                if hero.xp >= 1000:
-                    bet = 1000
+                if hero.xp >= 800:
+                    bet = 800
                 elif hero.xp >= 200:
                     bet = 200
                 elif hero.xp >= 50:
                     bet = 50
 
             case 3:
-                if hero.xp >= 1000:
+                if hero.xp >= 800:
                     bet = 200
                 elif hero.xp >= 200:
                     bet = 50
@@ -1437,8 +1417,7 @@ def event_7_act_2(hero, stage, screen):
             y = display_outro(hero, raw_text, y, screen, font)
             raw_text = 'und bleibt langsam auf der Scheibe liegen...'
             y = display_outro(hero, raw_text, y, screen, font)
-            magic_number = random.choice((1, 2))
-            if magic_number == 1:
+            if random.choice((1, 2)) == 1:
                 hero.xp += bet
                 raw_text = 'Triumph!'
                 y = display_outro(hero, raw_text, y, screen, font)
