@@ -94,7 +94,7 @@ class Button:
         return self.rect.collidepoint(mouse_position)
 
 
-def boss_reward_and_buttons(hero, screen):
+def boss_reward_and_buttons(screen):
 
     font = pygame.font.SysFont(None, 34)
     text = 'DU HAST GESIEGT!'
@@ -132,13 +132,13 @@ def display_text(text, y, screen, font):
 def bond_fire_buttons(hero):
 #from world
     button_heal = Button(475, 450,
-    250, 70, f"+{round(hero.max_life / 2)} HP", "1")
+    250, 70, f"+{round(hero.max_life / 2)} HP", "0")
 
     button_mana = Button(275, 600,
-    250, 70, f"+{hero.max_mana} Odem", "2")
+    250, 70, f"+{hero.max_mana} Odem", "1")
 
     button_xp = Button(675, 600,
-    250, 70, f"+{round(hero.xp * 0.5)} XP", "3")
+    250, 70, f"+{round(hero.xp * 0.5)} XP", "2")
 
     buttons = [button_heal, button_mana, button_xp]
 
@@ -168,7 +168,7 @@ def merchant_buttons():
 
 
 def yes_no_button():
-#from abilities, world uses it too now
+
     yes = Button(300, 500, 
         100, 100, "JA", "0")
     
@@ -241,29 +241,33 @@ def buttons_right_bottom_corn():
 
 def choose_ability(hero, action, screen):
 
-    buttons, font = buttons_right_bottom_corn()
+    buttons, _ = buttons_right_bottom_corn()
     button_keys = ("a", "b", "c", "d")
 
     for button, key in zip(buttons, button_keys):
         button.key = key# button.key must be in abcd
 
-    while len(buttons) != len(hero.abilities):
-        del buttons[-1]
+    while len(buttons) != len(hero.abilities) + 1:
+        del buttons[-1] #+1 for back-button
     
     for i, button in enumerate(buttons):
-        spell = hero.abilities[i]
-        button.text = f"{spell.name}\n"
-        button.text += f"ODEM:({str(spell.cost)})\n"
-        if spell.cool_down > 0:
-            button.text += f"COOLD.({str(spell.cool_down)})"
+        try:
+            spell = hero.abilities[i]
+            button.text = f"{spell.name}\n"
+            button.text += f"ODEM:({str(spell.cost)})\n"
+            if spell.cool_down > 0:
+                button.text += f"COOLD.({str(spell.cool_down)})"
+        except IndexError:
+            buttons[i].text = 'ZURÜCK'
+            buttons[i].key = 'back'
 
     action = display_answers_clicked(buttons, screen)
     return action
 
 
-def item_buttons(hero, screen):
+def item_buttons(hero):
 #from world
-    buttons, font = buttons_right_bottom_corn()
+    buttons, _ = buttons_right_bottom_corn()
 
     i = 0
     for item in hero.inventory:
@@ -282,9 +286,9 @@ def item_buttons(hero, screen):
     return buttons
 
 
-def item_in_combat(hero, enemy, screen):
+def item_in_combat(hero, screen):
 
-    buttons, font = buttons_right_bottom_corn()
+    buttons, _ = buttons_right_bottom_corn()
 
     i = 0
     for item in hero.inventory:
@@ -293,7 +297,7 @@ def item_in_combat(hero, enemy, screen):
             buttons[i].key = str(i)#str() is crucial here
             i += 1
 
-    for x, item in enumerate(hero.pockets):
+    for _, item in enumerate(hero.pockets):
         buttons[i].text = item.name
         buttons[i].key = str(i)#aswell
         i += 1
@@ -305,7 +309,7 @@ def item_in_combat(hero, enemy, screen):
     return int(item)
 
 
-def choose_item(hero, screen):####
+def choose_item(hero, screen):
 #from event
     buttons, font = buttons_right_bottom_corn()
     
@@ -328,7 +332,7 @@ def choose_item(hero, screen):####
 
 def combat_buttons(screen):
     """Attack, defense, ability, item"""
-    buttons, font = buttons_right_bottom_corn()
+    buttons, _ = buttons_right_bottom_corn()
 
     while len(buttons) != 4:#4 general buttons,
         del buttons[-1]     #they dont change at all
@@ -403,9 +407,7 @@ def abilities_displayed(hero, screen):
         x += 65
 
 
-def dungeon_buttons_clicked(hero, buttons, screen, event):
-
-    font = pygame.font.SysFont(None, 20)
+def dungeon_buttons_clicked(hero, buttons, event):
     
     for button in buttons:
         if button.clicked(event.pos):
@@ -454,8 +456,9 @@ def display_answers_clicked(buttons, screen):
 
 def cursor(choice, button, buttons, event, merchant_keys):
 
-    even = ['0', '2', '4', '6', '8']
-    uneven = ['1', '3', '5', '7', '9']
+    even = ('0', '2', '4', '6', '8')
+    uneven = ('1', '3', '5', '7', '9')
+    spell_keys = [button.key for button in buttons]
 
     button.cursor = False
     match event.key:
@@ -463,10 +466,9 @@ def cursor(choice, button, buttons, event, merchant_keys):
         case pygame.K_UP:
             if button.key in (even[1:] + uneven[1:]):
                 buttons[int(button.key)-2].cursor = True
-            elif button.key == 'c':
-                buttons[0].cursor = True
-            elif button.key == 'd':
-                buttons[1].cursor = True
+            elif button.key in spell_keys[2:]:
+                i = spell_keys.index(button.key)
+                buttons[i - 2].cursor = True
             elif button.key in merchant_keys[:5]:#UP
                 i = merchant_keys.index(button.key)
                 buttons[i + 2].cursor = True
@@ -478,10 +480,9 @@ def cursor(choice, button, buttons, event, merchant_keys):
         case pygame.K_DOWN:
             if button.key in (even+uneven) and (int(button.key)+2 < len(buttons)):
                 buttons[int(button.key)+2].cursor = True
-            elif len(buttons) >= 3 and button.key == 'a':
-                buttons[2].cursor = True
-            elif len(buttons) == 4 and button.key == 'b':
-                buttons[3].cursor = True
+            elif button.key in spell_keys[:len(buttons)-2]:
+                i = spell_keys.index(button.key)
+                buttons[i + 2].cursor = True
             elif button.key in merchant_keys[2:]:#DOWN
                 i = merchant_keys.index(button.key)
                 buttons[i - 2].cursor = True
@@ -493,10 +494,9 @@ def cursor(choice, button, buttons, event, merchant_keys):
         case pygame.K_LEFT:
             if button.key in uneven:
                 buttons[int(button.key)-1].cursor = True
-            elif button.key == 'b':
-                buttons[0].cursor = True
-            elif button.key == 'd':
-                buttons[2].cursor = True
+            elif button.key in spell_keys[1::2]:
+                i = spell_keys.index(button.key)
+                buttons[i - 1].cursor = True
             elif button.key in merchant_keys[:5]:#LEFT
                 i = merchant_keys.index(button.key)
                 buttons[i + 1].cursor = True
@@ -506,10 +506,9 @@ def cursor(choice, button, buttons, event, merchant_keys):
         case pygame.K_RIGHT:
             if button.key in even and (int(button.key)+1 < len(buttons)):
                 buttons[int(button.key)+1].cursor = True
-            elif len(buttons) >= 2 and button.key == 'a':
-                buttons[1].cursor = True
-            elif len(buttons) == 4 and button.key == 'c':
-                buttons[3].cursor = True
+            elif button.key in spell_keys[0:len(buttons)-1:2]:
+                i = spell_keys.index(button.key)
+                buttons[i + 1].cursor = True
             elif button.key in merchant_keys[1:]:#RIGHT
                 i = merchant_keys.index(button.key)
                 buttons[i - 1].cursor = True
