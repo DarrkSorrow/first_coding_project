@@ -19,7 +19,20 @@ def combat_start_screen(enemy, screen):
 def combat_inputs(hero, enemy, screen, step):
 
     key = enemy_visuals(hero, enemy, screen, step)
-    action = buttons_clog.combat_buttons(screen)
+
+    action = ' '
+    while action == ' ' or action == 'back':
+        action = buttons_clog.combat_buttons(screen)
+
+        pygame.draw.rect(                               #drawn to cover up
+                screen, (150,100,0), (650, 500, 1100, 730)) #old buttons
+        pygame.display.flip()
+
+        if action == '2':
+            action = buttons_clog.choose_ability(hero, action, screen)
+            pygame.draw.rect(                               #drawn to cover up
+                screen, (150,100,0), (650, 500, 1100, 730)) #old buttons
+            pygame.display.flip()
     
     return action, key
 
@@ -99,6 +112,8 @@ def hero_xp(hero, screen):
 
     font = pygame.font.SysFont(None, 32)
     text = f"{hero.name}: {hero.xp}XP"
+    pygame.draw.rect(screen, (0, 0, 0),
+                     (13, 40, 215, 46))
     textrend = font.render(text, True, (255, 255, 255))
     screen.blit(textrend, (20, 50))
 
@@ -119,6 +134,9 @@ def hero_combat_stats(hero, screen):
         f"enemies in row: {hero.game_state.enemy_counter}",
         f"event in row: {hero.game_state.events_in_row}",
     ]
+
+    pygame.draw.rect(screen, (0, 0, 0),
+                     (15, 495, 95, 150))
 
     for stat in stats:
 
