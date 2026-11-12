@@ -66,7 +66,7 @@ def main_fight(hero, enemy, screen, stage):
         hero_interface(hero, screen), enemy.blitme(screen)
         enemy_interface(enemy, screen), pygame.display.flip()
         # *** SECONDE MOVE ***
-        
+
         debuff_hero_enemy(hero, enemy)
         undo(hero, enemy, action)
         step += 1
@@ -101,13 +101,8 @@ def pre_hero_turn(hero, action, combat_log, screen):
 
         case "2":  #Fähigkeiten
             if hero.abilities == []:
-                text = ("Du kannst doch garnichts.")
+                text = "Du kannst doch garnichts."
                 combat_log.add(text)
-            else:
-                pygame.draw.rect(                               #drawn to cover up
-                    screen, (150,100,0), (650, 500, 1100, 730)) #old buttons
-                pygame.display.flip()
-                action = buttons_clog.choose_ability(hero, action, screen)
                 
         case "3":  #Gegenstände
             hero.instant_item(combat_log)
@@ -126,9 +121,9 @@ def who_first(hero, enemy, attack_order, key, action, combat_log, screen):
         magic_number = randint(0, int(total_speed))
 
     if hero.speed > enemy.speed * 2:
-        magic_number /= 2
+        magic_number *= 0.75
     elif enemy.speed > hero.speed * 2:
-        magic_number *= 2
+        magic_number *= 1.33
 
     if round(magic_number) in range(round(hero.speed) + 1):
         attack_order.append(partial(hero_turn, hero, enemy, action, combat_log, screen))
@@ -146,34 +141,36 @@ def who_first(hero, enemy, attack_order, key, action, combat_log, screen):
 
 
 def enemy_turn(hero, enemy, key, combat_log):
+
     if enemy.life > 0:
-        stunned = enemy.stunned_or_not()
-        if stunned:
+        if enemy.stunned_or_not():
             text = f'{enemy.name} ist BENOMMEN und kann nichts tun.'
             combat_log.add(text, True)
         else:
             enemy_action = enemy.enemy_ai(hero, key, combat_log)
+
     return enemy_action
 
 
 def hero_turn(hero, enemy, action, combat_log, screen):
 
-    stunned = hero.stunned_or_not()
-    if stunned:
+    previous_action = action
+    if hero.stunned_or_not():
         action = "4"
 
     match action:
-
         case "0":
             magic_attack = False
             for item in hero.inventory:
                 if item.gear and item.magic_attack:
                     magic_attack = True
+                    break
             if magic_attack:
                 enemy_mental_dodge(hero, hero.magic_power,
                                  enemy, combat_log)
             else:
                 enemy_block_dodge(hero, enemy, combat_log)
+            hero.mana += round(hero.max_mana / 50)
 
         case "1":
             hero.defend(combat_log)
@@ -205,7 +202,7 @@ def hero_turn(hero, enemy, action, combat_log, screen):
                 pygame.draw.rect(                               #drawn to cover up
                     screen, (150,100,0), (650, 500, 1100, 730)) #old buttons
                 pygame.display.flip()
-                choice = buttons_clog.item_in_combat(hero, enemy, screen)
+                choice = buttons_clog.item_in_combat(hero, screen)
                 if choice < hero.max_inventory:
                     action = hero.inventory[choice].use_item(hero, enemy, combat_log)
                 else:
@@ -217,6 +214,7 @@ def hero_turn(hero, enemy, action, combat_log, screen):
                 text = f'{hero.name} ist BENOMMEN und kann nichts tun'
                 combat_log.add(text)
 
+    action = previous_action
     return action
 
 
@@ -292,11 +290,11 @@ def after_combat(hero, enemy, combat_log):
 
     return True
 
-
 #NOT USED IN COMBAT.PY
 def train_hero(hero):#only called during the beginning
-    #hero.abilities.append(Ability5())
+    hero.abilities.append(Ability4())
+    hero.abilities.append(Ability3())
     #hero.abilities.append(Ability0())
-    hero.abilities.append(Ability7())
-    hero.abilities.append(Ability8())
+    #hero.abilities.append(Ability7())
+    #hero.abilities.append(Ability8())
 
